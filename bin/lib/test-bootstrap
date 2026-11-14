@@ -687,6 +687,18 @@ check_true "and so does the font step" has 'skipped: the fonts module is off'
 check_true "the agents steps say it once" [ "$(grep -c 'skipped: the agents module is off' <<< "$out")" = 1 ]
 check_true "no TypeScript warning with apps off" lacks 'npm:typescript is not installed'
 
+# rtk's note about RTK.md is false here: tilde/.claude/rules/rtk.md replaces that file
+fresh
+mstub "$tmp/mbin/rtk" "echo 'Hook installed'; echo \"  Note: No RTK.md created. Claude won't know about meta commands (gain, discover, bypass).\""
+misc
+check_true "rtk: its RTK.md note is dropped" lacks 'No RTK.md'
+check_true "rtk: … and the rest of its output kept" has '^  Hook installed$'
+check_true "rtk: … with no warning" lacks 'rtk init failed'
+fresh
+mstub "$tmp/mbin/rtk" "echo \"  Note: No RTK.md created.\"; exit 1"
+misc
+check_true "rtk: a failed init still warns" has 'rtk init failed'
+
 fresh no-claude
 misc
 check_true "claude on and not installed: the installer is fetched" ran 'claude.ai/install.sh'

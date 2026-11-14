@@ -370,15 +370,16 @@ fi
 
 # rtk (a brew: package) — a Claude Code PreToolUse hook that rewrites Bash calls to
 # their compact rtk form (`git status` → `rtk git status`). --hook-only: no
-# RTK.md or @RTK.md line in ~/.claude/CLAUDE.md (codegraph rewrites that file;
-# tilde/.claude/rules/rtk.md carries the guidance, so ignore rtk's "No RTK.md"
-# note). Re-run every time because
+# RTK.md or @RTK.md line in ~/.claude/CLAUDE.md (codegraph rewrites that file).
+# tilde/.claude/rules/rtk.md carries the guidance, so rtk's "No RTK.md created"
+# note is false here and is filtered out; pipefail still reports rtk's own failure.
+# Re-run every time because
 # `claude-config` doesn't track hooks; rtk skips it when already present.
 # Claude Code only: --codex would write through the ~/.codex/AGENTS.md symlink
 # into agents/instructions.md. https://github.com/rtk-ai/rtk#auto-rewrite-hook
 if $agents_on && command_exists rtk; then
   info "✂️ Connecting rtk to Claude Code…"
-  rtk init -g --hook-only --auto-patch < /dev/null 2>&1 | indent \
+  rtk init -g --hook-only --auto-patch < /dev/null 2>&1 | { grep -v 'No RTK.md created' || true; } | indent \
     || warning "rtk init failed — run it later: rtk init -g --hook-only"
 fi
 
