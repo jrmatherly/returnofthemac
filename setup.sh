@@ -191,9 +191,11 @@ warning() {
   { echo "$1" >> "$ROTM_WARNINGS_FILE"; } 2> /dev/null || true
 }
 # show_warnings: the run's warnings, each once in the order they came, at the end
-# of the run or before an exit that stops it early
+# of the run or, from the EXIT trap, when it stops early. Once a run, whichever comes first
 show_warnings() {
   local warnings n
+  [ -z "${warnings_shown:-}" ] || return 0
+  warnings_shown=true
   warnings=$(awk 'NF && !seen[$0]++' "$ROTM_WARNINGS_FILE" 2> /dev/null) || warnings=""
   [ -n "$warnings" ] || return 0
   n=$(grep -c . <<< "$warnings")
@@ -202,9 +204,20 @@ show_warnings() {
   awk -v x="${red}!${reset}" '{ print "  " x " " $0 }' <<< "$warnings"
   echo
 }
+# The EXIT trap. Any exit but 0 stops the run early, Ctrl-C's 130 included
+finish() {
+  local rc=$?
+  [ -z "${sudo_kept_alive:-}" ] || sudo_keepalive_stop
+  [ "$rc" = 0 ] || show_warnings
+  rm -f "$ROTM_WARNINGS_FILE"
+}
 ROTM_WARNINGS_FILE=$(mktemp -t rotm-warnings)
 export ROTM_WARNINGS_FILE
-trap 'rm -f "$ROTM_WARNINGS_FILE"' EXIT
+trap finish EXIT
+# A signal bash takes with no trap of its own runs the EXIT trap with status 0, and a trap that
+# returns would let the run carry on past a guarded step
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 # Until 2026-11-12 the config environment was named `installed`, a name a
 # project's own mise.installed.toml also answers to. A copy from then still has
@@ -314,10 +327,7 @@ sudo_keepalive_start() {
     kill -0 "$$" 2> /dev/null || exit
   done &
   SUDO_KEEPALIVE_PID=$!
-  # A trap that returns lets the run carry on past a guarded step, so Ctrl-C exits and EXIT cleans up
-  trap 'sudo_keepalive_stop; rm -f "$ROTM_WARNINGS_FILE"' EXIT
-  trap 'exit 130' INT
-  trap 'exit 143' TERM
+  sudo_kept_alive=true
 }
 
 # Stop the keep-alive and drop the cached credential (`sudo -k`), so the steps
@@ -371,7 +381,6 @@ if [ "$run_dotfiles" = true ]; then
   # --yes: the Enter prompt above was the confirmation, and mise asks per file otherwise
   if ! mise dotfiles apply --yes ${dry_run_flag:+"$dry_run_flag"}; then
     warning "mise dotfiles apply stopped. Move aside what it reported, then rerun $self"
-    show_warnings
     exit 1
   fi
   echo
@@ -410,7 +419,6 @@ packages_for() {
   if ! mise_shown bootstrap packages apply --yes --manager "$1" ${dry_run_flag:+"$dry_run_flag"}; then
     if grep -q 'no packages requested' <<< "$out"; then
       warning "mise read no package list from $HOME/.config/mise"
-      show_warnings
       exit 1
     fi
     # mise stops at the first package that fails, so each one after it gets its own apply
@@ -546,7 +554,6 @@ bootstrap() {
   mise bootstrap ${yes:+--yes} "$@" ${mise_args[@]+"${mise_args[@]}"} || {
     local rc=$?
     warning "mise bootstrap stopped. Earlier steps stay applied. Fix what it reported, then rerun $self"
-    show_warnings
     exit "$rc"
   }
 }

@@ -63,8 +63,18 @@ for f in modules-off.local config.override.toml; do
   [ ! -e "$STATE/saved-$f" ] || cp "$STATE/saved-$f" "$folder/$f"
 done
 EOF
+# rotm-modules is the real one, but refuses the list once the restore has run when the case asks
+mv "$fix/bin/lib/rotm-modules" "$fix/bin/lib/rotm-modules.real"
+cat > "$fix/bin/lib/rotm-modules" << 'EOF'
+#!/bin/bash
+if [ -e "$STATE/modules-fail-after-restore" ] && grep -qF 'helper=rotm-user-layer args=restore' "$STATE/mise.log"; then
+  echo "rotm-modules: no module named 'nosuch'" >&2
+  exit 2
+fi
+exec "$(dirname "$0")/rotm-modules.real" "$@"
+EOF
 printf '#!/bin/bash\necho "pwd=$(pwd -P) helper=dotfiles-settings args=$* just_installed=${ROTM_JUST_INSTALLED:-}" >> "$STATE/mise.log"\n[ ! -e "$STATE/apply-fails" ]\n' > "$fix/bin/dotfiles-settings"
-chmod +x "$fix/setup.sh" "$fix"/setup/*.sh "$fix/bin/nyan" "$fix/bin/lib/rotm-user-layer" "$fix/bin/dotfiles-settings"
+chmod +x "$fix/setup.sh" "$fix"/setup/*.sh "$fix/bin/nyan" "$fix/bin/lib/rotm-user-layer" "$fix/bin/lib/rotm-modules" "$fix/bin/dotfiles-settings"
 
 stub() {
   printf '#!/bin/bash\n%s\n' "$2" > "$tmp/bin/$1"
@@ -111,7 +121,10 @@ case $1 in
         [ ! -e "$STATE/task-warns" ] || { echo "a task warning" >> "$ROTM_WARNINGS_FILE"; echo "a task warning" >> "$ROTM_WARNINGS_FILE"; }
         [ ! -e "$STATE/task-fails" ] ;;
       "bootstrap packages "* | plugins*) ;;
-      bootstrap*) [ ! -e "$STATE/bootstrap-fails" ] ;;
+      bootstrap*)
+        # TERM, not Ctrl-C's INT: pnpm check runs this in the background, where INT is ignored and cannot be trapped
+        [ ! -e "$STATE/interrupt" ] || kill -TERM "$PPID"
+        [ ! -e "$STATE/bootstrap-fails" ] ;;
     esac ;;
 esac
 EOF
@@ -317,6 +330,13 @@ check_true "f: no extras after a failed bootstrap" extras_ran 0
 check_true "f: no tools after a failed bootstrap" log_lacks "args=install"
 check_true "f: does not say All done" lacks 'All done'
 check_true "f: the run's warnings are listed before it stops" has '^  ! No GitHub token'
+check_true "f: … once" [ "$(grep -c '^  ! No GitHub token' <<< "$out")" = 1 ]
+
+prepare() { touch "$STATE/interrupt"; }
+run
+check_true "a signal: setup stops with 143" [ "$rc" -eq 143 ]
+check_true "a signal: no extras" extras_ran 0
+check_true "a signal: the run's warnings are listed before it stops" has '^  ! No GitHub token'
 
 prepare() {
   touch "$STATE/bootstrap-fails"
@@ -642,6 +662,14 @@ check_true "a failed restore: setup carries on" [ "$rc" -eq 0 ]
 check_true "a failed restore: warns and names sync status" has 'rotm settings sync status'
 check_true "a failed restore: the packages still install after it" in_order "$restore" "$apply brew disable="
 check_true "a failed restore: the tool settings are not applied" applies 0
+
+prepare() {
+  stub gh "$saved"
+  touch "$STATE/restore-fails" "$STATE/modules-fail-after-restore"
+}
+answers='\ny\n' run
+check_true "modules sync refused after the restore: setup stops with its code" [ "$rc" -eq 2 ]
+check_true "modules sync refused after the restore: the run's warnings are listed before it stops" has '^  ! Your saved settings did not load'
 
 prepare() { stub gh "$saved"; }
 answers='\ny\n' run -- --dry-run
