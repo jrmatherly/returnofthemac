@@ -266,7 +266,9 @@ def lint(items, by_name, cur, plugins=()):
             unsynced.add(n)
         else:
             problems.append(f"curated entry for unknown item: {n}")
-    if unsynced:
+    # No synced skill at all means the account is not signed in or not synced yet (a fresh
+    # install), so only a partial sync is worth a line
+    if unsynced and any(n.startswith(SYNCED) for n in by_name):
         problems.append("claude.ai skills not synced to this account: " + ", ".join(sorted(unsynced)))
     # MCP registration is per machine (an app that isn't installed, a project
     # that isn't cloned), so a curated server missing here is a note, not an error

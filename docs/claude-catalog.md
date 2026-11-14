@@ -6,7 +6,7 @@
 
 - Rebuild after installing, updating or removing plugins or skills: `claude-catalog` (`sysup` does it too).
 - `claude-catalog --open` rebuilds and opens `catalog.html`.
-- The hand-written half lives in `agents/catalog/curated.toml`: task groups, the recommended pick per group, notes, and keep or retire decisions per plugin. The build exits 1 when that file names something that is not installed, except an MCP server (registration is per machine) or an `anthropic-skills:*` skill (synced per claude.ai account), which only warn.
+- The hand-written half lives in `agents/catalog/curated.toml`: task groups, the recommended pick per group, notes, and keep or retire decisions per plugin. The build exits 1 when that file names something that is not installed, except an MCP server (registration is per machine) or an `anthropic-skills:*` skill (synced per claude.ai account), which only warn. The skills warn only when the account has synced at least one, so a Mac not signed in to claude.ai yet gets no warning.
 - A global rule, `tilde/.claude/rules/catalog.md`, tells Claude to consult the catalog when choosing a tool.
 
 ## Commands

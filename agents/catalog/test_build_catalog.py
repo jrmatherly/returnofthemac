@@ -61,10 +61,13 @@ probs = b.lint([], {}, {"mcp": {"ghost": {"desc": "x"}}, "group": [{"title": "G"
 assert probs == ["group 'G' names unknown item: nope", "mcp server not registered on this machine: ghost"], probs
 
 # a curated claude.ai skill the signed-in account doesn't sync is one note, not a fatal error per mention
-probs = b.lint([], {}, {"group": [{"title": "G", "items": ["anthropic-skills:pptx", "anthropic-skills:docs"]}],
-                        "notes": {"anthropic-skills:docs": "n"}, "duplicates": {"anthropic-skills:pptx": "x:y"}})
+synced_cur = {"group": [{"title": "G", "items": ["anthropic-skills:pptx", "anthropic-skills:docs"]}],
+              "notes": {"anthropic-skills:docs": "n"}, "duplicates": {"anthropic-skills:pptx": "x:y"}}
+probs = b.lint([], {"anthropic-skills:pdf": {}}, synced_cur)
 assert probs == ["curated entry for unknown item: x:y",
                  "claude.ai skills not synced to this account: anthropic-skills:docs, anthropic-skills:pptx"], probs
+# with no synced skill at all (not signed in or not synced yet, as on a fresh install) it says nothing
+assert b.lint([], {}, synced_cur) == ["curated entry for unknown item: x:y"]
 
 pl = [dict(name="ai", key="pydantic-ai@m", version="1", enabled=True, cost=9)]
 it = [dict(kind="skill", name="ai:x", source="ai", desc="d", path="/p", use="/ai:x", status="grouped", enabled=True)]
