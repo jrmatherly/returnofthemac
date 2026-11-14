@@ -88,6 +88,11 @@ TMUTIL_RC=80 "$repo/setup/macos-extras.sh" > "$tmp/tm.out" 2>&1
 # shellcheck disable=SC2034 # read inside the eval of check
 rc=$?
 check "a tmutil refused for want of Full Disk Access warns and the run carries on" "[ \$rc -eq 0 ] && grep -q 'Full Disk Access' '$tmp/tm.out'"
+: > "$log"
+TMUTIL_RC=1 "$repo/setup/macos-extras.sh" > "$tmp/tm.out" 2>&1
+# shellcheck disable=SC2034 # read inside the eval of check
+rc=$?
+check "another tmutil failure warns without blaming Full Disk Access" "[ \$rc -eq 0 ] && grep -q 'Time Machine is still on' '$tmp/tm.out' && ! grep -q 'Full Disk Access' '$tmp/tm.out'"
 check "HiDPI and the name are left alone by default" "! grep -q 'scutil --set\|windowserver' '$log'"
 
 DOTFILES_MACOS_FIREWALL=1 DOTFILES_MACOS_HIDPI=1 DOTFILES_MACOS_DISABLE_TIME_MACHINE=1 DOTFILES_MACOS_COMPUTER_NAME="Jason's Mac" run
