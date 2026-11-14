@@ -59,7 +59,7 @@ Changes are staged, not applied one by one:
 1. Choose **Review…**. The sheet lists the commands that will run, one `rotm settings set` or `rotm settings reset` line per change.
 1. Choose **Apply**. The app runs the commands in order. A command that fails does not stop the ones after it, and its change stays staged.
 
-After Apply the bar shows what the commands printed, such as the line that tells you to run `set-defaults`, and any failure, until you choose **Dismiss**. Nothing is installed and no macOS preference is written by a change alone. Run **Run Setup Again…** or **Apply macOS Preferences…** from the menu when a note asks for it.
+After Apply the bar shows what the commands printed, such as the line that tells you to run `set-defaults`, and any failure, until you choose **Dismiss**. A macOS preference takes effect as its change is applied, and the Dock or Finder restarts when the preference needs it. Nothing is installed by a change alone: run **Run Setup Again…** or **Apply macOS Preferences…** from the menu when a note asks for it.
 
 While a [profile](settings-sync.md#profiles) is in use, changes go to that profile. Tick **Write to shared settings** in the bar to change your shared settings instead, which adds `--shared` to every staged command.
 
