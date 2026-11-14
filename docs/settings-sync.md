@@ -1,6 +1,6 @@
 # Settings sync: your settings on your next Mac
 
-`rotm settings sync` saves the settings you changed with `rotm settings`, and the parts you opted out of, to a private GitHub repository in your own account. Your next Mac loads them, so you do not configure it a second time. Sync is manual. Nothing is saved, sent or loaded until you run one of the commands on this page.
+`rotm settings sync` saves the settings you changed with `rotm settings`, and the parts you opted out of, to a private GitHub repository in your own account. Your next Mac loads them, so you do not configure it a second time. Sync is manual. Nothing is saved, sent or loaded until you run one of the commands on this page. The [menu bar app](menu-bar.md) runs the same commands from its Sync and Profile lines.
 
 ## What is saved
 

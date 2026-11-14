@@ -11,7 +11,7 @@ Jason's personal dotfiles for macOS on Apple Silicon: Zsh, [mise](https://mise.j
 
 - **One command sets up a Mac.** [`setup.sh`](setup.sh) wraps [`mise bootstrap`](https://mise.jdx.dev/bootstrap.html): it links the dotfiles into `$HOME` and installs the [formulae, apps and VS Code extensions](tilde/.config/mise/conf.d/) and the [runtimes and CLIs](tilde/.config/mise/config.toml). Homebrew itself isn't needed. Everything outside the base is in [thirteen modules](docs/modules.md), and any of them can be left out.
 - **One command keeps it current.** [`sysup`](bin/sysup) updates macOS, mise, the packages, the runtimes and the agent tooling, and prints one status line per step.
-- **One place for settings.** [`dotfiles-settings`](settings/README.md) shows every setting the repo manages (environment variables, macOS defaults, packages, dotfile links and the agent tools) in a terminal UI, the same UI in a browser tab, or a scriptable CLI.
+- **One place for settings.** [`dotfiles-settings`](settings/README.md) shows every setting the repo manages (environment variables, macOS defaults, packages, dotfile links and the agent tools) in a terminal UI, the same UI in a browser tab, or a scriptable CLI. The [menu bar app](docs/menu-bar.md) puts the same settings, sync, profiles and updates in a window, with no terminal.
 - **Shell.** Zsh with a [Starship prompt](tilde/.starship.toml), [fzf](zsh/fzf.zsh) pickers with previews, [aliases](zsh/aliases.zsh), [handy scripts](bin/) and a built-in `help` for all of them.
 - **Terminals and editors.** [Ghostty](tilde/.config/ghostty/) and [cmux](tilde/.config/cmux/), [VS Code settings](vscode/) linked from the repo, the [Squirrelsong](colors/) color scheme and the [fonts](fonts/README.md) to go with it.
 - **macOS defaults as TOML.** [`20-macos.toml`](tilde/.config/mise/conf.d/20-macos.toml) declares the preferences, `set-defaults` applies them, and mise reports drift.
@@ -87,6 +87,7 @@ Everything in `$HOME` is a symlink into the clone, so you change a config by edi
 | [Installation](docs/installation.md) | The full install, setup's flags and prompts, a preview, the steps after setup, and the extras (color themes, Obsidian, Dash) |
 | [Updating](docs/updating.md) | What `sysup` does step by step, Renovate, and the macOS update password from 1Password |
 | [Settings sync](docs/settings-sync.md) | Saving your `rotm settings` changes and opt-outs to a private GitHub repository of your own, loading them on a second Mac, deciding a conflict, and keeping a profile such as work beside your own |
+| [Menu bar app](docs/menu-bar.md) | Return of the Mac in the menu bar: each menu line and the command it runs, the console, the settings window, how the app starts and updates, its logs, and how to switch it off |
 | [Local customizations](docs/local-customizations.md) | The per-Mac files outside the repo: `~/.zsh.local`, `~/.gitconfig.local`, `~/.ssh/config.local` and the 1Password SSH key |
 | [Make it yours](docs/forking.md) | The values hard-coded to me, for when you fork |
 | [Setup scripts](setup/README.md) | What each setup step does, with a diagram of what it downloads and what needs `sudo` |

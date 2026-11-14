@@ -507,7 +507,7 @@ The owner's end goal (decision 17): once the native window covers what the brows
 
 ## Not built
 
-- An app icon (the owner's to draw), a notification banner, a hover panel, and the per-project plugin stack screen.
+- A notification banner, a hover panel, and the per-project plugin stack screen.
 - Automatic installs of anything. The app only notifies.
 - A menu line saying a setup run is owed. Nothing records one (see "Measured"); the app shows each command's notes.
 - A check that the app and the checkout agree on the JSON at runtime. The shared fixtures catch a mismatch in the gate; an old app against a newer checkout shows the decode error and the Update line.

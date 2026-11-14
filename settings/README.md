@@ -8,7 +8,7 @@ There are three ways in:
 
 - `dotfiles-settings tui` opens the terminal UI. Sections are on the left and the highlighted section's settings on the right. A row shows where its value comes from, and an overridden row has a **Reset** button (`ctrl+r` resets the focused row). `p` opens the plugin stack of the folder it was started from, with `k` to keep a plugin and `o` to turn one off.
 - `dotfiles-settings serve` opens the same UI in a browser tab. `--no-open` prints the URL without opening it.
-- `list`, `get`, `set`, `reset`, `apply` and `status` are for scripts and the menu bar app, with `--json` on `list`, `get` and `status`.
+- `list`, `get`, `set`, `reset`, `apply` and `status` are for scripts and the [menu bar app](../docs/menu-bar.md), with `--json` on `list`, `get` and `status`. The app's settings window runs these commands.
 
 ```shell
 dotfiles-settings list
