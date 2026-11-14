@@ -11,7 +11,10 @@
 # link into a checkout under mise's data dir), and the settings repository is
 # a local bare repository. sync.py builds a github.com URL, so the scratch Git
 # config rewrites it to that path (url.<bare>.insteadOf); gh is a stub that
-# answers from the bare repository; the CLI runs as python3 -m
+# answers from the bare repository and keeps its token where gh does, out of
+# hosts.yml; git is a wrapper that stands in for GitHub's sign-in, refusing a
+# network call to that URL unless Git's credential helpers, mise's included,
+# give gh's token; the CLI runs as python3 -m
 # dotfiles_settings under the Python bin/lib/check picks, never through uv.
 # HOME, every mise dir, the XDG dirs, CLAUDE_CONFIG_DIR and the Git config
 # point into the temp dir, every command starts from env -i in the scratch
@@ -56,9 +59,23 @@ check_true() {
 # Only mise and git, so no shim and no other tool of the real home is reachable
 mkdir -p "$S/bin" "$S/stub" "$S/nobrew" "$S/nosys" "$S/tmp" "$S/claude-seed"
 ln -s "$mise_bin" "$S/bin/mise"
-ln -s "$git_bin" "$S/bin/git"
 bare="$S/origin.git"
 url=https://github.com/octo/rotm-settings.git
+token=gho_test-sync
+cat > "$S/bin/git" << EOF
+#!/bin/bash
+case " \$* " in *" $url "*)
+  cfg=()
+  a=("\$@")
+  for ((i = 0; i < \${#a[@]}; i++)); do [ "\${a[i]}" != -c ] || cfg+=(-c "\${a[i + 1]}"); done
+  pw=\$(printf 'protocol=https\nhost=github.com\npath=octo/rotm-settings.git\n\n' \\
+    | GIT_TERMINAL_PROMPT=0 "$git_bin" "\${cfg[@]}" credential fill 2> /dev/null | sed -n 's/^password=//p')
+  [ "\$pw" = $token ] || { echo "fatal: could not read Username for 'https://github.com': terminal prompts disabled" >&2; exit 128; }
+  ;;
+esac
+exec "$git_bin" "\$@"
+EOF
+chmod +x "$S/bin/git"
 cat > "$S/gitconfig" << EOF
 [user]
 	name = test-sync
@@ -81,6 +98,7 @@ has() {
 }
 case "\$*" in
   "auth status") exit 0 ;;
+  "auth token") echo $token ;;
   "api user --jq .login") echo octo ;;
   "repo view octo/rotm-settings --json isEmpty --jq .isEmpty")
     [ -d "\$bare" ] || { echo "GraphQL: Could not resolve to a Repository" >&2; exit 1; }
@@ -179,7 +197,8 @@ for f in /usr/bin/*; do
   ln -s "$f" "$S/c/bin/"
 done
 ln -s "$mise_bin" "$S/c/bin/mise"
-ln -sf "$git_bin" "$S/c/bin/git"
+ln -sf "$S/bin/git" "$S/c/bin/git"
+ln -s "$S/stub/gh" "$S/c/bin/gh"
 check_true "C: python3 is off PATH" [ -z "$(PATH_OVERRIDE="$S/c/bin:/bin" on c /bin/bash -c 'command -v python3 uv' || true)" ]
 rc=0
 out=$(PATH_OVERRIDE="$S/c/bin:/bin" on c "$repo/bin/lib/rotm-user-layer" restore "$url" 2>&1) || rc=$?

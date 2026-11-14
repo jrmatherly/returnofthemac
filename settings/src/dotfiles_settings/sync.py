@@ -255,11 +255,24 @@ def _sign_in() -> None:
         raise SettingsError(f"The GitHub sign-in did not finish. Run `{login}`, then run this again.")
 
 
+def _token() -> None:
+    """mise's Git helper reads gh's token only from hosts.yml, and gh keeps it in the Keychain, so hand it over.
+    shortcut: a long-running `serve` keeps the first token it read; restart it after switching gh accounts."""
+    if not os.environ.get("MISE_GITHUB_TOKEN"):
+        try:
+            token = _gh("auth", "token").stdout.strip()
+        except SettingsError:  # no gh: mise asks Git's own helpers
+            return
+        if token:
+            os.environ["MISE_GITHUB_TOKEN"] = token
+
+
 def on(repo: str) -> list[str]:
     if not re.fullmatch(r"[A-Za-z0-9._-]+", repo):
         raise SettingsError(f"--repo takes the name of a repository in your own account, such as rotm-settings, "
                             f"not {repo!r}")
     _sign_in()
+    _token()
     r = _gh("api", "user", "--jq", ".login")
     if r.returncode != 0:
         raise SettingsError(f"gh could not read your GitHub login: {r.stderr.strip()}")
@@ -306,6 +319,7 @@ def on(repo: str) -> list[str]:
 def now() -> list[str]:
     if NOT_CONNECTED in _text("dot", "origin"):
         raise SettingsError("Sync is not connected. Run `rotm settings sync on` first.")
+    _token()
     _guard()
     _stop_on_conflict()  # a save while sync on's conflict is held starts a history unrelated to the origin's
     _mise("dot", "save")

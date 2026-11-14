@@ -98,7 +98,11 @@ conflicts() {
 restore() {
   [ -n "${1:-}" ] || die 2 "restore takes the settings repository's URL"
   cd "$HOME"
-  local rc=0 manual=0 out
+  local rc=0 manual=0 out token
+  # mise's Git helper reads gh's token only from hosts.yml, and gh keeps it in the Keychain
+  if [ -z "${MISE_GITHUB_TOKEN:-}" ] && token=$(gh auth token 2> /dev/null) && [ -n "$token" ]; then
+    export MISE_GITHUB_TOKEN=$token
+  fi
   mise bootstrap --adopt "$1" --only final-hook --yes || rc=$?
   # An adopt that holds a conflict has still connected, in mise's automatic mode
   [ "$rc" = 0 ] || conflicts || exit "$rc"

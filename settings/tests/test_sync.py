@@ -226,7 +226,7 @@ def raises(fn, *args):
 def test_on_creates_a_repository_and_connects_it():
     fresh()
     lines = sync.on("rotm-settings")
-    assert calls() == ["gh auth status", "gh api user --jq .login",
+    assert calls() == ["gh auth status", "gh auth token", "gh api user --jq .login",
                        "gh repo view octo/rotm-settings --json isEmpty --jq .isEmpty",
                        "gh repo create rotm-settings --private", "rotm-user-layer ensure", "rotm-user-layer track",
                        "mise dot save", f"mise dot origin set {URL} --sync manual --yes", "mise dot sync",
@@ -367,9 +367,22 @@ def test_now_needs_a_connection():
 def test_now_saves_syncs_pulls_then_applies():
     fresh()
     lines = sync.now()
-    assert calls() == ["mise dot origin", "mise dot conflicts", "mise dot save", "mise dot sync", "mise dot pull",
-                       "mise dot conflicts", "rotm-user-layer ensure", "rotm-modules sync", "replay"], calls()
+    assert calls() == ["mise dot origin", "gh auth token", "mise dot conflicts", "mise dot save", "mise dot sync",
+                       "mise dot pull", "mise dot conflicts", "rotm-user-layer ensure", "rotm-modules sync", "replay"], calls()
     assert lines, lines
+
+
+def test_mise_gets_gh_token_from_the_keychain():
+    # mise's own Git helper never sees it otherwise
+    fresh()
+    answer("gh auth token", "gho_kept\n")
+    sync.now()
+    assert os.environ.pop("MISE_GITHUB_TOKEN", None) == "gho_kept"
+    fresh()
+    answer("gh auth token", "gho_new\n")
+    os.environ["MISE_GITHUB_TOKEN"] = "gho_mine"
+    sync.now()
+    assert os.environ.pop("MISE_GITHUB_TOKEN") == "gho_mine" and "gh auth token" not in calls(), calls()
 
 
 def test_apply_is_offline():
