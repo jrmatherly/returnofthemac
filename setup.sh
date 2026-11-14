@@ -437,9 +437,11 @@ github_login() {
     title "🔑 GitHub login…"
     command -v gh > /dev/null || mise bootstrap packages apply --yes brew:gh || true
     if command -v gh > /dev/null; then
-      read -rp "Without a login GitHub allows 60 API calls an hour, and the packages and tools use them. Run \`gh auth login\` now? [y/N] " gh_login || gh_login=""
+      warning "Without a GitHub login, GitHub allows 60 API calls an hour, and this install uses them"
+      read -rp "Sign in to GitHub now (gh auth login)? [Y/n] " gh_login || gh_login=""
       case "$gh_login" in
-        y | Y) gh auth login || echo "gh auth login failed or was cancelled. Run it later." ;;
+        n | N) ;;
+        *) gh auth login || echo "gh auth login failed or was cancelled. Run it later." ;;
       esac
     fi
     echo

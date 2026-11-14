@@ -596,6 +596,12 @@ prepare() {
 answers='\nn\n' run
 check_true "signed out: no lookup" eval '! grep -qE "^gh (api|repo) " "$STATE/gh.log"'
 check_true "signed out: no restore" restores 0
+check_true "signed out: warns about the limit before asking" [ "$(line_of 'Without a GitHub login, GitHub allows 60 API calls an hour')" -lt "$(line_of 'Sign in to GitHub now (gh auth login)? [Y/n]')" ]
+check_true "signed out: n skips the login" eval '! grep -qxF "gh auth login" "$STATE/gh.log"'
+answers='\n\n' run
+check_true "signed out: Enter signs in" grep -qxF "gh auth login" "$STATE/gh.log"
+answers='\ny\n' run
+check_true "signed out: y signs in" grep -qxF "gh auth login" "$STATE/gh.log"
 
 prepare() {
   stub gh "$saved"
