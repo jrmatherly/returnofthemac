@@ -316,6 +316,7 @@ check_true "f: says to rerun" has 'rerun \./setup\.sh'
 check_true "f: no extras after a failed bootstrap" extras_ran 0
 check_true "f: no tools after a failed bootstrap" log_lacks "args=install"
 check_true "f: does not say All done" lacks 'All done'
+check_true "f: the run's warnings are listed before it stops" has '^  ! No GitHub token'
 
 prepare() {
   touch "$STATE/bootstrap-fails"
@@ -621,6 +622,8 @@ answers='\n\n' run
 check_true "signed out: Enter signs in" grep -qxF "gh auth login" "$STATE/gh.log"
 answers='\ny\n' run
 check_true "signed out: y signs in" grep -qxF "gh auth login" "$STATE/gh.log"
+answers='\nno\n' run
+check_true "signed out: no skips the login" eval '! grep -qxF "gh auth login" "$STATE/gh.log"'
 
 prepare() {
   stub gh "$saved"

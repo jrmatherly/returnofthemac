@@ -188,7 +188,19 @@ say_warning() {
 # line that is not one: a heading, or a failure the problem list already names
 warning() {
   say_warning "$1"
-  echo "$1" >> "$ROTM_WARNINGS_FILE"
+  { echo "$1" >> "$ROTM_WARNINGS_FILE"; } 2> /dev/null || true
+}
+# show_warnings: the run's warnings, each once in the order they came, at the end
+# of the run or before an exit that stops it early
+show_warnings() {
+  local warnings n
+  warnings=$(awk 'NF && !seen[$0]++' "$ROTM_WARNINGS_FILE" 2> /dev/null) || warnings=""
+  [ -n "$warnings" ] || return 0
+  n=$(grep -c . <<< "$warnings")
+  echo "⚠️  ${bold}$n warning$([ "$n" -eq 1 ] || echo s) during setup${reset}"
+  echo
+  awk -v x="${red}!${reset}" '{ print "  " x " " $0 }' <<< "$warnings"
+  echo
 }
 ROTM_WARNINGS_FILE=$(mktemp -t rotm-warnings)
 export ROTM_WARNINGS_FILE
@@ -359,6 +371,7 @@ if [ "$run_dotfiles" = true ]; then
   # --yes: the Enter prompt above was the confirmation, and mise asks per file otherwise
   if ! mise dotfiles apply --yes ${dry_run_flag:+"$dry_run_flag"}; then
     warning "mise dotfiles apply stopped. Move aside what it reported, then rerun $self"
+    show_warnings
     exit 1
   fi
   echo
@@ -378,11 +391,12 @@ problem() {
 # mise_shown <mise args>: runs mise with its output on screen, and sets out to
 # that output without colour codes, for the greps above and below. Captured
 # through tee, mise sees no terminal and drops its colours unless forced.
-[ -t 1 ] && mise_color=1 || mise_color=""
+# tee shows the output on stderr, so that is the stream that must be a terminal
+[ -t 2 ] && [ -z "${NO_COLOR:-}" ] && mise_color=1 || mise_color=""
 mise_shown() {
   local rc=0
   out=$(env ${mise_color:+CLICOLOR_FORCE=1} mise "$@" 2>&1 | tee /dev/stderr) || rc=$?
-  out=$(printf '%s' "$out" | sed $'s/\e\\[[0-9;]*m//g')
+  out=$(printf '%s' "$out" | sed $'s/\e\\[[0-9;?]*[A-Za-z]//g')
   return "$rc"
 }
 
@@ -396,6 +410,7 @@ packages_for() {
   if ! mise_shown bootstrap packages apply --yes --manager "$1" ${dry_run_flag:+"$dry_run_flag"}; then
     if grep -q 'no packages requested' <<< "$out"; then
       warning "mise read no package list from $HOME/.config/mise"
+      show_warnings
       exit 1
     fi
     # mise stops at the first package that fails, so each one after it gets its own apply
@@ -459,9 +474,10 @@ github_login() {
     command -v gh > /dev/null || mise bootstrap packages apply --yes brew:gh || true
     if command -v gh > /dev/null; then
       say_warning "Without a GitHub login, GitHub allows 60 API calls an hour, and this install uses them"
-      read -rp "Sign in to GitHub now (gh auth login)? [Y/n] " gh_login || gh_login=""
+      # A failed read (end of input) skips, as Ctrl-C at the login would end the whole run
+      read -rp "Sign in to GitHub now (gh auth login)? [Y/n] " gh_login || gh_login=n
       case "$gh_login" in
-        n | N) ;;
+        n* | N*) ;;
         *) gh auth login || echo "gh auth login failed or was cancelled. Run it later." ;;
       esac
     fi
@@ -530,6 +546,7 @@ bootstrap() {
   mise bootstrap ${yes:+--yes} "$@" ${mise_args[@]+"${mise_args[@]}"} || {
     local rc=$?
     warning "mise bootstrap stopped. Earlier steps stay applied. Fix what it reported, then rerun $self"
+    show_warnings
     exit "$rc"
   }
 }
@@ -596,15 +613,7 @@ if [ "$RUN_DASH" = true ]; then
 fi
 
 echo
-# Each line once, in the order they came
-warnings=$(awk 'NF && !seen[$0]++' "$ROTM_WARNINGS_FILE")
-if [ -n "$warnings" ]; then
-  n=$(grep -c . <<< "$warnings")
-  echo "⚠️  ${bold}$n warning$([ "$n" -eq 1 ] || echo s) during setup${reset}"
-  echo
-  awk -v x="${red}!${reset}" '{ print "  " x " " $0 }' <<< "$warnings"
-  echo
-fi
+show_warnings
 if [ -z "$problems" ]; then
   echo "🦏 ${green}All done! Open a new terminal for the changes to take effect or run: source ~/.zshrc.${reset}"
   "$DOTFILES_DIR/bin/nyan"

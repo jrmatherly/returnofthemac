@@ -39,7 +39,8 @@ warning() {
   tput setaf 1
   echo "/!\\ $1 /!\\"
   tput sgr0
-  [ -z "${ROTM_WARNINGS_FILE:-}" ] || echo "$1" >> "$ROTM_WARNINGS_FILE"
+  # An app that setup opened inherits the path after setup removed the file, so a failed write is not an error
+  [ -z "${ROTM_WARNINGS_FILE:-}" ] || { echo "$1" >> "$ROTM_WARNINGS_FILE"; } 2> /dev/null || true
 }
 
 command_exists() {
