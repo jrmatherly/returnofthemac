@@ -82,6 +82,9 @@ cat > "$S/gitconfig" << EOF
 	email = test-sync@example.invalid
 [init]
 	defaultBranch = main
+# As git-credential-manager is on a Mac that has run setup: Git asks a global helper before mise's own
+[credential]
+	helper = "!f() { echo called >> '$S/global-helper.log'; }; f"
 [url "$bare"]
 	insteadOf = $url
 EOF
@@ -203,6 +206,7 @@ check_true "C: python3 is off PATH" [ -z "$(PATH_OVERRIDE="$S/c/bin:/bin" on c /
 rc=0
 out=$(PATH_OVERRIDE="$S/c/bin:/bin" on c "$repo/bin/lib/rotm-user-layer" restore "$url" 2>&1) || rc=$?
 check_true "C: rotm-user-layer restore exits 0" [ "$rc" = 0 ]
+check_true "no global credential helper is asked before mise's own" [ ! -e "$S/global-helper.log" ]
 check_true "C: the same files as B" diff -r "$(folder b)" "$(folder c)"
 check_true "C: the same links as B" linked c config.override.toml
 check_true "C: the module list is linked" linked c modules-off.local

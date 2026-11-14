@@ -265,6 +265,12 @@ def _token() -> None:
             return
         if token:
             os.environ["MISE_GITHUB_TOKEN"] = token
+            # Git asks a global helper (git-credential-manager) before mise's own, and it opens a sign-in window.
+            # An empty entry clears the list; mise's command-line helper still comes after it.
+            # shortcut: skipped when GIT_CONFIG_COUNT is already set; append to it if a caller ever needs both.
+            if not os.environ.get("GIT_CONFIG_COUNT"):
+                os.environ.update(GIT_CONFIG_COUNT="1", GIT_CONFIG_KEY_0="credential.https://github.com.helper",
+                                  GIT_CONFIG_VALUE_0="")
 
 
 def on(repo: str) -> list[str]:

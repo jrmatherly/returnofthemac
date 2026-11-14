@@ -378,6 +378,9 @@ def test_mise_gets_gh_token_from_the_keychain():
     answer("gh auth token", "gho_kept\n")
     sync.now()
     assert os.environ.pop("MISE_GITHUB_TOKEN", None) == "gho_kept"
+    # The empty entry clears Git's GitHub helpers, so a global one (git-credential-manager) is not asked first
+    git = [os.environ.pop(k, None) for k in ("GIT_CONFIG_COUNT", "GIT_CONFIG_KEY_0", "GIT_CONFIG_VALUE_0")]
+    assert git == ["1", "credential.https://github.com.helper", ""], git
     fresh()
     answer("gh auth token", "gho_new\n")
     os.environ["MISE_GITHUB_TOKEN"] = "gho_mine"

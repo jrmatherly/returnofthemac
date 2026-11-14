@@ -35,7 +35,7 @@ A fifth command, `rotm settings sync apply`, puts loaded settings into effect wi
 
 The sign-in needs a terminal. There `sync on` runs `gh auth login --hostname github.com --git-protocol https --web`, which opens GitHub in your browser. Without a terminal it stops and names that command.
 
-`sync on`, `sync now` and setup's restore give mise the token `gh` signed in with, as `MISE_GITHUB_TOKEN`, unless you set that variable yourself. mise reaches your private repository with it. No Git credential helper is set up.
+`sync on`, `sync now` and setup's restore give mise the token `gh` signed in with, as `MISE_GITHUB_TOKEN`, unless you set that variable yourself. mise reaches your private repository with it. For those runs Git asks only mise's helper, so a credential helper you have, such as git-credential-manager, opens no sign-in window. No Git credential helper is set up.
 
 The [Sync section of the settings README](../settings/README.md#sync) lists the exit codes and the mise commands behind each action.
 
