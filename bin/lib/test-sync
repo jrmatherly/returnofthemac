@@ -212,6 +212,12 @@ check_true "C: the same links as B" linked c config.override.toml
 check_true "C: the module list is linked" linked c modules-off.local
 check_true "C: the same track entry as B" [ "$(grep -A1 -F '[dotfiles."~/.config/rotm"]' "$(cfg c)/config.local.toml")" = "$(grep -A1 -F '[dotfiles."~/.config/rotm"]' "$(cfg b)/config.local.toml")" ]
 
+install token
+rc=0
+out=$(on token env MISE_GITHUB_TOKEN=$token "$repo/bin/lib/rotm-user-layer" restore "$url" 2>&1) || rc=$?
+check_true "rotm-user-layer restore with a token you set exits 0" [ "$rc" = 0 ]
+check_true "no global credential helper is asked with a token you set" [ ! -e "$S/global-helper.log" ]
+
 settings a set shell.editor vim-2
 settings a sync now
 check_true "A: sync now after a change exits 0" [ "$rc" = 0 ]

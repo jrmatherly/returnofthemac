@@ -102,12 +102,12 @@ restore() {
   # mise's Git helper reads gh's token only from hosts.yml, and gh keeps it in the Keychain
   if [ -z "${MISE_GITHUB_TOKEN:-}" ] && token=$(gh auth token 2> /dev/null) && [ -n "$token" ]; then
     export MISE_GITHUB_TOKEN=$token
-    # Git asks a global helper (git-credential-manager) before mise's own, and it opens a sign-in window.
-    # An empty entry clears the list; mise's command-line helper still comes after it.
-    # shortcut: skipped when GIT_CONFIG_COUNT is already set; append to it if a caller ever needs both.
-    if [ -z "${GIT_CONFIG_COUNT:-}" ]; then
-      export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=credential.https://github.com.helper GIT_CONFIG_VALUE_0=
-    fi
+  fi
+  # Git asks a global helper (git-credential-manager) before mise's own, and it opens a sign-in window.
+  # An empty entry clears the list; mise's command-line helper still comes after it.
+  # shortcut: skipped when GIT_CONFIG_COUNT is already set; append to it if a caller ever needs both.
+  if [ -n "${MISE_GITHUB_TOKEN:-}" ] && [ -z "${GIT_CONFIG_COUNT:-}" ]; then
+    export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=credential.https://github.com.helper GIT_CONFIG_VALUE_0=
   fi
   mise bootstrap --adopt "$1" --only final-hook --yes || rc=$?
   # An adopt that holds a conflict has still connected, in mise's automatic mode
