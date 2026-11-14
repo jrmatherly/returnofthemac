@@ -731,8 +731,12 @@ check_true "all on: the menu bar app step runs" ran menubar-open.sh
 check_true "all on: the TypeScript link step warns without the tool" has 'npm:typescript is not installed'
 check_true "all on: nothing is skipped" lacks 'skipped: the'
 fresh
+: > "$STATE/warnings"
 ROTM_WARNINGS_FILE="$STATE/warnings" misc
 check_true "misc.sh's warnings reach setup.sh's file" grep -qxF 'npm:typescript is not installed — typescript-language-server will only see a project'"'"'s own TypeScript' "$STATE/warnings"
+fresh
+ROTM_WARNINGS_FILE="$STATE/removed" misc
+check_true "misc.sh does not recreate a warnings file setup.sh removed" [ ! -e "$STATE/removed" ]
 
 fresh
 printf 'claude\nagents\nfonts\napps\nmenubar\n' > "$HOME/.config/mise/modules-off.local"
