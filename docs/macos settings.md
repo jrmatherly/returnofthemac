@@ -59,7 +59,7 @@ A manual checklist for **System Settings** on this Mac (MacBook Pro, Apple M3 Pr
 - **Sharing** → **Accessories & Internet**: turn off every option
 - **Sharing** → **Advanced**: turn off every option
 - **Sharing** → **Local hostname**: change it (set-defaults, opt-in: `macos.computer_name` and `macos.local_hostname`, or `--computer-name`)
-- **Time Machine**: backups are off on this Mac (set-defaults, switch: `macos.disable_time_machine`, on by default). **set-defaults stops all Time Machine backups unless you switch this off first**: on a Mac that uses Time Machine, run `dotfiles-settings set macos.disable_time_machine off` before set-defaults. set-defaults also stops Time Machine asking to use new disks for backup (set-defaults, switch: `macos.time_machine_new_disks`).
+- **Time Machine**: backups are off on this Mac (set-defaults, switch: `macos.disable_time_machine`, on by default). **set-defaults stops all Time Machine backups unless you switch this off first**: on a Mac that uses Time Machine, run `dotfiles-settings set macos.disable_time_machine off` before set-defaults. macOS lets `tmutil` turn backups off only when the app running set-defaults (Terminal, or Return of the Mac) has Full Disk Access (System Settings ▸ Privacy & Security ▸ Full Disk Access). Without it set-defaults warns, leaves Time Machine on and carries on. set-defaults also stops Time Machine asking to use new disks for backup (set-defaults, switch: `macos.time_machine_new_disks`).
 
 ### Appearance
 

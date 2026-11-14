@@ -241,7 +241,10 @@ fi
 # It is on by default and stops all backups, so a Mac that uses Time Machine
 # switches macos.disable_time_machine off.
 if [ -n "$disable_tm" ] && [ "$(defaults read /Library/Preferences/com.apple.TimeMachine AutoBackup 2> /dev/null || true)" != 0 ]; then
-  if hash tmutil &> /dev/null; then sudo "$(sys tmutil)" disable; fi
+  # tmutil refuses (exit 80) unless the app running this has Full Disk Access, which a new Mac grants no app
+  if hash tmutil &> /dev/null && ! sudo "$(sys tmutil)" disable; then
+    warn "Time Machine is still on: tmutil needs Full Disk Access for the app running this (Terminal, or Return of the Mac). Allow it in System Settings ▸ Privacy & Security ▸ Full Disk Access, then run set-defaults again, or switch macos.disable_time_machine off."
+  fi
 fi
 
 # Drift alone must not restart anything (a value macOS keeps rewriting would

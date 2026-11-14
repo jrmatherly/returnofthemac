@@ -18,7 +18,8 @@ stub() {
   printf '#!/bin/bash\necho "%s $*" >> "$log"\n%s\n' "$1" "${2:-}" > "$stubs/$1"
   chmod +x "$stubs/$1"
 }
-stub sudo
+# tmutil needs Full Disk Access for the app running it, and exits 80 without it
+stub sudo '[[ "$*" != *tmutil* ]] || exit "${TMUTIL_RC:-0}"'
 stub defaults '[ "$1" = read ] || { [ "$2" != "${DEFAULTS_DENY:-}" ]; exit; }; f="$reads/${*: -1}"; [ -e "$f" ] || exit 1; cat "$f"'
 stub killall
 stub osascript 'exit "${OSASCRIPT_RC:-0}"'
@@ -82,6 +83,11 @@ run
 check "the firewall is turned on by default" "grep -q '^sudo .*socketfilterfw --setglobalstate on$' '$log' && grep -q '^sudo .*socketfilterfw --setstealthmode on$' '$log'"
 check "every command sudo runs is in a system folder, never one found on PATH" "grep -q '^sudo /' '$log' && ! grep '^sudo ' '$log' | grep -qv '^sudo /\(usr/bin\|bin\|usr/sbin\|sbin\|usr/libexec/ApplicationFirewall\)/'"
 check "Time Machine is turned off by default" "grep -qx 'sudo .*/tmutil disable' '$log'"
+: > "$log"
+TMUTIL_RC=80 "$repo/setup/macos-extras.sh" > "$tmp/tm.out" 2>&1
+# shellcheck disable=SC2034 # read inside the eval of check
+rc=$?
+check "a tmutil refused for want of Full Disk Access warns and the run carries on" "[ \$rc -eq 0 ] && grep -q 'Full Disk Access' '$tmp/tm.out'"
 check "HiDPI and the name are left alone by default" "! grep -q 'scutil --set\|windowserver' '$log'"
 
 DOTFILES_MACOS_FIREWALL=1 DOTFILES_MACOS_HIDPI=1 DOTFILES_MACOS_DISABLE_TIME_MACHINE=1 DOTFILES_MACOS_COMPUTER_NAME="Jason's Mac" run
