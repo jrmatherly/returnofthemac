@@ -632,6 +632,8 @@ logging='echo "$(basename "$0") $*" >> "$STATE/misc.log"'
 for helper in install-iosevka-code claude-config claude-catalog hindsight-memory install-snippetslab-skill; do
   printf '#!/bin/bash\n%s\n' "$logging" > "$mfix/bin/$helper"
 done
+# Hindsight's installer runs `cargo --version`, a proxy in the keg-only rustup's bin
+printf '#!/bin/bash\n%s\necho "$PATH" > "$STATE/hindsight-path"\n' "$logging" > "$mfix/bin/hindsight-memory"
 printf '#!/bin/bash\n%s\n' "$logging" > "$mfix/setup/menubar-open.sh"
 chmod +x "$mfix"/bin/* "$mfix/setup/menubar-open.sh"
 # Its own stub dir: a logging curl or jq on $tmp/bin would break the setup.sh cases
@@ -667,6 +669,7 @@ check_true "all on: the catalog is built" ran claude-catalog
 check_true "all on: an MCP server is registered" ran 'mcp add'
 check_true "all on: a uv tool is installed" ran 'tool install'
 check_true "all on: Hindsight is set up" ran 'hindsight-memory init'
+check_true "all on: … with rustup's cargo on PATH" grep -qF ":$HOMEBREW_PREFIX/opt/rustup/bin:" "$STATE/hindsight-path"
 check_true "all on: rtk is wired" ran 'init -g'
 check_true "all on: the menu bar app step runs" ran menubar-open.sh
 check_true "all on: the TypeScript link step warns without the tool" has 'npm:typescript is not installed'

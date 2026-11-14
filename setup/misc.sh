@@ -13,9 +13,11 @@ sudo -k 2> /dev/null || true
 DOTFILES_DIR="${DOTFILES_DIR:-${DOTFILES:-$(cd "$(dirname "$0")/.." && pwd -P)}}"
 cd "$DOTFILES_DIR"
 
-# HOMEBREW_PREFIX so a self-check can point the script away from this Mac's tools
+# HOMEBREW_PREFIX so a self-check can point the script away from this Mac's tools.
+# rustup is keg-only, and Hindsight's installer checks `cargo --version`: without
+# its keg dir a fresh install warns that macOS needs a Rust toolchain (tilde/.zprofile adds it for shells)
 prefix="${HOMEBREW_PREFIX:-/opt/homebrew}"
-export PATH="$HOME/.local/bin:$prefix/bin:$prefix/sbin:$PATH"
+export PATH="$HOME/.local/bin:$prefix/bin:$prefix/sbin:$prefix/opt/rustup/bin:$PATH"
 
 # tput fails with TERM unset (CI, a launchd job), which would abort this set -e script
 tput() { command tput "$@" 2> /dev/null || true; }
@@ -123,7 +125,7 @@ if command_exists mise; then
   fi
 fi
 
-# Rust — the rustup formula (conf.d/30-packages.toml) is the system toolchain manager. Make
+# Rust — the rustup formula (conf.d/60-rotm-devops.toml) is the system toolchain manager. Make
 # stable the default when it isn't: a proxy with no default toolchain downloads
 # one on first use, which Hindsight's daemon start runs inside a 10 s
 # `cargo --version` check. `rustup default` alone is a local read.
