@@ -301,6 +301,16 @@ def test_jstack_round_trip_is_byte_identical():
     assert rule.is_symlink()
 
 
+def test_jstack_a_changed_role_reads_as_override_until_reset():
+    # The app offers Reset only for an override, so a role the user set must not read as the shipped value
+    tracked.write_text(RULE)
+    A.write(by_id("jstack.bug_fix"), "sonnet high")
+    assert A.read(by_id("jstack.bug_fix")).source is Source.OVERRIDE
+    A.reset(by_id("jstack.bug_fix"))
+    assert A.read(by_id("jstack.bug_fix")).source is not Source.OVERRIDE
+    assert "jstack.bug_fix" not in sync.wanted_tools()
+
+
 def test_jstack_append_and_reset():
     tracked.write_text(RULE)
     A.write(by_id("jstack.hillclimb"), "inherit")
