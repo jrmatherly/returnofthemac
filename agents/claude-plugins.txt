@@ -36,7 +36,7 @@ plugin grafana-mcp@claude-plugins-official disabled
 plugin hookify@claude-plugins-official disabled
 plugin impeccable@impeccable
 plugin jstack@jrmatherly-skills
-plugin langfuse-observability@claude-plugins-official disabled
+plugin langfuse-observability@claude-plugins-official
 plugin langfuse@claude-plugins-official
 plugin logfire@claude-plugins-official
 plugin lua-lsp@claude-plugins-official
