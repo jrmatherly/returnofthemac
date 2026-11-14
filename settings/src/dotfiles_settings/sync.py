@@ -161,10 +161,11 @@ INSTALL = "Nothing was installed or removed. Run `rotm install` to install what 
 DEFAULTS = "macOS preferences changed. Run `set-defaults` to write them."
 
 
-def _call(*argv: str) -> subprocess.CompletedProcess[str]:
+def _call(*argv: str, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
     # From $HOME, like mise.run_mise
     try:
-        return subprocess.run(argv, capture_output=True, text=True, cwd=Path.home())
+        return subprocess.run(argv, capture_output=True, text=True, cwd=Path.home(),
+                              env={**os.environ, **env} if env else None)
     except FileNotFoundError:
         raise SettingsError(f"{argv[0]} is not on PATH") from None
 
@@ -174,7 +175,7 @@ def _gh(*args: str) -> subprocess.CompletedProcess[str]:
 
 
 def _mise_call(*args: str) -> subprocess.CompletedProcess[str]:
-    return _call(os.environ.get("DOTFILES_SETTINGS_MISE", "mise"), *args)
+    return _call(os.environ.get("DOTFILES_SETTINGS_MISE", "mise"), *args, env=_git_env)
 
 
 def _text(*args: str) -> str:
@@ -183,9 +184,9 @@ def _text(*args: str) -> str:
     return r.stdout + r.stderr
 
 
-def _helper(*argv: str) -> str:
+def _helper(*argv: str, env: dict[str, str] | None = None) -> str:
     from .adapters.tool import _check, run  # here, not at the top: tool.py imports this module
-    return _check(run(list(argv)))
+    return _check(run(list(argv), env=env))
 
 
 def _toml(path: Path) -> dict:
@@ -239,7 +240,7 @@ def _stop_on_conflict() -> None:
 
 def _mise(*args: str) -> None:
     try:
-        mise.run_mise(list(args))
+        mise.run_mise(list(args), env=_git_env)
     except SettingsError:
         _stop_on_conflict()  # a paused sync can exit 1; the conflict is the useful message
         raise
@@ -255,22 +256,29 @@ def _sign_in() -> None:
         raise SettingsError(f"The GitHub sign-in did not finish. Run `{login}`, then run this again.")
 
 
+_git_env: dict[str, str] | None = None  # what _token() found, for the mise calls that reach the settings repository
+
+
 def _token() -> None:
-    """mise's Git helper reads gh's token only from hosts.yml, and gh keeps it in the Keychain, so hand it over.
-    shortcut: a long-running `serve` keeps the first token it read; restart it after switching gh accounts."""
-    if not os.environ.get("MISE_GITHUB_TOKEN"):
+    """mise's Git helper reads gh's token only from hosts.yml, and gh keeps it in the Keychain, so hand it over, to
+    the mise calls and rotm-user-layer restore only: nothing else this process starts gets it."""
+    global _git_env
+    if _git_env is not None:
+        return
+    _git_env, token = {}, os.environ.get("MISE_GITHUB_TOKEN")
+    if not token:
         try:
             token = _gh("auth", "token").stdout.strip()
         except SettingsError:  # no gh: mise asks Git's own helpers
             return
         if token:
-            os.environ["MISE_GITHUB_TOKEN"] = token
-            # Git asks a global helper (git-credential-manager) before mise's own, and it opens a sign-in window.
-            # An empty entry clears the list; mise's command-line helper still comes after it.
-            # shortcut: skipped when GIT_CONFIG_COUNT is already set; append to it if a caller ever needs both.
-            if not os.environ.get("GIT_CONFIG_COUNT"):
-                os.environ.update(GIT_CONFIG_COUNT="1", GIT_CONFIG_KEY_0="credential.https://github.com.helper",
-                                  GIT_CONFIG_VALUE_0="")
+            _git_env["MISE_GITHUB_TOKEN"] = token
+    # Git asks a global helper (git-credential-manager) before mise's own, and it opens a sign-in window.
+    # An empty entry clears the list; mise's command-line helper still comes after it.
+    # shortcut: skipped when GIT_CONFIG_COUNT is already set; append to it if a caller ever needs both.
+    if token and not os.environ.get("GIT_CONFIG_COUNT"):
+        _git_env.update(GIT_CONFIG_COUNT="1", GIT_CONFIG_KEY_0="credential.https://github.com.helper",
+                        GIT_CONFIG_VALUE_0="")
 
 
 def on(repo: str) -> list[str]:
@@ -297,7 +305,7 @@ def on(repo: str) -> list[str]:
         if _gh("api", f"repos/{name}/contents/.mise-history/format.toml").returncode != 0:
             raise SettingsError(f"{name} is not a settings repository. Pass `--repo <another name>`.")
         try:
-            _helper("lib/rotm-user-layer", "restore", url)
+            _helper("lib/rotm-user-layer", "restore", url, env=_git_env)
         except SettingsError:
             _stop_on_conflict()
             raise

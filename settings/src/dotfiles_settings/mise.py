@@ -9,11 +9,12 @@ NEEDS = f"dotfiles-settings needs mise {'.'.join(map(str, FLOOR))} or newer"
 MISSING = f"{NEEDS}, and mise is not on PATH"
 
 
-def run_mise(args: list[str], stdin: str | None = None) -> str:
+def run_mise(args: list[str], stdin: str | None = None, env: dict[str, str] | None = None) -> str:
     # From $HOME, so an untrusted mise.toml in the folder the UI started in never makes mise fail
     try:
         r = subprocess.run([os.environ.get("DOTFILES_SETTINGS_MISE", "mise"), *args], input=stdin,
-                           capture_output=True, text=True, cwd=Path.home())
+                           capture_output=True, text=True, cwd=Path.home(),
+                           env={**os.environ, **env} if env else None)
     except FileNotFoundError:
         raise SettingsError(MISSING) from None
     if r.returncode != 0:

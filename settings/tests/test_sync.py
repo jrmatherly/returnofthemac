@@ -16,6 +16,7 @@ for name, path in (("gh", "gh"), ("mise", "mise"), ("defaults", "defaults"),
                    ("rotm-user-layer", "bin/lib/rotm-user-layer"), ("rotm-modules", "bin/lib/rotm-modules")):
     (stubs / path).write_text(f'''#!/bin/sh
 echo "{name} $*" >> "{log}"
+echo "{name} $*|${{MISE_GITHUB_TOKEN-}}|${{GIT_CONFIG_COUNT-}}|${{GIT_CONFIG_KEY_0-}}|${{GIT_CONFIG_VALUE_0-}}" >> "{log}.env"
 f="{answers}/$(echo "{name} $*" | tr ' /' '__')"
 [ -f "$f.out" ] && cat "$f.out"
 [ -f "$f.err" ] && cat "$f.err" >&2
@@ -201,6 +202,8 @@ def fresh(repo="rotm-settings"):
     """An empty folder, config dir and state, a signed-in gh, no such repository, a connected origin, no conflict."""
     seen.extend(calls())
     log.unlink(missing_ok=True)
+    Path(f"{log}.env").unlink(missing_ok=True)
+    sync._git_env = None
     for d in (answers, sync.user_dir(), conf, tmp / "state"):
         shutil.rmtree(d, True)
         d.mkdir(parents=True)
@@ -372,20 +375,46 @@ def test_now_saves_syncs_pulls_then_applies():
     assert lines, lines
 
 
+def received():
+    """Each stub call, with the MISE_GITHUB_TOKEN and GIT_CONFIG_* values it ran with."""
+    env = Path(f"{log}.env")
+    return [tuple(l.split("|", 1)) for l in env.read_text().splitlines()] if env.exists() else []
+
+
+GIT = "1|credential.https://github.com.helper|"
+
+
 def test_mise_gets_gh_token_from_the_keychain():
-    # mise's own Git helper never sees it otherwise
+    # mise's own Git helper never sees it otherwise, and the empty entry clears Git's GitHub helpers, so a global one
+    # (git-credential-manager) is not asked first
     fresh()
     answer("gh auth token", "gho_kept\n")
     sync.now()
-    assert os.environ.pop("MISE_GITHUB_TOKEN", None) == "gho_kept"
-    # The empty entry clears Git's GitHub helpers, so a global one (git-credential-manager) is not asked first
-    git = [os.environ.pop(k, None) for k in ("GIT_CONFIG_COUNT", "GIT_CONFIG_KEY_0", "GIT_CONFIG_VALUE_0")]
-    assert git == ["1", "credential.https://github.com.helper", ""], git
+    got = received()
+    assert {e for c, e in got if c.startswith("mise ") and c != "mise dot origin"} == {f"gho_kept|{GIT}"}, got
+    # Nothing else gets them, apply's children included
+    assert {e for c, e in got if not c.startswith("mise ")} == {"|||"}, got
+    assert not {"MISE_GITHUB_TOKEN", "GIT_CONFIG_COUNT"} & os.environ.keys()
+    fresh()
+    answer("gh repo view octo/rotm-settings --json isEmpty --jq .isEmpty", "false\n")
+    answer("gh auth token", "gho_kept\n")
+    sync.on("rotm-settings")
+    assert (f"rotm-user-layer restore {URL}", f"gho_kept|{GIT}") in received(), received()
+    assert ("rotm-modules sync", "|||") in received(), received()
+
+
+def test_a_token_you_set_is_kept_and_still_clears_git_helpers():
     fresh()
     answer("gh auth token", "gho_new\n")
     os.environ["MISE_GITHUB_TOKEN"] = "gho_mine"
-    sync.now()
-    assert os.environ.pop("MISE_GITHUB_TOKEN") == "gho_mine" and "gh auth token" not in calls(), calls()
+    try:
+        sync.now()
+    finally:
+        del os.environ["MISE_GITHUB_TOKEN"]
+    got = received()
+    assert "gh auth token" not in calls(), calls()
+    assert {e for c, e in got if c.startswith("mise ") and c != "mise dot origin"} == {f"gho_mine|{GIT}"}, got
+    assert ("rotm-modules sync", "gho_mine|||") in got, got
 
 
 def test_apply_is_offline():
