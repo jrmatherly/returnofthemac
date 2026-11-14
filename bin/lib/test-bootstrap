@@ -419,6 +419,8 @@ answers='\n' run
 check_true "t, on a terminal: mise's colours are forced" log_has "color=1"
 check_true "t, on a terminal: … and a coloured ERROR still gives the reason" has '✗.* cask +warp +download returned 404$'
 check_true "t: a failure the problem list names is not a warning too" lacks '^  ! .*failed to install'
+NO_COLOR=1 answers='\n' run
+check_true "t, on a terminal with NO_COLOR: mise's colours are not forced" log_lacks "color=1"
 
 prepare() { touch "$STATE/task-fails"; }
 run
@@ -644,6 +646,10 @@ answers='\ny\n' run
 check_true "signed out: y signs in" grep -qxF "gh auth login" "$STATE/gh.log"
 answers='\nno\n' run
 check_true "signed out: no skips the login" eval '! grep -qxF "gh auth login" "$STATE/gh.log"'
+# Ctrl-D: the terminal ends the input at the question
+answers='\n\004' run
+check_true "signed out: end of input at the question skips the login" eval '! grep -qxF "gh auth login" "$STATE/gh.log"'
+check_true "signed out: … and the run goes on" [ "$rc" -eq 0 ]
 
 prepare() {
   stub gh "$saved"
