@@ -74,7 +74,7 @@ IFS= read -r -d '' mise_stub << 'EOF' || true
 case $1 in
   --version) echo "${STUB_MISE_VERSION:-2026.11.8} macos-arm64 (2026-11-08)" ;;
   *) echo "mise $*" >> "$STATE/order.log"
-    echo "pwd=$(pwd -P) args=$* disable=${MISE_DISABLE_TOOLS:-} dotfiles=${DOTFILES:-} skip=${DOTFILES_SKIP_CODEGRAPH:-} token=${MISE_GITHUB_TOKEN:-} telemetry=${CODEGRAPH_TELEMETRY:-} yes=${DOTFILES_YES:-}" >> "$STATE/mise.log"
+    echo "pwd=$(pwd -P) args=$* disable=${MISE_DISABLE_TOOLS:-} dotfiles=${DOTFILES:-} skip=${DOTFILES_SKIP_CODEGRAPH:-} token=${MISE_GITHUB_TOKEN:-} telemetry=${CODEGRAPH_TELEMETRY:-} yes=${DOTFILES_YES:-} color=${CLICOLOR_FORCE:-}" >> "$STATE/mise.log"
     case "$*" in
       "bootstrap packages upgrade "*) [ ! -e "$STATE/upgrade-fails" ] ;;
       "bootstrap packages apply --yes --manager brew")
@@ -94,7 +94,8 @@ case $1 in
         for p in $(cat "$STATE/absent-casks" 2> /dev/null); do printf '{"package":"%s","state":"unexpectedly_installed"},' "$p"; done
         printf '{"package":"ghostty","state":"installed"}]}}\n' ;;
       "bootstrap packages apply --yes brew-cask:"*)
-        ! grep -qxF "${5#brew-cask:}" "$STATE/bad-casks" 2> /dev/null || { echo "mise ERROR download returned 404"; exit 1; } ;;
+        # Coloured as mise colours it when forced
+        ! grep -qxF "${5#brew-cask:}" "$STATE/bad-casks" 2> /dev/null || { printf 'mise %sERROR%s download returned 404\n' "${CLICOLOR_FORCE:+$'\e[31m'}" "${CLICOLOR_FORCE:+$'\e[0m'}"; exit 1; } ;;
       "dotfiles apply"*) [ ! -e "$STATE/dotfiles-fail" ] ;;
       install*)
         [ ! -e "$STATE/tools-fail" ] || {
@@ -392,6 +393,10 @@ check_true "t: lists the tool with mise's reason" has '^  ✗ tool   npm:@vue/la
 check_true "t: a tool that installed is not listed" lacks '✗ tool +npm:typescript'
 check_true "t: ends with the tool hint" [ "$(tail -1 <<< "$out")" = "  To see why a tool failed: mise install <tool>" ]
 check_true "t: no All done" lacks 'All done'
+check_true "t: without a terminal mise's colours are not forced" log_lacks "color=1"
+answers='\n' run
+check_true "t, on a terminal: mise's colours are forced" log_has "color=1"
+check_true "t, on a terminal: … and a coloured ERROR still gives the reason" has '✗.* cask +warp +download returned 404$'
 check_true "t: a failure the problem list names is not a warning too" lacks '^  ! .*failed to install'
 
 prepare() { touch "$STATE/task-fails"; }

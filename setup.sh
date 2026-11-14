@@ -375,6 +375,17 @@ problem() {
   problems+="$1"$'\t'"$2"$'\t'"$reason"$'\n'
 }
 
+# mise_shown <mise args>: runs mise with its output on screen, and sets out to
+# that output without colour codes, for the greps above and below. Captured
+# through tee, mise sees no terminal and drops its colours unless forced.
+[ -t 1 ] && mise_color=1 || mise_color=""
+mise_shown() {
+  local rc=0
+  out=$(env ${mise_color:+CLICOLOR_FORCE=1} mise "$@" 2>&1 | tee /dev/stderr) || rc=$?
+  out=$(printf '%s' "$out" | sed $'s/\e\\[[0-9;]*m//g')
+  return "$rc"
+}
+
 # packages_for <manager> <noun> <kind>: setup applies the packages itself, because
 # mise bootstrap stops at the first part that fails and one failed cask would
 # skip the dotfiles, the login shell and the tools. A failed package warns and
@@ -382,7 +393,7 @@ problem() {
 packages_for() {
   local out
   title "🫖 Installing $2 with mise…"
-  if ! out=$(mise bootstrap packages apply --yes --manager "$1" ${dry_run_flag:+"$dry_run_flag"} 2>&1 | tee /dev/stderr); then
+  if ! mise_shown bootstrap packages apply --yes --manager "$1" ${dry_run_flag:+"$dry_run_flag"}; then
     if grep -q 'no packages requested' <<< "$out"; then
       warning "mise read no package list from $HOME/.config/mise"
       exit 1
@@ -402,14 +413,14 @@ packages_for() {
       problem "$3" "some $2" "$out"
     fi
     for pkg in $missing; do
-      if ! out=$(mise bootstrap packages apply --yes ${dry_run_flag:+"$dry_run_flag"} "$1:$pkg" 2>&1 | tee /dev/stderr); then
+      if ! mise_shown bootstrap packages apply --yes ${dry_run_flag:+"$dry_run_flag"} "$1:$pkg"; then
         say_warning "$1:$pkg failed to install. See above, then rerun $self"
         problem "$3" "$pkg" "$out"
       fi
     done
   fi
   # mise's own --upgrade upgrades packages only in the part setup skips
-  if [ "$upgrade" = true ] && ! out=$(mise bootstrap packages upgrade --yes --manager "$1" ${dry_run_flag:+"$dry_run_flag"} 2>&1 | tee /dev/stderr); then
+  if [ "$upgrade" = true ] && ! mise_shown bootstrap packages upgrade --yes --manager "$1" ${dry_run_flag:+"$dry_run_flag"}; then
     say_warning "Some $2 failed to upgrade. See above, then rerun $self -- --upgrade"
     problem upgrade "$2" "$out"
   fi
@@ -531,7 +542,7 @@ sudo_keepalive_stop
 # mise install carries on past one and exits 1, and the task needs the rest.
 if [ "$run_tools" = true ]; then
   title "🧰 Installing the mise tools…"
-  if ! out=$(mise install --yes ${dry_run_flag:+"$dry_run_flag"} 2>&1 | tee /dev/stderr); then
+  if ! mise_shown install --yes ${dry_run_flag:+"$dry_run_flag"}; then
     missing=$(mise ls --missing --json | jq -r 'keys[]') || missing=""
     [ -n "$missing" ] || problem tool "mise install" "$out"
     for tool in $missing; do
@@ -539,7 +550,7 @@ if [ "$run_tools" = true ]; then
     done
   fi
   # What mise's --upgrade did in the tools part
-  if [ "$upgrade" = true ] && ! out=$(mise upgrade --yes ${dry_run_flag:+"$dry_run_flag"} 2>&1 | tee /dev/stderr); then
+  if [ "$upgrade" = true ] && ! mise_shown upgrade --yes ${dry_run_flag:+"$dry_run_flag"}; then
     problem upgrade tools "$out"
   fi
   echo
