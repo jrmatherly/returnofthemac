@@ -180,9 +180,19 @@ title() {
   echo
 }
 
-warning() {
+say_warning() {
   echo "${red}/!\\ $1 /!\\${reset}"
 }
+# The warnings of this run, setup/misc.sh's included (it runs as a separate mise
+# task), listed again at the end so they don't scroll away. say_warning is for a
+# line that is not one: a heading, or a failure the problem list already names
+warning() {
+  say_warning "$1"
+  echo "$1" >> "$ROTM_WARNINGS_FILE"
+}
+ROTM_WARNINGS_FILE=$(mktemp -t rotm-warnings)
+export ROTM_WARNINGS_FILE
+trap 'rm -f "$ROTM_WARNINGS_FILE"' EXIT
 
 # Until 2026-11-12 the config environment was named `installed`, a name a
 # project's own mise.installed.toml also answers to. A copy from then still has
@@ -293,7 +303,7 @@ sudo_keepalive_start() {
   done &
   SUDO_KEEPALIVE_PID=$!
   # A trap that returns lets the run carry on past a guarded step, so Ctrl-C exits and EXIT cleans up
-  trap sudo_keepalive_stop EXIT
+  trap 'sudo_keepalive_stop; rm -f "$ROTM_WARNINGS_FILE"' EXIT
   trap 'exit 130' INT
   trap 'exit 143' TERM
 }
@@ -314,7 +324,7 @@ sudo_keepalive_stop() {
 # the login shell. It is dropped before the tools install.
 # Without a terminal mise asks per step, and a dry run needs none.
 if [ -t 0 ] && [ -z "$dry_run_flag" ]; then
-  warning "Activate sudo"
+  say_warning "Activate sudo"
   sudo -v
   sudo_keepalive_start
   echo "Sudo activated!"
@@ -388,19 +398,19 @@ packages_for() {
       # Nothing is missing, so that choice is not a problem
       echo "Nothing is missing: mise stopped at $2 that are installed and declared absent, and they stay as they are."
     else
-      warning "Some $2 failed to install. See above, then rerun $self"
+      say_warning "Some $2 failed to install. See above, then rerun $self"
       problem "$3" "some $2" "$out"
     fi
     for pkg in $missing; do
       if ! out=$(mise bootstrap packages apply --yes ${dry_run_flag:+"$dry_run_flag"} "$1:$pkg" 2>&1 | tee /dev/stderr); then
-        warning "$1:$pkg failed to install. See above, then rerun $self"
+        say_warning "$1:$pkg failed to install. See above, then rerun $self"
         problem "$3" "$pkg" "$out"
       fi
     done
   fi
   # mise's own --upgrade upgrades packages only in the part setup skips
   if [ "$upgrade" = true ] && ! out=$(mise bootstrap packages upgrade --yes --manager "$1" ${dry_run_flag:+"$dry_run_flag"} 2>&1 | tee /dev/stderr); then
-    warning "Some $2 failed to upgrade. See above, then rerun $self -- --upgrade"
+    say_warning "Some $2 failed to upgrade. See above, then rerun $self -- --upgrade"
     problem upgrade "$2" "$out"
   fi
   # The full install measured about 32 GB; a full disk is the likeliest mid-run failure
@@ -437,7 +447,7 @@ github_login() {
     title "🔑 GitHub login…"
     command -v gh > /dev/null || mise bootstrap packages apply --yes brew:gh || true
     if command -v gh > /dev/null; then
-      warning "Without a GitHub login, GitHub allows 60 API calls an hour, and this install uses them"
+      say_warning "Without a GitHub login, GitHub allows 60 API calls an hour, and this install uses them"
       read -rp "Sign in to GitHub now (gh auth login)? [Y/n] " gh_login || gh_login=""
       case "$gh_login" in
         n | N) ;;
@@ -575,6 +585,15 @@ if [ "$RUN_DASH" = true ]; then
 fi
 
 echo
+# Each line once, in the order they came
+warnings=$(awk 'NF && !seen[$0]++' "$ROTM_WARNINGS_FILE")
+if [ -n "$warnings" ]; then
+  n=$(grep -c . <<< "$warnings")
+  echo "⚠️  ${bold}$n warning$([ "$n" -eq 1 ] || echo s) during setup${reset}"
+  echo
+  awk -v x="${red}!${reset}" '{ print "  " x " " $0 }' <<< "$warnings"
+  echo
+fi
 if [ -z "$problems" ]; then
   echo "🦏 ${green}All done! Open a new terminal for the changes to take effect or run: source ~/.zshrc.${reset}"
   "$DOTFILES_DIR/bin/nyan"

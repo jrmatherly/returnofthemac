@@ -104,7 +104,11 @@ case $1 in
         } ;;
       "ls --missing --json") if [ -e "$STATE/tools-fail" ]; then echo '{"npm:@vue/language-server":[]}'; else echo '{}'; fi ;;
       upgrade*) ;;
-      "bootstrap --only task"*) [ ! -e "$STATE/task-fails" ] ;;
+      "bootstrap --only task"*)
+        # What setup/misc.sh's warning does, a separate process
+        echo "$ROTM_WARNINGS_FILE" > "$STATE/warnings-file"
+        [ ! -e "$STATE/task-warns" ] || { echo "a task warning" >> "$ROTM_WARNINGS_FILE"; echo "a task warning" >> "$ROTM_WARNINGS_FILE"; }
+        [ ! -e "$STATE/task-fails" ] ;;
       "bootstrap packages "* | plugins*) ;;
       bootstrap*) [ ! -e "$STATE/bootstrap-fails" ] ;;
     esac ;;
@@ -216,6 +220,15 @@ check_true "setup.sh offers the GitHub login before the first package list" [ "$
 check_true "a: a free-space line per manager" [ "$(grep -cE '^[0-9.]+[KMGT]i? free on /$' <<< "$out")" = 2 ]
 check_true "a: the extras script runs once" extras_ran 1
 check_true "a: no sudo prompt without a terminal" [ -z "$(grep -e '-v' "$STATE/sudo.log")" ]
+check_true "a: the GitHub warning is listed again at the end" has '^  ! No GitHub token'
+check_true "a: … in a Warnings block before All done" [ "$(grep -n 'warning during setup' <<< "$out" | cut -d: -f1)" -lt "$(grep -n 'All done' <<< "$out" | cut -d: -f1)" ]
+check_true "a: the warnings file is removed" [ ! -e "$(cat "$STATE/warnings-file")" ]
+
+prepare() { touch "$STATE/task-warns"; }
+run
+check_true "w: the task's warning is in the block, once" [ "$(grep -c '^  ! a task warning$' <<< "$out")" = 1 ]
+check_true "w: … counted with setup.sh's own" has '^⚠️  2 warnings during setup$'
+prepare() { :; }
 
 run -y --skip-codegraph -- --skip packages
 check_true "b: --yes, the merged skip list and CodeGraph disabled" boot_has "args=bootstrap --yes --skip macos-defaults,packages,tools,task disable=npm:@colbymchenry/codegraph "
@@ -379,6 +392,7 @@ check_true "t: lists the tool with mise's reason" has '^  ✗ tool   npm:@vue/la
 check_true "t: a tool that installed is not listed" lacks '✗ tool +npm:typescript'
 check_true "t: ends with the tool hint" [ "$(tail -1 <<< "$out")" = "  To see why a tool failed: mise install <tool>" ]
 check_true "t: no All done" lacks 'All done'
+check_true "t: a failure the problem list names is not a warning too" lacks '^  ! .*failed to install'
 
 prepare() { touch "$STATE/task-fails"; }
 run
@@ -680,6 +694,9 @@ check_true "all on: rtk is wired" ran 'init -g'
 check_true "all on: the menu bar app step runs" ran menubar-open.sh
 check_true "all on: the TypeScript link step warns without the tool" has 'npm:typescript is not installed'
 check_true "all on: nothing is skipped" lacks 'skipped: the'
+fresh
+ROTM_WARNINGS_FILE="$STATE/warnings" misc
+check_true "misc.sh's warnings reach setup.sh's file" grep -qxF 'npm:typescript is not installed — typescript-language-server will only see a project'"'"'s own TypeScript' "$STATE/warnings"
 
 fresh
 printf 'claude\nagents\nfonts\napps\nmenubar\n' > "$HOME/.config/mise/modules-off.local"

@@ -34,10 +34,12 @@ info() {
   echo "[ ${BLUE}..${RESET} ] $1" | indent
 }
 
+# setup.sh lists ROTM_WARNINGS_FILE's lines at the end of its run
 warning() {
   tput setaf 1
   echo "/!\\ $1 /!\\"
   tput sgr0
+  [ -z "${ROTM_WARNINGS_FILE:-}" ] || echo "$1" >> "$ROTM_WARNINGS_FILE"
 }
 
 command_exists() {
