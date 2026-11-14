@@ -25,6 +25,7 @@ private func stubScript() throws -> URL {
       slow) sleep 30 & echo $! > "$2"; wait;;
       grandchild) sleep 30 & echo $! > "$2"; echo hi;;
       int) echo bye >&2; kill -INT $$;;
+      mise) echo "${MISE_ENV-unset} ${__MISE_DIFF-unset} ${HOME:+home}";;
       quit) kill -QUIT $$;;
       *) exit 1;;
     esac
@@ -119,6 +120,17 @@ private func pgrep(_ pattern: String) -> Bool {
   let lines = out.stdout.split(separator: "\n").map(String.init)
   #expect(Array(lines.prefix(3)) == [CLI.searchPath(home: runHome), "dumb", "null"])
   #expect(lines.last.map { URL(fileURLWithPath: $0).lastPathComponent } == runHome.lastPathComponent)
+}
+
+// `open` hands the caller's environment to the app it launches, so an app setup opened inside
+// `mise bootstrap` carries MISE_ENV, which would pick the profile over the saved list.
+@Test func theChildGetsNoneOfMisesOwnVariables() async throws {
+  setenv("MISE_ENV", "rotm-installed", 1)
+  setenv("__MISE_DIFF", "x", 1)
+  defer { unsetenv("MISE_ENV"); unsetenv("__MISE_DIFF") }
+  let out = try await CLI(tool: stubScript(), home: runHome).run(["mise"])
+  #expect(out.stdout == "unset unset home")
+  #expect(CLI.inheritedEnvironment().keys.allSatisfy { !$0.hasPrefix("MISE_") && !$0.hasPrefix("__MISE_") })
 }
 
 @Test func searchPathIsTheGlobalConstraintsList() {

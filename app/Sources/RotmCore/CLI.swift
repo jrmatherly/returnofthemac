@@ -51,12 +51,19 @@ public final class CLI: CommandRunner {
     return fm.isExecutableFile(atPath: linked.path) ? linked : nil
   }
 
+  /// The app's own environment without mise's variables. `open` hands the caller's environment to the
+  /// app it launches, and an app setup opened inside `mise bootstrap` would otherwise pass MISE_ENV on,
+  /// which `rotm` takes over the saved profile list.
+  public static func inheritedEnvironment() -> [String: String] {
+    ProcessInfo.processInfo.environment.filter { !$0.key.hasPrefix("MISE_") && !$0.key.hasPrefix("__MISE_") }
+  }
+
   public func run(_ args: [String]) async throws -> CommandOutput {
     guard FileManager.default.isExecutableFile(atPath: tool.path) else { throw CommandError.toolMissing(tool.path) }
     let process = Process()
     process.executableURL = tool
     process.arguments = args
-    var env = ProcessInfo.processInfo.environment
+    var env = Self.inheritedEnvironment()
     env["PATH"] = Self.searchPath(home: home)
     env["TERM"] = "dumb"
     process.environment = env

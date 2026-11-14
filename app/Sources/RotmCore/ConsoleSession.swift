@@ -97,7 +97,7 @@ public struct ConsoleCommand: Equatable, Sendable {
     p.executableURL = URL(fileURLWithPath: "/usr/bin/script")
     p.arguments = ["-q", "/dev/null"] + command
     // setup.sh records its run under a second `script` unless this is set.
-    p.environment = ProcessInfo.processInfo.environment
+    p.environment = CLI.inheritedEnvironment()
       .merging(environment) { $1 }
       .merging(["DOTFILES_SETUP_LOG": logURL.path]) { $1 }
     // An anonymous pipe: `script` refuses a named one as stdin.
