@@ -1,6 +1,6 @@
 # Project audit, 2026-11-14
 
-Date: 2026-11-14. Status: findings for the owner's review. Nothing here is fixed yet. Plans built on this spec are listed in [Plans](#plans).
+Date: 2026-11-14. Status: closed on 2026-11-15. The four plans built on it are in `docs/superpowers/plans/completed/`, each with an Outcome table. Decision 8 (finding I22) was left for the P6 plan. Plans built on this spec are listed in [Plans](#plans).
 
 ## Goal
 
@@ -120,4 +120,4 @@ The 184 VS Code extension ids, `firefox/chrome/*.css`, VoiceOver in the running 
 - `docs/superpowers/plans/completed/2026-11-14-audit-gate-ci-and-docs.md` covers G1 to G14, except G8.
 - `docs/superpowers/plans/completed/2026-11-14-audit-install-and-opt-outs.md` covers I1 to I21.
 - `docs/superpowers/plans/completed/2026-11-14-audit-settings-tool.md` covers S1 to S11.
-- `docs/superpowers/plans/2026-11-14-audit-menu-bar-app.md` covers M1 to M9 and G8.
+- `docs/superpowers/plans/completed/2026-11-14-audit-menu-bar-app.md` covers M1 to M9 and G8.

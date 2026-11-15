@@ -8,7 +8,7 @@
 
 **Tech Stack:** bash 3.2 (`setup/`, `bin/`), mise 2026.11.8 TOML fragments, `jq`, OpenSSH client config, Python 3.11+ standard library for the settings self-checks (`settings/tests/`), Firefox `user.js`.
 
-**Spec:** `docs/superpowers/specs/2026-11-14-project-audit.md`, section I (findings I1 to I21) and "Decisions the owner must make" (decisions 1 to 7). Read both before Task 1. I22 is out of scope here. It belongs to the P6 plan (decision 8).
+**Spec:** `docs/superpowers/specs/completed/2026-11-14-project-audit.md`, section I (findings I1 to I21) and "Decisions the owner must make" (decisions 1 to 7). Read both before Task 1. I22 is out of scope here. It belongs to the P6 plan (decision 8).
 
 ## Outcome
 

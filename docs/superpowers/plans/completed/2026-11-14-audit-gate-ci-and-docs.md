@@ -8,7 +8,7 @@
 
 **Tech Stack:** bash 3.2, uv 0.13.7, actionlint 1.7.12, Renovate (Mend app), Python 3.11+ standard library, GitHub Actions on `macos-26`.
 
-**Spec:** `docs/superpowers/specs/2026-11-14-project-audit.md`, section "G. Gate, CI and docs". Read it before Task 1. Tasks 2 and 11 also read `docs/superpowers/specs/2026-11-14-p5-vm-proof/RUNBOOK.md` and Task 11 of `docs/superpowers/plans/completed/2026-11-13-p5-menu-bar-app.md`.
+**Spec:** `docs/superpowers/specs/completed/2026-11-14-project-audit.md`, section "G. Gate, CI and docs". Read it before Task 1. Tasks 2 and 11 also read `docs/superpowers/specs/2026-11-14-p5-vm-proof/RUNBOOK.md` and Task 11 of `docs/superpowers/plans/completed/2026-11-13-p5-menu-bar-app.md`.
 
 ## Outcome
 
@@ -272,7 +272,7 @@ and, after the `DOTFILES_SETTINGS_MISE` line, `assert same(shape(<status.json>),
 
 **Finding:** G8
 
-This fix lives in `docs/superpowers/plans/2026-11-14-audit-menu-bar-app.md`, Task 5, which moves `noFieldTakesFocusOnOpen` into an always-on suite. That plan's writer ran the moved test in a scratch copy of the package and saw it take no focus from the front app, so it does not need a CI-only gate. Nothing to do here.
+This fix lives in `docs/superpowers/plans/completed/2026-11-14-audit-menu-bar-app.md`, Task 5, which moves `noFieldTakesFocusOnOpen` into an always-on suite. That plan's writer ran the moved test in a scratch copy of the package and saw it take no focus from the front app, so it does not need a CI-only gate. Nothing to do here.
 
 ---
 

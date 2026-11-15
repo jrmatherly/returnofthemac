@@ -330,6 +330,8 @@ Two fixes in 0.1.3 can only be seen while the app that runs is 0.1.3 and the tap
 
 45. Shut the guest down. **Tell the session.**
 
+The run on 2026-11-15: every row was recorded and both checks passed. One addition to step 42: the dot also shows while the setup has an update waiting, so when the setup line reads anything but **Setup: up to date**, choose **Update…** first and run `p 3b` again. The session pushed a commit during the install, which is why the first `3b` (kept as `g3/3b-behind-1`) showed a dot. The session pushes nothing to `main` between steps 38 and 45.
+
 ## Compare any two records
 
 To compare two records yourself, in either guest or on the host (with the host's path):

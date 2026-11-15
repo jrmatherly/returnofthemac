@@ -8,9 +8,27 @@
 
 **Tech Stack:** Swift 5.9 tools, macOS 14+, AppKit, SwiftUI, Observation, Swift Testing, `FakeRunner` and its `hold` from `app/Tests/RotmTestSupport`. mise 2026.11.8 for the one read-only `status --json` call Task 2 adds.
 
-**Spec:** `docs/superpowers/specs/2026-11-14-project-audit.md`, section "M. Menu bar app" and row G8. Read its Goal first. The app's design is the P5 plan, `docs/superpowers/plans/completed/2026-11-13-p5-menu-bar-app.md`.
+**Spec:** `docs/superpowers/specs/completed/2026-11-14-project-audit.md`, section "M. Menu bar app" and row G8. Read its Goal first. The app's design is the P5 plan, `docs/superpowers/plans/completed/2026-11-13-p5-menu-bar-app.md`.
 
 The fixes ship with the next app release (the `app/VERSION` bump, the tag and the cask), which is the owner's call and is not part of this plan.
+
+## Outcome
+
+Done on 2026-11-15. Every task is on `main` and shipped in app 0.1.3.
+
+| Task | Commit | Difference from the plan |
+| --- | --- | --- |
+| 1 | `0cb1667`, `c597959` | The second commit, from review, starts one refresh when two rechecks wait on the same one |
+| 2 | `59ad265` | Proved in the guest on 2026-11-15 (rows `3b`, `3c`) |
+| 3 | `43084e7` | None |
+| 4 | `2b022de` | None |
+| 5 | `851c141` | None |
+| 6 | `6aea469` | None |
+| 7 | `8fdb4c1` | None |
+| 8 | `f91d2d6` | None |
+| 9 | `c448cb3` | Proved in the guest on 2026-11-15 (rows `3c`, `3d`) |
+
+The two guest steps needed two releases, which the plan did not foresee: 0.1.3 carries the fixes, and 0.1.4 is a version bump that gave 0.1.3 an update to offer. The results are in the installable-setup spec's "Verified facts".
 
 ## Global Constraints
 

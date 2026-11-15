@@ -4,11 +4,9 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 ## Open plans
 
-| Plan | Spec | Tasks | State |
-| --- | --- | --- | --- |
-| [Audit: menu bar app](2026-11-14-audit-menu-bar-app.md) | project audit, M1 to M9 and G8 | 9 | All nine tasks are on `main` (`0cb1667` to `c448cb3`), with `c597959` added from review. Unreleased: the `app/VERSION` bump, tag and cask are the owner's. The plan moves to `completed/` after the guest steps Tasks 2 and 9 add have run. |
+None. Every plan written so far is in `completed/`. The next plan is P6 (docs for the new path), written from its brief in the [installable setup spec](../specs/2026-11-11-installable-setup-profiles-and-sync.md), then P7.
 
-The four audit plans were each checked line by line against the code on 2026-11-14 and corrected. Three are finished and filed in `completed/`: [install and opt-outs](completed/2026-11-14-audit-install-and-opt-outs.md), [settings tool](completed/2026-11-14-audit-settings-tool.md) and [gate, CI and docs](completed/2026-11-14-audit-gate-ci-and-docs.md). Each opens with an "Outcome" table of its commits. Stages 2 to 5 below ran on 2026-11-14, one commit per task, each with its failing check seen first. Stage 1 is done.
+The four audit plans were each checked line by line against the code on 2026-11-14 and corrected. All four are finished and filed in `completed/`: [install and opt-outs](completed/2026-11-14-audit-install-and-opt-outs.md), [settings tool](completed/2026-11-14-audit-settings-tool.md), [gate, CI and docs](completed/2026-11-14-audit-gate-ci-and-docs.md) and [menu bar app](completed/2026-11-14-audit-menu-bar-app.md). Each opens with an "Outcome" table of its commits. Stages 2 to 5 below ran on 2026-11-14, one commit per task, each with its failing check seen first. Stage 1 is done.
 
 Found while running them, and not in any plan:
 
@@ -62,11 +60,11 @@ No owner decision is needed. Each task is small and independent of the others.
 
 ### Stage 5. The menu bar app
 
-Run App 1 to 9 in the plan's order. App 5 must come before App 6. The fixes reach users with the next app release (the `app/VERSION` bump, the tag and the cask), which is the owner's call. App 2 and App 9 each add one step to the next guest run.
+Run App 1 to 9 in the plan's order. App 5 must come before App 6. The fixes reach users with the next app release (the `app/VERSION` bump, the tag and the cask), which is the owner's call. App 2 and App 9 each add one step to the next guest run. Released as 0.1.3 on 2026-11-15, with 0.1.4 as the version bump the two guest steps needed. Both steps ran that day.
 
 ### Stage 6. Tasks that wait on the owner
 
-Start each only after the owner confirms the decision named in the [audit spec](../specs/2026-11-14-project-audit.md), section "Decisions the owner must make".
+Start each only after the owner confirms the decision named in the [audit spec](../specs/completed/2026-11-14-project-audit.md), section "Decisions the owner must make".
 
 | Task | Decision | What it does |
 | --- | --- | --- |
@@ -85,7 +83,7 @@ Decision 8 (owner values in linked files, finding I22) is not planned here. It b
 1. **Gate 9, then Gate 10.** The `ci.md`, forking table and macOS doc corrections. Gate 9 comes after Install 4 and Install 7, because two of its forking rows describe what those tasks ship. Done on 2026-11-15 (`61b074a`, `8ff381a`).
 2. **The owner runs `fresh-install` again**, since the install plan changes the setup path. Done on 2026-11-15: both legs passed at `cbd63b0` (run 43720059101).
 3. **P5 Task 12** (retire `rotm settings serve`). Done on 2026-11-15, on the owner's word. The P5 plan is in `completed/`.
-4. Move each finished plan to `completed/`, and each spec to `specs/completed/` when every plan built on it is there.
+4. Move each finished plan to `completed/`, and each spec to `specs/completed/` when every plan built on it is there. Done on 2026-11-15: the audit spec and its four plans, and the P5 plan. The installable-setup spec stays open for P6 and P7.
 
 ## Tasks that touch the same files
 

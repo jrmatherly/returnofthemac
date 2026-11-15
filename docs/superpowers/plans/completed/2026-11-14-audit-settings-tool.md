@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.11+ standard library (`settings/src/dotfiles_settings`), Textual 8.2.8 (`settings/uv.lock`), bash 3.2 (`setup/macos-extras.sh`, `bin/lib/test-sync`), mise 2026.11.8.
 
-**Spec:** `docs/superpowers/specs/2026-11-14-project-audit.md`, section "S. Settings tool and terminal UI". No entry in its "Decisions the owner must make" covers an S finding, so no task waits on one. Task 9 changes a documented rule and says so at its top: tell the owner before starting it.
+**Spec:** `docs/superpowers/specs/completed/2026-11-14-project-audit.md`, section "S. Settings tool and terminal UI". No entry in its "Decisions the owner must make" covers an S finding, so no task waits on one. Task 9 changes a documented rule and says so at its top: tell the owner before starting it.
 
 ## Outcome
 
