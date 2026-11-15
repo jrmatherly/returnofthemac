@@ -60,7 +60,7 @@ How it works:
 
    This shows whether the app is in `/Applications`, runs, and has the `opened-by-setup` file.
 
-   Then check GitHub over SSH with a plain key and no 1Password (audit plan `2026-11-14-audit-install-and-opt-outs.md`, Task 4):
+   Then check GitHub over SSH with a plain key and no 1Password (audit plan `docs/superpowers/plans/completed/2026-11-14-audit-install-and-opt-outs.md`, Task 4):
 
    ```shell
    ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519 && pbcopy < ~/.ssh/id_ed25519.pub
