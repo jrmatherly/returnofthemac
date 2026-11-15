@@ -219,8 +219,10 @@ check_true "rotm-user-layer restore with a token you set exits 0" [ "$rc" = 0 ]
 check_true "no global credential helper is asked with a token you set" [ ! -e "$S/global-helper.log" ]
 
 settings a set shell.editor vim-2
+touch "$(folder a)/.DS_Store"
 settings a sync now
 check_true "A: sync now after a change exits 0" [ "$rc" = 0 ]
+check_true "A: a Finder .DS_Store is removed before the save" [ ! -e "$(folder a)/.DS_Store" ]
 settings b sync now
 check_true "B: sync now exits 0" [ "$rc" = 0 ]
 check_true "B: the override file has A's new value" [ "$(editor b)" = 'EDITOR = "vim-2"' ]

@@ -323,6 +323,14 @@ def test_a_secret_or_a_stray_file_stops_before_the_first_save():
             assert "mise dot save" not in calls(), (fn.__name__, calls())
 
 
+def test_a_finder_ds_store_is_removed_and_stops_nothing():
+    for fn, args in ((sync.on, ("rotm-settings",)), (sync.now, ())):
+        fresh()
+        (sync.user_dir() / ".DS_Store").write_bytes(b"\0\0\0\1Bud1")
+        fn(*args)
+        assert not (sync.user_dir() / ".DS_Store").exists() and "mise dot save" in calls(), (fn.__name__, calls())
+
+
 def test_the_secret_rule_reads_every_env_table_in_any_case():
     for body, name in (('[[env]]\nPLAIN = "y"\n[[env]]\nGITHUB_TOKEN = "x"\n', "GITHUB_TOKEN"),
                        ('[env]\ngithub_token = "x"\n', "github_token"), ('[env]\nDB_PASSWORD = "x"\n', "DB_PASSWORD"),

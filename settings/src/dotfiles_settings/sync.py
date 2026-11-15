@@ -200,6 +200,8 @@ def _toml(path: Path) -> dict:
 
 def _guard() -> None:
     folder = user_dir()
+    # mise saves every file in a tracked folder, and Finder writes this one
+    (folder / ".DS_Store").unlink(missing_ok=True)
     names = sorted(p.name for p in folder.iterdir()) if folder.is_dir() else []
     stray = [n for n in names if n not in KEPT and not KEPT_PROFILE.fullmatch(n)]
     if stray:
