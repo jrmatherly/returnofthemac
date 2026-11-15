@@ -27,6 +27,10 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/../.."
+# Check this tree, not the copy the shell's $DOTFILES names: on a Mac that runs an
+# installed copy, bin/help would otherwise render that copy's headers
+DOTFILES=$(pwd -P)
+export DOTFILES
 
 fail() {
   echo "FAIL: $1" >&2
