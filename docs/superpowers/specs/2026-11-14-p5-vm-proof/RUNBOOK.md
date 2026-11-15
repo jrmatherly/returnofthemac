@@ -283,17 +283,17 @@ How it works:
 
 Two fixes in 0.1.3 can only be seen while the app that runs is 0.1.3 and the tap holds something newer (audit app plan, Tasks 2 and 9). So this run takes two releases: 0.1.3 carries the fixes, and 0.1.4 is a version bump that gives 0.1.3 an update to offer. Rows `3a` to `3d` record into `~/vm-proof/p5/g3/`.
 
-38. Use the guest from step 36 if it is still running. Otherwise start the guest with **Run without saving changes** and do steps 4 to 6. No GitHub sign-in is needed, so answer `n` to setup's GitHub login. Do this before step 41, so the guest never installs 0.1.4 directly.
-39. **Stop and tell the session.** The 0.1.3 release follows step 23, with `0.1.3` in place of `0.1.2`: the session pushes the version commit, you push the tag `app-v0.1.3` on it with its message, the session changes the cask and pushes the tap on your word, and you wait five minutes.
-40. From the menu, choose **Quit**. In Finder, open **Applications**, then **Return of the Mac**. The menu's first line should read **Update Return of the Mac to 0.1.3…**. Choose it and confirm. When the app has opened again:
+38. Step 37 shut the last guest down and discarded it, so start the guest with **Run without saving changes** and do steps 4 to 6. No GitHub sign-in is needed, so answer `n` to setup's GitHub login. Finish this before the session pushes the 0.1.4 cask in step 41, so the guest never installs 0.1.4 directly.
+39. The 0.1.3 release follows step 23, with `0.1.3` in place of `0.1.2`. On 2026-11-15 the tap held 0.1.3 before the guest was started, so the install in step 38 gave the guest 0.1.3 and no update from 0.1.2 ran. Row 1f3 proved that update path on 2026-11-14.
+40. Record the state after the install:
 
     ```shell
     p 3a
     ```
 
-    Expected, compared with 2c: `mac.app_version` is 0.1.3 and `mac.app_started` is later. A guest installed after the tap moved already runs 0.1.3 and shows no update line: run `p 3a` and go on.
+    Expected: `mac.app_version` is 0.1.3, `mac.app_running` is yes and `cask` shows 0.1.3 installed by mise. **Tell the session.**
 
-41. **Stop and tell the session.** The 0.1.4 release is the same four steps with `0.1.4`. Wait five minutes after the session says the tap is pushed.
+41. **The 0.1.4 release** is the four steps of step 23 with `0.1.4`. The session pushes the cask only after row 3a exists. Wait five minutes after the session says the tap is pushed.
 42. Turn the module off, then restart the app so it checks for its update again:
 
     ```shell

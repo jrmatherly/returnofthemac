@@ -182,7 +182,6 @@ run_row() {
       [ "$row" = 2a ] || pointer p3 "The P3 proof ran inside the P5 run: guest 1 is ../p5/g1/1c1 to 1d4, guest 2 is ../p5/g2/2a and 2b. Steps 16 to 22 and 31 to 35 of RUNBOOK.md in docs/superpowers/specs/2026-11-14-p5-vm-proof/."
       ;;
     2c) against=2b ;;
-    3a) against=2c ;;
     3b) against=3a ;;
     3c) against=3b ;;
     3d) against=3c ;;
