@@ -72,11 +72,17 @@ h="$tmp/h1"
 run "$h"
 check "closed stdin and no knobs: exits 0" "[ $? = 0 ]"
 check "closed stdin and no knobs: no identity file" "[ ! -e '$h/.gitconfig.local' ]"
-check "missing public key warned about" "grep -q 'github_personal.pub not found' '$tmp/out'"
+check "no 1Password agent: no warning about the public key" "! grep -q github_personal.pub '$tmp/out'"
 check "no Firefox profile: warned, not failed" "grep -q 'No Firefox Developer Edition profile' '$tmp/out'"
 check "cot linked without sudo into a writable folder" "[ '$tmp/bin/cot' -ef '$cot' ] && ! grep -q '^sudo' '$tmp/log'"
 check "VS Code missing: warned" "grep -q 'Visual Studio Code not installed' '$tmp/out'"
 check "bat cache rebuilt" "grep -qx 'bat cache --build' '$tmp/log'"
+
+ha="$tmp/ha"
+mkdir -p "$ha/Library/Group Containers/2BUA8C4S2C.com.1password/t"
+touch "$ha/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+run "$ha"
+check "1Password agent without the public key: warned" "grep -q 'github_personal.pub not found' '$tmp/out'"
 
 # SSH signing runs 1Password's helper, so it is written only when the helper is there (the cask is in the apps module)
 h0="$tmp/h0"

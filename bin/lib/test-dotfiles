@@ -55,6 +55,39 @@ if grep -E '^"' "$installed" | grep -vE 'mode = "copy", create_if_missing = true
   fail "config.rotm-installed.toml has an entry that is neither create_if_missing, merge, a real folder nor an exclude-only symlink-each"
 fi
 
+# tilde/.ssh/config: each 1Password block applies only when its file exists.
+# ssh takes %d and ~ from the account, so a copy points both at a scratch home.
+# A socket path is limited to 104 bytes, hence the short /tmp folder.
+ssh_tmp=$(mktemp -d /tmp/rotm.XXXXXX)
+trap 'rm -rf "$ssh_tmp"' EXIT
+sock="Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+ssh_case() { # <case> <host> <must grep -E...> [-- <must not grep -E>]
+  local name=$1 h="$ssh_tmp/$1" host=$2 out
+  shift 2
+  sed -e '/^Include /d' -e "s|%d|$h|g" -e "s|~|$h|g" "$repo/tilde/.ssh/config" > "$h.config"
+  out=$(ssh -T -G -F "$h.config" "$host" | grep -iE '^(identitiesonly|identityfile|identityagent) ' | grep -iE "identitiesonly|$h" || true)
+  while [ $# -gt 0 ]; do
+    if [ "$1" = -- ]; then
+      ! grep -qiE "$2" <<< "$out" || fail "tilde/.ssh/config: $name resolved to $out"
+      shift 2
+      continue
+    fi
+    grep -qiE "$1" <<< "$out" || fail "tilde/.ssh/config: $name resolved to $out"
+    shift
+  done
+}
+make_sock() { mkdir -p "$(dirname "$1")" && python3 -c 'import socket,sys; socket.socket(socket.AF_UNIX).bind(sys.argv[1])' "$1"; }
+mkdir -p "$ssh_tmp/nothing" "$ssh_tmp/pub/.ssh"
+touch "$ssh_tmp/pub/.ssh/github_personal.pub"
+make_sock "$ssh_tmp/socket/$sock"
+mkdir -p "$ssh_tmp/both/.ssh" && touch "$ssh_tmp/both/.ssh/github_personal.pub"
+make_sock "$ssh_tmp/both/$sock"
+ssh_case nothing github.com '^identitiesonly no$' -- '^identityagent .*1password'
+ssh_case pub github.com '^identitiesonly yes$' "^identityfile $ssh_tmp/pub/.ssh/github_personal.pub$" -- '^identityagent .*1password'
+ssh_case socket github.com '^identitiesonly no$' "^identityagent \"?$ssh_tmp/socket/$sock\"?$"
+ssh_case both example.com '^identitiesonly no$' "^identityagent \"?$ssh_tmp/both/$sock\"?$"
+rm -rf "$ssh_tmp"
+
 command -v mise > /dev/null || {
   echo "test-dotfiles: mise not found, skipping the apply checks" >&2
   exit 0

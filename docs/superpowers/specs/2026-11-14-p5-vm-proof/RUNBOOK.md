@@ -60,6 +60,14 @@ How it works:
 
    This shows whether the app is in `/Applications`, runs, and has the `opened-by-setup` file.
 
+   Then check GitHub over SSH with a plain key and no 1Password (audit plan `2026-11-14-audit-install-and-opt-outs.md`, Task 4):
+
+   ```shell
+   ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519 && pbcopy < ~/.ssh/id_ed25519.pub
+   ```
+
+   Add the copied key at github.com/settings/keys for the account you signed in with, then run `ssh -T -o StrictHostKeyChecking=accept-new git@github.com`. It should greet the account by name. **Tell the session** what it printed. **Not run on the host.**
+
 8. In Finder, open **Applications**, then **Return of the Mac**. The settings window should open. **Tell the session** what you saw, and whether the menu bar shows the app's icon.
 
 ### P4: a profile, through the app

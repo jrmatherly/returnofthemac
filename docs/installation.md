@@ -50,7 +50,7 @@ Nothing is overwritten. The run stops and names what it found, and you move it a
 
 ## Install from a clone
 
-On a new Mac, clone over HTTPS. SSH only works after 1Password is set up (keys live there, see [`~/.ssh/github_personal.pub`](local-customizations.md#sshgithub_personalpub)).
+On a new Mac, clone over HTTPS. The tracked SSH config pins GitHub to a 1Password key and uses the 1Password agent only when their files exist, so any other key setup works untouched (see [`~/.ssh/github_personal.pub`](local-customizations.md#sshgithub_personalpub)).
 
 1. Install the Command Line Tools (for `git`):
 

@@ -14,13 +14,13 @@ If this file exists, it will be automatically included after the public SSH host
 
 ## `~/.ssh/github_personal.pub`
 
-SSH keys live in 1Password, and `tilde/.ssh/config` pins `github.com` to your personal key by pointing at this _public_ key file (1Password's ["Match key with host"](https://www.1password.dev/ssh/agent/advanced) pattern). It's machine-local and not in the repo. On a new Mac, export the public key from 1Password into this file, or copy the matching line from:
+When this file exists, `tilde/.ssh/config` pins `github.com` to your personal key by pointing at this _public_ key file (1Password's ["Match key with host"](https://www.1password.dev/ssh/agent/advanced) pattern). When 1Password's agent socket exists, every host uses that agent. Each setting applies only when its file is there, so any other key setup (a plain `~/.ssh/id_ed25519`, another agent) works untouched. The file is machine-local and not in the repo. To use a 1Password key, export the public key from 1Password into this file, or copy the matching line from:
 
 ```shell
 SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock ssh-add -L
 ```
 
-`setup/dotfiles-extras.sh` warns if it's missing. Test with `ssh -T git@github.com`.
+`setup/dotfiles-extras.sh` warns if it's missing on a Mac that has the 1Password agent. Test with `ssh -T git@github.com`.
 
 > [!IMPORTANT]  
 > 1Password must be running and unlocked, with **Settings → Developer → Use the SSH agent** turned on, for GitHub SSH and signed commits to work. Turning on "Keep 1Password in the menu bar" and "Start at login" keeps the agent available.

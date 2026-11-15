@@ -191,7 +191,7 @@ hard_link() {
 
 configure_git_identity
 
-if [ ! -f "$HOME/.ssh/github_personal.pub" ]; then
+if [ ! -f "$HOME/.ssh/github_personal.pub" ] && [ -e "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock" ]; then
   warn "$(tildify "$HOME/.ssh")/github_personal.pub not found — GitHub SSH needs it to pick your 1Password key (see tilde/.ssh/config)"
 fi
 
