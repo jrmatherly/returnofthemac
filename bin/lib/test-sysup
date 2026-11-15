@@ -206,7 +206,8 @@ log_lacks() { ! grep -q -- "$1" "$DOTFILES"/logs/sysup-*.log; }
 run() {
   local rc=0
   screen=$("$script" < /dev/null 2>&1) || rc=$?
-  check_true "sysup exited $rc" [ "$rc" -eq 0 ]
+  if has '^✖ '; then check_true "sysup exited 1 after a failed step" [ "$rc" -eq 1 ]
+  else check_true "sysup exited 0" [ "$rc" -eq 0 ]; fi
   check_true "no colors off a terminal" lacks $'\x1b'
 }
 
@@ -238,6 +239,11 @@ check_true "cache: nothing to prune is ok" has '^✔ uv cache +nothing to prune$
 check_true "cache: the wait is bounded" [ "$(cat "$STATE/lock-timeout")" = 10 ]
 check_true "up to date: nothing for mise prune" has '^✔ mise prune +nothing unused$'
 check_true "up to date: no changed, notice or failed line" lacks '^ *[↻●✖]'
+rm -rf "$DOTFILES/logs"
+printf '{"plugins":{}}' > "$CLAUDE_CONFIG_DIR/plugins/installed_plugins.json"
+run
+check_true "no plugins installed: the step still reports" has '^✔ plugins +none installed$'
+printf '{"plugins":{"alpha@m":[],"beta@m":[]}}' > "$CLAUDE_CONFIG_DIR/plugins/installed_plugins.json"
 check_true "up to date: one-line summary" has '^Everything up to date\.$'
 check_true "up to date: log is a file:// link" has "^Log +file://$DOTFILES/logs/sysup-[0-9]{8}-[0-9]{6}\\.log\$"
 check_true "up to date: no step slow enough for a time" lacks '\([0-9]+s\)$'
@@ -512,7 +518,7 @@ rm -rf "$DOTFILES/logs"
 echo cloud > "$HOME/.config/mise/modules-off.local"
 rc=0
 screen=$(TERM=xterm-256color script -q /dev/null "$script" < /dev/null | tr -d '\r') || rc=$?
-check_true "terminal: sysup exited $rc" [ "$rc" -eq 0 ]
+check_true "terminal: sysup exited 1 after a failed step (the summary below has a ✖ line)" [ "$rc" -eq 1 ]
 check_true "sysup syncs the module list" grep -q '60-rotm-cloud' "$HOME/.config/mise/miserc.local.toml"
 check_true "terminal: status lines colored" has $'\x1b\\[[0-9;]*m✔'
 check_true "terminal: a running step shows a … line" has '… packages'

@@ -3,6 +3,7 @@
 # Get macOS software updates, upgrade mise and the formulae and casks it installs, mise tools (pruning versions nothing uses) and uv tools, the Iosevka Code font, dotfiles, Raycast, Claude Code and Amp; update agent skills, regenerate the SnippetsLab skill, record Claude Code plugins/settings/skills and rebuild their catalog.
 #
 # > Reads like a report: one status line per step and a summary at the end. Full tool output goes to `logs/sysup-<timestamp>.log` in the dotfiles repo, and to the screen only when a step changed something or failed.
+# > A failed step never stops the run, and sysup exits 1 at the end when any step failed.
 # > A macOS update asks for your login password. Run `dotfiles-settings set updates.mac_password_op 'op://vault/item/password'` (a 1Password secret reference) to supply it with a fingerprint instead.
 #
 # - Run updates:
@@ -698,7 +699,7 @@ if command -v claude > /dev/null; then
       status fail marketplaces "run: claude plugin marketplace update"
       show
     fi
-    plugin_count=0 plugin_updates="" plugins_blocked=0
+    plugin_count=0 plugin_updates="" plugins_blocked=0 plugins_failed=0
     while read -r id; do
       if capture claude plugin update -y "$id" < /dev/null; then
         # Counted only once checked: a failed one is its own fail line
@@ -710,6 +711,7 @@ if command -v claude > /dev/null; then
         # Managed settings on this Mac forbid the marketplace; nothing to rerun
         plugins_blocked=$((plugins_blocked + 1))
       else
+        plugins_failed=$((plugins_failed + 1))
         status fail plugins "updating $id failed; run: claude plugin update $id"
         show
       fi
@@ -723,6 +725,8 @@ if command -v claude > /dev/null; then
       actions+=("Restart Claude Code to apply plugin updates")
     elif [ "$plugin_count" -gt 0 ]; then
       status ok plugins "$(plural "$plugin_count" plugin) up to date"
+    elif [ "$plugins_blocked" -eq 0 ] && [ "$plugins_failed" -eq 0 ]; then
+      status ok plugins "none installed"
     fi
 
     step "Claude config"
@@ -901,3 +905,4 @@ say ""
 
 # Sign-off: Deadpool with his katanas (bin/nyan)
 nyan
+[ ${#failed[@]} -eq 0 ] || exit 1
