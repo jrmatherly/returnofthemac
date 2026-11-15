@@ -345,6 +345,18 @@ def test_the_secret_rule_reads_every_env_table_in_any_case():
         assert "mise dot save" in calls(), (body, calls())
 
 
+def test_a_password_in_place_of_the_reference_stops_before_the_first_save():
+    fresh()
+    (sync.user_dir() / "config.override.toml").write_text('[env]\nDOTFILES_MAC_PASSWORD_OP = "hunter2"\n')
+    message = raises(sync.now)
+    assert "DOTFILES_MAC_PASSWORD_OP" in message and "hunter2" not in message, message
+    assert "mise dot save" not in calls(), calls()
+    fresh()
+    (sync.user_dir() / "config.override.toml").write_text('[env]\nDOTFILES_MAC_PASSWORD_OP = "op://Private/Mac/password"\n')
+    sync.now()
+    assert "mise dot save" in calls()
+
+
 def test_a_machine_setting_left_in_the_override_file_stops_a_save():
     for fn, args in ((sync.on, ("rotm-settings",)), (sync.now, ())):
         fresh()

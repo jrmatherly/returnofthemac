@@ -79,6 +79,7 @@ os.chdir(cwd)
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from dotfiles_settings import cli
 from dotfiles_settings.adapters import env
+from dotfiles_settings.model import InvalidValue, Setting
 
 env.seed_env = lambda keys: {"T_LOCKED": "1"}
 
@@ -136,6 +137,15 @@ if shutil.which("mise"):
                        (("apply", "nope"), 2), (("set", "t.locked", "0"), 3), (("reset", "t.locked"), 3)):
         got, _, err = run(*argv)
         assert got == code and err.startswith("dotfiles-settings: ") and "Traceback" not in err, (argv, got, err)
+    ref = Setting(id="t.ref", section="T", label="", help="", kind="env", key="DOTFILES_MAC_PASSWORD_OP", type="string",
+                  access="rw")
+    assert cli.normalize(ref, "op://Private/Mac login/password") == "op://Private/Mac login/password"
+    assert cli.normalize(ref, "") == ""
+    try:
+        cli.normalize(ref, "hunter2")
+        raise AssertionError("a password was accepted")
+    except InvalidValue as e:
+        assert "op://" in str(e) and "hunter2" not in str(e), e
     assert "T_LOCKED" not in env.read_override()
     assert run("apply", "env") == (0, "env: nothing to apply\n", "")
 

@@ -35,6 +35,11 @@ def normalize(s: Setting, raw: str) -> str:
         if not os.path.isabs(path):
             raise InvalidValue(f"{s.id}: expected an absolute path, got {raw!r}")
         return path
+    prefix = sync.REFERENCE.get(s.key) if s.kind == "env" else None
+    if prefix and raw and not raw.startswith(prefix):
+        # Never the value: this message reaches the terminal and the app
+        raise InvalidValue(f"{s.id}: expected a 1Password secret reference that starts with {prefix}. "
+                           "Nothing was stored.")
     return raw
 
 

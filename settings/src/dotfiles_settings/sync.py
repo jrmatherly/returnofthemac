@@ -148,6 +148,8 @@ KEPT_PROFILE = re.compile(r"config\.rotm-p-[a-z0-9-]+\.override\.toml|modules-of
                           r"|tools\.rotm-p-[a-z0-9-]+\.toml")
 # bin/claude-config's rule for env keys, plus PASSWORD and ACCESS_KEY
 SECRET = re.compile(r"(TOKEN|SECRET|PASSPHRASE|PASSWORD|API_KEY|ACCESS_KEY|CLIENT_KEY)$", re.I)
+# An env key whose value must start with this prefix, so a pasted password is never stored or synced
+REFERENCE: dict[str, str] = {"DOTFILES_MAC_PASSWORD_OP": "op://"}
 LOGIN = ["auth", "login", "--hostname", "github.com", "--git-protocol", "https", "--web"]
 NOT_CONNECTED = "no setup repository is connected"
 NO_CONFLICT = "no sharing conflicts"
@@ -214,7 +216,14 @@ def _guard() -> None:
         # `mise unset --override` and `rotm settings set` on a single-Mac setting only reach the shared file
         unset = "mise unset --override" if shared else f"mise unset --file {override}"
         env = _toml(override).get("env", {})
-        keys = [k for t in (env if isinstance(env, list) else [env]) if isinstance(t, dict) for k in t]
+        tables = [t for t in (env if isinstance(env, list) else [env]) if isinstance(t, dict)]
+        keys = [k for t in tables for k in t]
+        bare = sorted(k for t in tables for k, v in t.items()
+                      if k in REFERENCE and isinstance(v, str) and v and not v.startswith(REFERENCE[k]))
+        if bare:
+            raise SettingsError(f"{', '.join(bare)} in {override} is not a 1Password secret reference, and sync "
+                                "would keep it in the settings repository's history for good. Run "
+                                f"`{unset} {' '.join(bare)}` and run this again.")
         secrets = sorted(k for k in keys if SECRET.search(k))
         if secrets:
             raise SettingsError(f"{', '.join(secrets)} in {override} looks like a secret, and sync "
