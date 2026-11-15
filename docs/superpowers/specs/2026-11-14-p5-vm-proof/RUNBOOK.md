@@ -163,7 +163,7 @@ How it works:
     p 1d1
     ```
 
-    Expected: compared with 1c1, `no field differs`. These four changes are what sync carries to guest 2.
+    Expected: compared with 1c1, `list.jstack.bug_fix` reads `sonnet xhigh` where 1c1 holds `haiku high`, and `file.tools.toml` differs by that line. Nothing else differs. Row 1c3 still holds `haiku high`, because the app offered no Reset for a role then (fixed in `e7db2f3`). These four changes are what sync carries to guest 2.
 
 ### P3, first half: sync from guest 1
 
@@ -191,17 +191,17 @@ How it works:
 
     The row also leaves `~/vm-proof/p3/p5-run.txt`.
 
-### Stop and tell the session: the 0.1.1 release
+### Stop and tell the session: the 0.1.2 release
 
 23. **Stop and tell the session.** Leave the guest running. From here:
-    1. The session sets `app/VERSION` to `0.1.1`, runs `pnpm check`, commits and pushes to `main`. That commit is also the update guest 1 sees waiting.
-    1. You push the tag on that commit, from the clone on the host: `git tag app-v0.1.1 <commit> && git push origin app-v0.1.1`. **Not run on the host.**
-    1. The session waits for the release workflow to publish `returnofthemac-app_0.1.1_arm64.dmg`, then changes the cask in `~/dev/homebrew-tap/Casks/returnofthemac-app.rb` to `version "0.1.1"` and the release's `sha256`, and pushes it when you say so.
+    1. The session sets `app/VERSION` to `0.1.2`, runs `pnpm check`, commits and pushes to `main`. That commit is also the update guest 1 sees waiting.
+    1. You push the tag on that commit, from the clone on the host: `git tag app-v0.1.2 <commit> && git push origin app-v0.1.2`. **Not run on the host.**
+    1. The session waits for the release workflow to publish `returnofthemac-app_0.1.2_arm64.dmg`, then changes the cask in `~/dev/homebrew-tap/Casks/returnofthemac-app.rb` to `version "0.1.2"` and the release's `sha256`, and pushes it when you say so.
     1. The session tells you when the tap is pushed. Wait five minutes after that: the app reads the cask through `raw.githubusercontent.com`, which caches it for up to five minutes.
 
 ### Update the setup and the app
 
-24. The app checks for its own update when it starts and then once a day, so restart it. From the menu, choose **Quit**. In Finder, open **Applications**, then **Return of the Mac**. Open the menu: the first line should read **Update Return of the Mac to 0.1.1…**, and the setup line **Setup: 1 update waiting**. Then:
+24. The app checks for its own update when it starts and then once a day, so restart it. From the menu, choose **Quit**. In Finder, open **Applications**, then **Return of the Mac**. Open the menu: the first line should read **Update Return of the Mac to 0.1.2…**, and the setup line **Setup: 2 updates waiting**. Then:
 
     ```shell
     p 1f1
@@ -217,13 +217,13 @@ How it works:
 
     Expected, compared with 1f1: `update.behind` drops to 0 and `status.commit` is the new commit.
 
-26. From the menu, choose **Update Return of the Mac to 0.1.1…** and confirm. The app runs mise while it keeps running, then quits and opens again by itself, which takes up to a minute. If it shows "Return of the Mac was not updated" instead, **tell the session** what it says. Then:
+26. From the menu, choose **Update Return of the Mac to 0.1.2…** and confirm. The app runs mise while it keeps running, then quits and opens again by itself, which takes up to a minute. If it shows "Return of the Mac was not updated" instead, **tell the session** what it says. Then:
 
     ```shell
     p 1f3
     ```
 
-    Expected, compared with 1f2: `mac.app_version` is 0.1.1, `mac.app_running` is still yes with a new `mac.app_started`, and `cask` shows 0.1.1 installed.
+    Expected, compared with 1f2: `mac.app_version` is 0.1.2, `mac.app_running` is still yes with a new `mac.app_started`, and `cask` shows 0.1.2 installed.
 
 ### Launch at Login across a restart
 
@@ -251,7 +251,7 @@ How it works:
     p 2a
     ```
 
-    Expected, compared with 1d4: the four `list.*` rows of step 16 match (Editor `vim`, Dock size 64, Kubernetes off, bug-fix `haiku high`), as do the files from `~/.config/rotm`. Expected to differ: the Dock's `defaults` value (this Mac has not run `set-defaults`), `mac.app_version` (the tap now gives 0.1.1), `status.commit`, and the machine-scoped rows. If setup warned that your saved settings did not load, or `status.sync.connected` is false, **tell the session** before going on.
+    Expected, compared with 1d4: the four `list.*` rows of step 16 match (Editor `vim`, Dock size 64, Kubernetes off, bug-fix `sonnet xhigh`), as do the files from `~/.config/rotm`. Expected to differ: the Dock's `defaults` value (this Mac has not run `set-defaults`), `mac.app_version` (the tap now gives 0.1.2), `status.commit`, and the machine-scoped rows. If setup warned that your saved settings did not load, or `status.sync.connected` is false, **tell the session** before going on.
 
 34. Apply the macOS preferences from the terminal, answering its question and the password:
 

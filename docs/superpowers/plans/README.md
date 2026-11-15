@@ -6,8 +6,8 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 | Plan | Spec | Tasks | State |
 | --- | --- | --- | --- |
-| [P5 menu bar app](2026-11-13-p5-menu-bar-app.md) | [installable setup](../specs/2026-11-11-installable-setup-profiles-and-sync.md) | 12 | Through Task 10, with Task 9 and Task 11's docs done. Task 11's VM proof waits on Guest 2. Task 12 waits on the owner's word. |
-| [Audit: gate, CI and docs](2026-11-14-audit-gate-ci-and-docs.md) | [project audit](../specs/2026-11-14-project-audit.md), G1 to G14 | 11 | Tasks 1, 2, 3, 5, 6 and 7 are on `main` (`9bc4017` to `97d4766`). Task 8 is the app plan's Task 5, done. Task 4 is the owner's. Tasks 9 and 10 are on `main` (`61b074a`, `8ff381a`). Task 11 waits on Guest 2. |
+| [P5 menu bar app](2026-11-13-p5-menu-bar-app.md) | [installable setup](../specs/2026-11-11-installable-setup-profiles-and-sync.md) | 12 | Through Task 11: its VM proof ran over two guests on 2026-11-14 and is in the spec's "Verified facts". Task 12 waits on the owner's word. |
+| [Audit: gate, CI and docs](2026-11-14-audit-gate-ci-and-docs.md) | [project audit](../specs/2026-11-14-project-audit.md), G1 to G14 | 11 | Tasks 1, 2, 3, 5, 6 and 7 are on `main` (`9bc4017` to `97d4766`). Task 8 is the app plan's Task 5, done. Task 4 is the owner's. Tasks 9 and 10 are on `main` (`61b074a`, `8ff381a`). Task 11 is done with the P5 write-up. The plan stays open for Task 4. |
 | [Audit: menu bar app](2026-11-14-audit-menu-bar-app.md) | project audit, M1 to M9 and G8 | 9 | All nine tasks are on `main` (`0cb1667` to `c448cb3`), with `c597959` added from review. Unreleased: the `app/VERSION` bump, tag and cask are the owner's. The plan moves to `completed/` after the guest steps Tasks 2 and 9 add have run. |
 
 The four audit plans were each checked line by line against the code on 2026-11-14 and corrected. Two are finished and filed in `completed/`: [install and opt-outs](completed/2026-11-14-audit-install-and-opt-outs.md) and [settings tool](completed/2026-11-14-audit-settings-tool.md). Each opens with an "Outcome" table of its commits. Stages 2 to 5 below ran on 2026-11-14, one commit per task, each with its failing check seen first. Stage 1's step 1 is done and step 2 is the owner's.
@@ -28,7 +28,7 @@ Task numbers are the plan's own. "Gate 2" means Task 2 of the gate plan. Run the
 
 ### Stage 1. Finish the P5 VM proof (time-bound)
 
-Guest 2 is running in UTM and is disposable, so this stage comes first.
+Done. Guest 2's rows `2a`, `2b` and `2c` were recorded on 2026-11-14 (the guest's clock), and the results are in the installable-setup spec.
 
 1. **Gate 2.** Add row `2c` (the jstack Reset proof) to `proof.sh` and the runbook, then copy `proof.sh` to `~/vm-proof/p5/`.
 2. **The owner runs the Guest 2 retry** in the guest: `rotm update`, `p 2a`, `set-defaults`, `p 2b`, `p 2c`, then shuts the guest down. The exact lines are in the session handoff and in the runbook's Guest 2 section.

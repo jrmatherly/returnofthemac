@@ -39,8 +39,9 @@ app_path="$HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/
 bundle="${APPLICATIONS_DIR:-/Applications}/Return of the Mac.app"
 cask_url=https://raw.githubusercontent.com/jrmatherly/homebrew-tap/HEAD/Casks/returnofthemac-app.rb
 
-# The four settings rows 1c and 1d change, one of each kind; RUNBOOK.md's
-# settings-window steps use the same values
+# The four settings rows 1c and 1d change, one of each kind. Row 1c2 sets these
+# values. From row 1d1 on, the 2026-11-14 record holds "sonnet xhigh" for
+# jstack.bug_fix, the value chosen in the settings window
 ids=(shell.editor macos.dock.tilesize modules.kubernetes jstack.bug_fix)
 values=(vim "${P5_DOCK_SIZE:-64}" off "haiku high")
 
