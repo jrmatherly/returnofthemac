@@ -8,7 +8,7 @@
 
 **Tech Stack:** bash 3.2, uv 0.13.7, actionlint 1.7.12, Renovate (Mend app), Python 3.11+ standard library, GitHub Actions on `macos-26`.
 
-**Spec:** `docs/superpowers/specs/2026-11-14-project-audit.md`, section "G. Gate, CI and docs". Read it before Task 1. Tasks 2 and 11 also read `docs/superpowers/specs/2026-11-14-p5-vm-proof/RUNBOOK.md` and Task 11 of `docs/superpowers/plans/2026-11-13-p5-menu-bar-app.md`.
+**Spec:** `docs/superpowers/specs/2026-11-14-project-audit.md`, section "G. Gate, CI and docs". Read it before Task 1. Tasks 2 and 11 also read `docs/superpowers/specs/2026-11-14-p5-vm-proof/RUNBOOK.md` and Task 11 of `docs/superpowers/plans/completed/2026-11-13-p5-menu-bar-app.md`.
 
 ## Global Constraints
 
@@ -310,7 +310,7 @@ If the install plan's I1 or I9 task has landed first, write the last two rows to
 
 **Finding:** G9, G11
 
-Do not start this task until `~/vm-proof/p5/g2/2a/state.json` and `~/vm-proof/p5/g2/2b/state.json` exist. It is part of Task 11 Step 3 of `docs/superpowers/plans/2026-11-13-p5-menu-bar-app.md`, which writes the run's results into the spec once. Splitting the spec edit in two would leave the sync row half-rewritten.
+Do not start this task until `~/vm-proof/p5/g2/2a/state.json` and `~/vm-proof/p5/g2/2b/state.json` exist. It is part of Task 11 Step 3 of `docs/superpowers/plans/completed/2026-11-13-p5-menu-bar-app.md`, which writes the run's results into the spec once. Splitting the spec edit in two would leave the sync row half-rewritten.
 
 **Files:**
 - Modify: `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md:211-321` ("Verified facts" and "Still not verified")

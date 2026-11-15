@@ -11,7 +11,7 @@ Jason's personal dotfiles for macOS on Apple Silicon: Zsh, [mise](https://mise.j
 
 - **One command sets up a Mac.** [`setup.sh`](setup.sh) wraps [`mise bootstrap`](https://mise.jdx.dev/bootstrap.html): it links the dotfiles into `$HOME` and installs the [formulae, apps and VS Code extensions](tilde/.config/mise/conf.d/) and the [runtimes and CLIs](tilde/.config/mise/config.toml). Homebrew itself isn't needed. Everything outside the base is in [thirteen modules](docs/modules.md), and any of them can be left out.
 - **One command keeps it current.** [`sysup`](bin/sysup) updates macOS, mise, the packages, the runtimes and the agent tooling, and prints one status line per step.
-- **One place for settings.** [`dotfiles-settings`](settings/README.md) shows every setting the repo manages (environment variables, macOS defaults, packages, dotfile links and the agent tools) in a terminal UI, the same UI in a browser tab, or a scriptable CLI. The [menu bar app](docs/menu-bar.md) puts the same settings, sync, profiles and updates in a window, with no terminal.
+- **One place for settings.** [`dotfiles-settings`](settings/README.md) shows every setting the repo manages (environment variables, macOS defaults, packages, dotfile links and the agent tools) in a terminal UI or a scriptable CLI. The [menu bar app](docs/menu-bar.md) puts the same settings, sync, profiles and updates in a window, with no terminal.
 - **Shell.** Zsh with a [Starship prompt](tilde/.starship.toml), [fzf](zsh/fzf.zsh) pickers with previews, [aliases](zsh/aliases.zsh), [handy scripts](bin/) and a built-in `help` for all of them.
 - **Terminals and editors.** [Ghostty](tilde/.config/ghostty/) and [cmux](tilde/.config/cmux/), [VS Code settings](vscode/) linked from the repo, the [Squirrelsong](colors/) color scheme and the [fonts](fonts/README.md) to go with it.
 - **macOS defaults as TOML.** [`20-macos.toml`](tilde/.config/mise/conf.d/20-macos.toml) declares the preferences, `set-defaults` applies them, and mise reports drift.
@@ -74,7 +74,7 @@ The full walkthrough, with the flags, what setup prompts for and what to do when
 | `"$DOTFILES/setup.sh"` | Applies new links, tools and config after a pull. It installs what is missing, and leaves upgrades to `sysup` |
 | `mise dotfiles apply` | Re-links the dotfiles only. `mise dotfiles status` shows drift |
 | `set-defaults` | Applies the macOS defaults |
-| `dotfiles-settings tui` | Opens the settings UI. `serve` opens it in a browser |
+| `dotfiles-settings tui` | Opens the settings UI |
 | `help` | Shows the [alias and command index](docs/README.md). `help <command>` documents a script in `bin/`, and `help gui/<app>` shows an app's [shortcut cheat sheet](docs/gui/) |
 | `pnpm check` | Runs the checks before a commit (shell syntax, shellcheck, Prettier, the self-checks). `pnpm format` fixes formatting |
 

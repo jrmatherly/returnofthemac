@@ -6,7 +6,6 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 | Plan | Spec | Tasks | State |
 | --- | --- | --- | --- |
-| [P5 menu bar app](2026-11-13-p5-menu-bar-app.md) | [installable setup](../specs/2026-11-11-installable-setup-profiles-and-sync.md) | 12 | Through Task 11: its VM proof ran over two guests on 2026-11-14 and is in the spec's "Verified facts". Task 12 waits on the owner's word. |
 | [Audit: gate, CI and docs](2026-11-14-audit-gate-ci-and-docs.md) | [project audit](../specs/2026-11-14-project-audit.md), G1 to G14 | 11 | Tasks 1, 2, 3, 5, 6 and 7 are on `main` (`9bc4017` to `97d4766`). Task 8 is the app plan's Task 5, done. Task 4 is the owner's. Tasks 9 and 10 are on `main` (`61b074a`, `8ff381a`). Task 11 is done with the P5 write-up. The plan stays open for Task 4's `fresh-install` run; its PRs are settled. |
 | [Audit: menu bar app](2026-11-14-audit-menu-bar-app.md) | project audit, M1 to M9 and G8 | 9 | All nine tasks are on `main` (`0cb1667` to `c448cb3`), with `c597959` added from review. Unreleased: the `app/VERSION` bump, tag and cask are the owner's. The plan moves to `completed/` after the guest steps Tasks 2 and 9 add have run. |
 
@@ -86,7 +85,7 @@ Decision 8 (owner values in linked files, finding I22) is not planned here. It b
 
 1. **Gate 9, then Gate 10.** The `ci.md`, forking table and macOS doc corrections. Gate 9 comes after Install 4 and Install 7, because two of its forking rows describe what those tasks ship. Done on 2026-11-15 (`61b074a`, `8ff381a`).
 2. **The owner runs `fresh-install` again**, since the install plan changes the setup path.
-3. **P5 Task 12** (retire `rotm settings serve`), only on the owner's word.
+3. **P5 Task 12** (retire `rotm settings serve`). Done on 2026-11-15, on the owner's word. The P5 plan is in `completed/`.
 4. Move each finished plan to `completed/`, and each spec to `specs/completed/` when every plan built on it is there.
 
 ## Tasks that touch the same files

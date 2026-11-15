@@ -167,11 +167,12 @@ else:
 # mise older than the floor, then missing: every subcommand exits 1 with one line
 for fake_mise, needle in ((fake("2026.11.4"), "found 2026.11.4"), (str(tmp / "absent"), "not on PATH")):
     os.environ["DOTFILES_SETTINGS_MISE"] = fake_mise
-    for argv in (("list",), ("get", "t.flag"), ("set", "t.flag", "on"), ("tui",), ("serve", "--no-open")):
+    for argv in (("list",), ("get", "t.flag"), ("set", "t.flag", "on"), ("tui",)):
         code, out, err = run(*argv)
         assert (code, out) == (1, "") and needle in err and err.count("\n") == 1, (argv, err)
 
 assert run("sync")[0] == 2
+assert run("serve")[0] == 2, "the browser UI is gone, so serve is an unknown command"
 os.environ["DOTFILES_SETTINGS_MISE"] = fake("2026.11.8 no setup repository is connected")
 code, out, _ = run("sync", "status")
 assert code == 0 and "not connected" in out, (code, out)

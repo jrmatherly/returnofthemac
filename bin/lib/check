@@ -85,7 +85,6 @@ job quiet "${python[@]}" setup/tests/macos-defaults.py
 if command -v uv > /dev/null; then
   job quiet uv run --quiet --locked --project settings python settings/tests/test_tui.py
   job quiet uv run --quiet --locked --project settings python settings/tests/test_tui_agents.py
-  job quiet uv run --quiet --locked --project settings python settings/tests/test_serve.py
   # hindsight/uv.lock must still match pyproject.toml; uv needs a Python 3.13 to check it
   job uv lock --check --quiet --directory hindsight
 else

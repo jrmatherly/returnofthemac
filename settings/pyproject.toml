@@ -3,7 +3,7 @@ name = "dotfiles-settings"
 version = "0.1.0"
 description = "See and change the settings this dotfiles repo manages"
 requires-python = ">=3.11"
-dependencies = ["textual>=8.2,<9", "textual-serve>=1.1,<2"]
+dependencies = ["textual>=8.2,<9"]
 
 [project.scripts]
 dotfiles-settings = "dotfiles_settings.cli:main"

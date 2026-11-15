@@ -1,14 +1,10 @@
 #!/bin/bash
 #
-# See and change the settings this dotfiles repo manages, in the terminal or a browser.
+# See and change the settings this dotfiles repo manages, in the terminal.
 #
 # - Open the terminal UI:
 #
 # `dotfiles-settings tui`
-#
-# - Open the same UI in a browser tab (local only, behind a per-run token):
-#
-# `dotfiles-settings serve`
 #
 # - List every setting with its value and where the value comes from:
 #

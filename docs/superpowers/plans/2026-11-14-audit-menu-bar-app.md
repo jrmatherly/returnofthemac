@@ -8,7 +8,7 @@
 
 **Tech Stack:** Swift 5.9 tools, macOS 14+, AppKit, SwiftUI, Observation, Swift Testing, `FakeRunner` and its `hold` from `app/Tests/RotmTestSupport`. mise 2026.11.8 for the one read-only `status --json` call Task 2 adds.
 
-**Spec:** `docs/superpowers/specs/2026-11-14-project-audit.md`, section "M. Menu bar app" and row G8. Read its Goal first. The app's design is the P5 plan, `docs/superpowers/plans/2026-11-13-p5-menu-bar-app.md`.
+**Spec:** `docs/superpowers/specs/2026-11-14-project-audit.md`, section "M. Menu bar app" and row G8. Read its Goal first. The app's design is the P5 plan, `docs/superpowers/plans/completed/2026-11-13-p5-menu-bar-app.md`.
 
 The fixes ship with the next app release (the `app/VERSION` bump, the tag and the cask), which is the owner's call and is not part of this plan.
 

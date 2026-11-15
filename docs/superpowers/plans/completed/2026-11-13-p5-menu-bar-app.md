@@ -491,7 +491,9 @@ public enum UpdateOutcome: Equatable { case relaunch, unchanged(String), failed(
 
 ---
 
-### Task 12: Retire the browser variant (waits on the owner's word)
+### Task 12: Retire the browser variant (done 2026-11-15)
+
+Outcome: the owner gave the word on 2026-11-15. `serve.py`, `templates/` and `test_serve.py` are deleted, `textual-serve` and its eleven dependencies left `uv.lock`, and `rotm settings serve` exits 2 as an unknown command. Nothing in `app/` called it.
 
 The owner's end goal (decision 17): once the native window covers what the browser was used for, `rotm settings serve` goes. Do not start this task until the owner says the window has replaced it for them.
 

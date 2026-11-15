@@ -11,7 +11,7 @@
 # `/bin/bash "/Volumes/My Shared Files/vm-proof/p5/proof.sh" diff {{1c1}} {{1c2}}`
 #
 # ---
-# Evidence for ../../plans/2026-11-13-p5-menu-bar-app.md (Task 11 Step 3), and the
+# Evidence for ../../plans/completed/2026-11-13-p5-menu-bar-app.md (Task 11 Step 3), and the
 # VM proofs the P3 plan (Task 9 Step 6) and the P4 plan (Task 11 Step 3) still owe.
 # Not part of the product. RUNBOOK.md beside it says what to click before each row.
 # The guest runs the copy at ~/vm-proof/p5/proof.sh on the host. Run it under

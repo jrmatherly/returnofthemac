@@ -1,4 +1,4 @@
-"""The dotfiles-settings command: list, get, set, reset, apply, status, sync, profile, tui and serve. Exit codes 0 ok, 1 failure,
+"""The dotfiles-settings command: list, get, set, reset, apply, status, sync, profile and tui. Exit codes 0 ok, 1 failure,
 2 unknown id, invalid value or refused profile name, 3 read-only."""
 import argparse, importlib, json, os, re, subprocess, sys
 from pathlib import Path
@@ -101,8 +101,6 @@ def parser() -> argparse.ArgumentParser:
                          ("new", "make a profile")):
         actions.add_parser(action, help=text).add_argument("name")
     sub.add_parser("tui", help="open the terminal UI")
-    c = sub.add_parser("serve", help="open the UI in a browser tab")
-    c.add_argument("--no-open", action="store_true")
     return p
 
 
@@ -124,9 +122,6 @@ def run(args: argparse.Namespace) -> None:
     mise.check_version()
     if args.command == "tui":
         ui("tui").run()
-        return
-    if args.command == "serve":
-        ui("serve").run(not args.no_open)
         return
     if args.command == "status":
         st = status()
@@ -183,8 +178,8 @@ def ui(name: str):
     try:
         return importlib.import_module(f".{name}", __package__)
     except ImportError as e:
-        if (e.name or "").split(".")[0] in ("textual", "textual_serve"):
-            raise SettingsError("tui and serve need Textual. Run bin/dotfiles-settings, or install the package with uv.") from None
+        if (e.name or "").split(".")[0] == "textual":
+            raise SettingsError("tui needs Textual. Run bin/dotfiles-settings, or install the package with uv.") from None
         raise
 
 

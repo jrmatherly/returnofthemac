@@ -4,10 +4,9 @@
 
 ![The terminal UI showing the Agents section](screenshot.svg)
 
-There are three ways in:
+There are two ways in:
 
 - `dotfiles-settings tui` opens the terminal UI. Sections are on the left and the highlighted section's settings on the right. A row shows where its value comes from, and an overridden row has a **Reset** button (`ctrl+r` resets the focused row). Enter or Tab saves a field, and a field being edited keeps its text when the setting changes elsewhere. `p` opens the plugin stack of the folder it was started from, with `k` to keep a plugin and `o` to turn one off.
-- `dotfiles-settings serve` opens the same UI in a browser tab. `--no-open` prints the URL without opening it.
 - `list`, `get`, `set`, `reset`, `apply` and `status` are for scripts and the [menu bar app](../docs/menu-bar.md), with `--json` on `list`, `get` and `status`. The app's settings window runs these commands.
 
 ```shell
@@ -64,7 +63,6 @@ The one row in the Dotfiles section, `dotfiles.links`, is the `dotfile` kind and
 | `status [--json]` | This copy's mode, branch and commit, the profile in use and the sync state, one line each, or the JSON object [below](#status) | 0 |
 | `sync on [--repo NAME]`, `sync off`, `sync now`, `sync status`, `sync apply` | What happened and what to run next, described in [Sync](#sync) | 0, 1 when a step stops it, 2 for an unknown action or a `--repo` that is not a repository name |
 | `tui` | Runs the terminal UI | 0 |
-| `serve [--no-open]` | Prints the URL and serves the UI until you stop it | 0 |
 
 In Claude Code, `set`, `reset` and `apply` ask first.
 
@@ -194,18 +192,6 @@ The value also has to fit the setting's type. An `int` is an optional `-` and di
 
 A `bool` accepts `on`, `true`, `yes` or `1` for on, and `off`, `false`, `no` or `0` for off, in any case. On is stored as the setting's `true_value`, such as `1` or `true`. Off is stored as an empty value, which still beats a seed of `1`. The adapter receives `true_value` or `""`, never the word you typed. A row shows on when its value equals `true_value`. `setup/macos-extras.sh` reads its switches the same way, so any other value is off in both.
 
-## The browser UI
-
-`serve` runs textual-serve on `127.0.0.1` only, on a random free port. The URL it prints carries a per-run token. The first request with the token sets a cookie and redirects to `/`, which takes the token out of the address bar. Every request needs that cookie, a `Host` of `127.0.0.1:<port>` and, when it sends one, a matching `Origin`. The WebSocket must send an `Origin`. Any other request gets 403, so another page open in the browser cannot drive the app.
-
-The page makes no request outside `127.0.0.1`. `src/dotfiles_settings/templates/app_index.html` is textual-serve's page with its `fonts.googleapis.com` stylesheet link replaced by an `@font-face` on `RobotoMono-VariableFont_wght.ttf`, the font file textual-serve ships. `LICENSE-textual-serve` beside it is the license that copy carries.
-
-After you upgrade textual-serve in `uv.lock`, `tests/test_serve.py` fails if upstream changed its template. To fix it:
-
-1. Copy the new `textual_serve/templates/app_index.html` from `settings/.venv/lib/python3.*/site-packages/` over `src/dotfiles_settings/templates/app_index.html`.
-1. Replace its Google Fonts `<link>` with the `@font-face` block, as `LOCAL_FONT` in `tests/test_serve.py` spells it.
-1. Run `uv run --project settings python settings/tests/test_serve.py` again.
-
 ## Adding a setting
 
 Add one `[[setting]]` table to `registry.toml`. These eight fields are required:
@@ -267,4 +253,4 @@ Use your fork's URL if you have one. The wheel carries its own copy of `registry
 
 - mise 2026.11.8 or newer. Below that, or with no mise on PATH, every command exits 1 with one line that names the floor.
 - Python 3.11 or newer.
-- uv. The first run of `bin/dotfiles-settings` creates `settings/.venv` and downloads Textual and textual-serve.
+- uv. The first run of `bin/dotfiles-settings` creates `settings/.venv` and downloads Textual.
