@@ -31,5 +31,5 @@
 "~/Library/Application Support/Code/User/snippets/global.code-snippets" = { source = "~/dotfiles/vscode/User/snippets/global.code-snippets", mode = "copy", create_if_missing = true }
 
 # rotm settings writes the jstack roles here; every other rule stays a link
-"~/.claude/rules" = { source = "~/dotfiles/tilde/.claude/rules", mode = "symlink-each", exclude = [".DS_Store", "jstack-models.md"] }
+"~/.claude/rules" = { source = "~/dotfiles/tilde/.claude/rules", mode = "symlink-each", exclude = [".DS_Store", "rtk.md", "hindsight.md", "catalog.md", "jstack-models.md"] }
 "~/.claude/rules/jstack-models.md" = { source = "~/dotfiles/tilde/.claude/rules/jstack-models.md", mode = "copy", create_if_missing = true }

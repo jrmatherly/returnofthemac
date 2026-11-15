@@ -7,8 +7,8 @@ Everything outside the base is grouped into thirteen modules, and each one can b
 | `fonts` | The seven Nerd Font casks, and the Iosevka Code font that setup and `sysup` install for VS Code |  |
 | `apps` | The GUI apps, 1Password among them, and the language servers for Terax's editor |  |
 | `vscode` | Every VS Code extension. VS Code itself is in the base |  |
-| `claude` | Claude Code: its installer, its saved config and skills, the plugin catalog, and `bun` |  |
-| `agents` | `rtk`, CodeRabbit, CodeGraph, REA, Serena, Scrapling, Hindsight memory and the MCP server registrations | `claude` for the registrations. Hindsight's daemon needs `cargo`, from `rustup` in `devops`. REA also uses Ghidra (`security`) and Hopper (`apps`) when they are there |
+| `claude` | Claude Code: its installer, its saved config and skills, the plugin catalog, `bun`, and the `catalog.md` Claude rule. A rule already linked stays when the module is switched off later |  |
+| `agents` | `rtk`, CodeRabbit, CodeGraph, REA, Serena, Scrapling, Hindsight memory, the MCP server registrations, and the `rtk.md` and `hindsight.md` Claude rules. A rule already linked stays when the module is switched off later | `claude` for the registrations. Hindsight's daemon needs `cargo`, from `rustup` in `devops`. REA also uses Ghidra (`security`) and Hopper (`apps`) when they are there |
 | `cloud` | The cloud, Azure and AWS CLIs, `azd`, Azure Functions Core Tools, Aspire and Serverless |  |
 | `kubernetes` | Kubernetes, container and infra CLIs, OrbStack and Docker, `flux2`, `talosctl`, `mirrord` and `lazydocker` |  |
 | `devops` | CI, linting and DevOps formulae, `rustup`, and the Sentry CLI |  |

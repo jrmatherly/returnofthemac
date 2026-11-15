@@ -18,6 +18,8 @@ set -euo pipefail
 
 repo="$(cd "$(dirname "$0")/../.." && pwd -P)"
 fragment="$repo/tilde/.config/mise/conf.d/40-dotfiles.toml"
+# The module fragments that link rules of their own
+modfrags=("$repo/tilde/.config/mise/conf.d/60-rotm-agents.toml" "$repo/tilde/.config/mise/conf.d/60-rotm-claude.toml")
 
 fail() {
   echo "test-dotfiles: $1" >&2
@@ -97,7 +99,7 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 home="$tmp/home"
 mkdir -p "$home" "$tmp/cfg/conf.d"
-cp "$fragment" "$tmp/cfg/conf.d/"
+cp "$fragment" "${modfrags[@]}" "$tmp/cfg/conf.d/"
 ln -s "$repo" "$home/dotfiles"
 
 # MISE_CONFIG_DIR only (never MISE_GLOBAL_CONFIG_FILE); the ceiling keeps a
@@ -113,7 +115,7 @@ snapshot() { (cd "$home" && find . \( -type l -o -type f \) -exec stat -f '%N %Y
 # Nothing here may reach the real HOME or read the clone's live mise config
 [ "$home" != "$HOME" ] && [ ! "$home" -ef "$HOME" ] || fail "the scratch HOME is the real HOME"
 only_scratch_config() {
-  [ "$(m config ls --no-header 2>&1 | awk '{print $1}')" = "$tmp/cfg/conf.d/40-dotfiles.toml" ] || fail "mise reads a config outside the scratch dir: $(m config ls 2>&1)"
+  ! m config ls --no-header 2>&1 | awk '{print $1}' | grep -qvF "$tmp/cfg/conf.d/" || fail "mise reads a config outside the scratch dir: $(m config ls 2>&1)"
 }
 only_scratch_config
 
@@ -125,6 +127,9 @@ m dotfiles status --missing > "$tmp/out" 2>&1 || fail "status --missing after ap
 [ -d "$home/.claude/rules" ] && [ ! -L "$home/.claude/rules" ] || fail "~/.claude/rules is not a real directory"
 [ -d "$home/.claude/skills" ] && [ ! -L "$home/.claude/skills" ] || fail "~/.claude/skills is not a real directory"
 [ -L "$home/.claude/rules/index.md" ] || fail "rules are not linked one by one"
+for rule in rtk hindsight catalog; do
+  [ -L "$home/.claude/rules/$rule.md" ] || fail "modules on: $rule.md is not linked"
+done
 [ -L "$home/.config/gh" ] && [ ! -L "$home/.config" ] || fail "~/.config children are not linked one by one"
 [ ! -e "$home/README.md" ] || fail "tilde/README.md was linked"
 [ -f "$home/.codex/config.toml" ] && [ ! -L "$home/.codex/config.toml" ] || fail "codex config is not a regular file"
@@ -185,6 +190,43 @@ before=$(snapshot)
 if m dotfiles apply --yes > "$tmp/out" 2>&1; then fail "apply succeeded without ~/dotfiles"; fi
 grep -q 'sources do not exist' "$tmp/out" || fail "missing ~/dotfiles not reported: $(cat "$tmp/out")"
 [ "$before" = "$(snapshot)" ] || fail "an apply without ~/dotfiles still wrote something"
+
+# The agents and claude modules off, in a scratch HOME of their own: their rules are not linked
+off_home="$tmp/offhome"
+mkdir -p "$off_home" "$tmp/cfgoff/conf.d"
+cp "$fragment" "${modfrags[@]}" "$tmp/cfgoff/conf.d/"
+printf 'ignored_config_paths = ["conf.d/60-rotm-agents.toml", "conf.d/60-rotm-claude.toml"]\n' > "$tmp/cfgoff/miserc.local.toml"
+ln -s "$repo" "$off_home/dotfiles"
+moff() {
+  (cd "$tmp" && env -i HOME="$off_home" PATH="$PATH" MISE_CONFIG_DIR="$tmp/cfgoff" MISE_STATE_DIR="$tmp/stateoff" \
+    MISE_DATA_DIR="$tmp/dataoff" MISE_CACHE_DIR="$tmp/cacheoff" MISE_CEILING_PATHS="$tmp" mise "$@")
+}
+# rotm-modules trusts an ignored file, which mise's dotfiles history still reads (test-modules covers why)
+moff trust "$tmp/cfgoff/conf.d/60-rotm-agents.toml" > /dev/null 2>&1 || fail "agents and claude off: mise trust failed"
+moff dotfiles apply --yes > "$tmp/out" 2>&1 || fail "agents and claude off: apply failed: $(cat "$tmp/out")"
+for rule in rtk hindsight catalog; do
+  [ ! -e "$off_home/.claude/rules/$rule.md" ] || fail "agents and claude off: $rule.md is still linked"
+done
+[ -L "$off_home/.claude/rules/verify-first.md" ] || fail "agents and claude off: the base rules are not linked"
+
+# A home set up when the base entry still linked the module rules keeps them after ONE apply
+mig_home="$tmp/mighome"
+mkdir -p "$mig_home" "$tmp/cfgmig/conf.d"
+sed 's/, "rtk.md", "hindsight.md", "catalog.md"//' "$fragment" > "$tmp/cfgmig/conf.d/40-dotfiles.toml"
+grep -qF '"~/.claude/rules" = { source = "~/dotfiles/tilde/.claude/rules", mode = "symlink-each", exclude = [".DS_Store"] }' "$tmp/cfgmig/conf.d/40-dotfiles.toml" \
+  || fail "migration: could not rebuild the old ~/.claude/rules entry"
+ln -s "$repo" "$mig_home/dotfiles"
+mmig() {
+  (cd "$tmp" && env -i HOME="$mig_home" PATH="$PATH" MISE_CONFIG_DIR="$tmp/cfgmig" MISE_STATE_DIR="$tmp/statemig" \
+    MISE_DATA_DIR="$tmp/datamig" MISE_CACHE_DIR="$tmp/cachemig" MISE_CEILING_PATHS="$tmp" mise "$@")
+}
+mmig dotfiles apply --yes > "$tmp/out" 2>&1 || fail "migration: old-layout apply failed: $(cat "$tmp/out")"
+cp "$fragment" "${modfrags[@]}" "$tmp/cfgmig/conf.d/"
+mmig dotfiles apply --yes > "$tmp/out" 2>&1 || fail "migration: apply failed: $(cat "$tmp/out")"
+for rule in rtk hindsight catalog; do
+  [ -L "$mig_home/.claude/rules/$rule.md" ] || fail "migration: $rule.md is gone after one apply"
+done
+mmig dotfiles status --missing > "$tmp/out" 2>&1 || fail "migration: status --missing after one apply: $(cat "$tmp/out")"
 
 # The installed environment, in a second scratch HOME: the targets apps write
 # to are real files and folders, seeded once and then left to their owner

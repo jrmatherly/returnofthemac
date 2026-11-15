@@ -37,8 +37,9 @@
 
 # Claude Code: ~/.claude holds its own state and ~/.claude/rules may hold
 # machine-local rules, so both stay real folders. Each tracked rule is linked
-# into it (a new rule needs no entry), and so is the status line script.
-"~/.claude/rules" = { source = "~/dotfiles/tilde/.claude/rules", mode = "symlink-each", exclude = [".DS_Store"] }
+# into it (a new rule needs no entry), and so is the status line script. The
+# rules about a module's tools are linked from that module's fragment.
+"~/.claude/rules" = { source = "~/dotfiles/tilde/.claude/rules", mode = "symlink-each", exclude = [".DS_Store", "rtk.md", "hindsight.md", "catalog.md"] }
 "~/.claude/statusline-command.sh" = { source = "~/dotfiles/tilde/.claude/statusline-command.sh", mode = "symlink" }
 
 # One link per ~/.config child: apps write their own state into these folders

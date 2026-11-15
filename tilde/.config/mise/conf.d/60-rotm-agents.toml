@@ -29,3 +29,10 @@
 # is why it is not 0: a few hours still catches a pulled release. npm's own
 # `min-release-age=7` from setup/misc.sh never applies to mise installs.
 "npm:rea-agents" = { version = "latest", minimum_release_age = "6h" }
+
+[dotfiles]
+# The rules describe tools this module installs. `depends` writes them after
+# ~/.claude/rules, whose apply prunes the links it made for them before they
+# were excluded there.
+"~/.claude/rules/rtk.md" = { source = "~/dotfiles/tilde/.claude/rules/rtk.md", mode = "symlink", depends = ["~/.claude/rules"] }
+"~/.claude/rules/hindsight.md" = { source = "~/dotfiles/tilde/.claude/rules/hindsight.md", mode = "symlink", depends = ["~/.claude/rules"] }

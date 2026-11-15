@@ -9,3 +9,9 @@
 # package-manager settings are in tilde/.bunfig.toml; crash reports are off
 # via DO_NOT_TRACK (zsh/env.zsh).
 bun = "latest"
+
+[dotfiles]
+# The rule describes a tool this module installs. `depends` writes it after
+# ~/.claude/rules, whose apply prunes the link it made for it before it was
+# excluded there.
+"~/.claude/rules/catalog.md" = { source = "~/dotfiles/tilde/.claude/rules/catalog.md", mode = "symlink", depends = ["~/.claude/rules"] }
