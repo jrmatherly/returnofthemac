@@ -26,7 +26,16 @@ How it works:
    ls ~/.local/bin/mise
    ```
 
-   **Tell the session** what both printed. `install.sh` installs what is missing, and this run is its first on a real Mac. When the tools are missing it asks for the guest's password and installs them with no window; if a window opens instead, finish it and **tell the session**. **Not run on the host:** its two installers.
+   The baseline guest has the tools and no mise (the owner, 2026-11-15). So that `install.sh` has to install the tools too, remove them when the first line printed `/Library/Developer/CommandLineTools`. Nothing is kept from this guest:
+
+   ```shell
+   sudo rm -rf /Library/Developer/CommandLineTools
+   xcode-select -p; echo "exit $?"
+   ```
+
+   The second line must now end with an exit code that is not 0. When it still prints `exit 0`, or the first line printed a path inside `Xcode.app`, leave the tools as they are: the run then proves the mise install only. **Not run on the host.**
+
+   **Tell the session** what each line printed. `install.sh` installs what is missing, and this run is its first on a real Mac. When the tools are missing it asks for the guest's password and installs them with no window; if a window opens instead, finish it and **tell the session**. **Not run on the host:** its two installers.
 
 3. Make the record folder:
 
