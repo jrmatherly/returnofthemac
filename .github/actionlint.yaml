@@ -1,5 +1,9 @@
 self-hosted-runner:
-  # Hosted, not self-hosted: the macOS 27 preview image (actions/runner-images
-  # README), which actionlint 1.7.12 does not list yet. Used by fresh-install.yml
   labels:
+    # Hosted, not self-hosted: the macOS 27 preview image (actions/runner-images
+    # README), which actionlint 1.7.12 does not list yet. Used by fresh-install.yml
     - xcode-27
+    # Hosted, not self-hosted, and actionlint 1.7.12 does not list it yet.
+    # Renovate PR 19 wants it for app-release.yml's release job; drop this
+    # entry once actionlint lists it
+    - ubuntu-26.04
