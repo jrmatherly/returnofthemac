@@ -5,6 +5,7 @@
 # - Run its own cases, then check the repository:
 #
 # `python3 setup/tests/doc-links.py`
+import os
 import re
 import subprocess
 import sys
@@ -21,7 +22,7 @@ PAGES_NAMED_AFTER_A_SCRIPT = ("claude-config", "claude-catalog")
 
 LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 SCHEME = re.compile(r"[a-z][a-z0-9+.-]*:", re.I)
-FENCE = re.compile(r"\s*(```|~~~)")
+FENCE = re.compile(r" {0,3}(`{3,}|~{3,})(.*)")
 
 
 def slug(heading):
@@ -32,12 +33,17 @@ def slug(heading):
 
 def prose(path):
     """(line number, line) for each line of a page outside its fenced blocks."""
-    fenced = False
+    fence = ""
     for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        if FENCE.match(line):
-            fenced = not fenced
-        elif not fenced:
-            yield number, line
+        mark = FENCE.match(line)
+        if not fence:
+            # An opening backtick fence has no backtick after it: ```x``` on one line is inline code
+            if mark and not (mark[1][0] == "`" and "`" in mark[2]):
+                fence = mark[1]
+            else:
+                yield number, line
+        elif mark and mark[1].startswith(fence) and not mark[2].strip():
+            fence = ""
 
 
 def anchors(path):
@@ -52,11 +58,16 @@ def anchors(path):
     return found
 
 
-def problems(root, pages):
+def problems(root, pages, tracked=None):
+    """tracked: the paths git knows, so a link that differs only in case, or points at an untracked file, fails."""
     cache = {}
     for page in pages:
         for number, line in prose(root / page):
-            for target in LINK.findall(re.sub(r"`[^`]*`", "", line)):
+            line = re.sub(r"`[^`]*`", "", line)
+            # A titled, nested or bracketed link is not read by LINK, and would pass unchecked
+            if "](" in LINK.sub("", line):
+                yield f"{page}:{number}: a link this check cannot read: write it as [text](target)"
+            for target in LINK.findall(line):
                 if SCHEME.match(target):
                     continue
                 path, _, fragment = unquote(target).partition("#")
@@ -66,7 +77,8 @@ def problems(root, pages):
                     file = (root / page).parent / path
                 else:
                     file = root / page
-                if not file.exists():
+                known = tracked is None or os.path.relpath(file, root) in tracked
+                if not file.exists() or not known:
                     yield f"{page}:{number}: no such file: {target}"
                 elif fragment and file.suffix == ".md":
                     if file not in cache:
@@ -81,10 +93,20 @@ def self_test():
     assert slug("macOS tips & tricks") == "macos-tips--tricks"
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
-        (root / "a.md").write_text("[gone](b.md#gone) [there](b.md#here-1) [code](`x.md`)\n```\n[fenced](x.md)\n```\n")
+        (root / "a.md").write_text(
+            "[gone](b.md#gone) [there](b.md#here-1) `[code](x.md)`\n"
+            "````\n```\n[fenced](x.md)\n# Not a heading\n````\n"
+            '[titled](b.md "t")\n[case](B.md) [none](c.md) [own](#not-a-heading)\n'
+        )
         (root / "b.md").write_text("# Here\n\n## Here\n")
-        found = list(problems(root, ["a.md", "b.md"]))
-        assert found == ["a.md:1: no such heading: b.md#gone"], found
+        found = list(problems(root, ["a.md", "b.md"], tracked={"a.md", "b.md"}))
+        assert found == [
+            "a.md:1: no such heading: b.md#gone",
+            "a.md:7: a link this check cannot read: write it as [text](target)",
+            "a.md:8: no such file: B.md",
+            "a.md:8: no such file: c.md",
+            "a.md:8: no such heading: #not-a-heading",
+        ], found
 
 
 def main():
@@ -93,7 +115,12 @@ def main():
         ["git", "ls-files", "*.md"], cwd=ROOT, check=True, capture_output=True, text=True
     ).stdout.splitlines()
     pages = [p for p in tracked if not p.startswith(SKIPPED)]
-    found = list(problems(ROOT, pages))
+    files = subprocess.run(["git", "ls-files"], cwd=ROOT, check=True, capture_output=True, text=True).stdout.splitlines()
+    known = set(files) | {os.path.dirname(f) for f in files} | {"."}
+    for folder in list(known):
+        while folder := os.path.dirname(folder):
+            known.add(folder)
+    found = list(problems(ROOT, pages, known))
     scripts = {p.name for p in (ROOT / "bin").iterdir() if p.is_file()}
     for page in sorted((ROOT / "docs").glob("*.md")):
         if page.stem in scripts and page.stem not in PAGES_NAMED_AFTER_A_SCRIPT:

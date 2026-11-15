@@ -268,7 +268,8 @@ roles="$home/.claude/rules/jstack-models.md"
 [ ! -L "$roles" ] && cmp -s "$roles" "$repo/tilde/.claude/rules/jstack-models.md" || fail "installed: jstack-models.md is not a seeded copy"
 [ -L "$home/.claude/rules/verify-first.md" ] || fail "installed: the other rules are no longer links"
 ffconfig="$home/.config/fastfetch/config.jsonc"
-[ -f "$ffconfig" ] && [ ! -L "$ffconfig" ] && cmp -s "$ffconfig" "$repo/tilde/.config/fastfetch/config.jsonc" || fail "installed: fastfetch's config.jsonc is not a seeded copy"
+# Not through a folder link: the edit below would then land in the repo
+[ ! -L "$home/.config/fastfetch" ] && [ -f "$ffconfig" ] && [ ! -L "$ffconfig" ] && cmp -s "$ffconfig" "$repo/tilde/.config/fastfetch/config.jsonc" || fail "installed: fastfetch's config.jsonc is not a seeded copy"
 [ -r "$home/.config/fastfetch/ascii/deadpool-katanas.ascii" ] || fail "installed: fastfetch's logo is not readable"
 # What the user or an app writes afterwards stays, and never reaches the checkout
 echo "# mine" >> "$home/.gitconfig"
@@ -295,7 +296,7 @@ cp "$fragment" "$tmp/cfg3/conf.d/"
 cp "$installed" "$tmp/cfg3/"
 mi3 dotfiles apply --yes > "$tmp/out" 2>&1 || fail "installed migration: apply failed: $(cat "$tmp/out")"
 ffconfig="$home/.config/fastfetch/config.jsonc"
-[ -f "$ffconfig" ] && [ ! -L "$ffconfig" ] && [ -r "$home/.config/fastfetch/ascii/deadpool-katanas.ascii" ] \
+[ ! -L "$home/.config/fastfetch" ] && [ -f "$ffconfig" ] && [ ! -L "$ffconfig" ] && [ -r "$home/.config/fastfetch/ascii/deadpool-katanas.ascii" ] \
   || fail "installed migration: no config.jsonc of its own after one apply"
 
 echo ok
