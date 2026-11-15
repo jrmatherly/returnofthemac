@@ -220,16 +220,24 @@ for argv in (("set", "--shared", "t.flag", "on"), ("set", "t.flag", "on"), ("res
 assert seen == [("set", True), ("set", False), ("reset", True), ("reset", False)], seen
 cli.ADAPTERS["env"] = real_env
 
-# The app's decoder tests read these fixtures, so a field renamed here or there fails one side's gate
+# The app's decoder tests read these fixtures, so a field renamed or a type changed here or there fails one side's gate
 fixtures = Path(__file__).resolve().parents[2] / "app/Tests/RotmTestSupport/Fixtures"
 live = json.loads(run("list", "--json")[1])[0]
-assert all(set(row) == set(live) for row in json.loads((fixtures / "list.json").read_text())), set(live)
 
 
 def shape(value):
-    return {k: shape(v) for k, v in value.items()} if isinstance(value, dict) else None
+    return {k: shape(v) for k, v in value.items()} if isinstance(value, dict) else type(value).__name__
 
+
+def same(a, b):
+    """Null matches any type: seed, origin, missing and conflicts are nullable."""
+    if isinstance(a, dict) and isinstance(b, dict):
+        return a.keys() == b.keys() and all(same(a[k], b[k]) for k in a)
+    return a == b or "NoneType" in (a, b)
+
+
+assert all(same(shape(row), shape(live)) for row in json.loads((fixtures / "list.json").read_text())), shape(live)
 
 os.environ["DOTFILES_SETTINGS_MISE"] = fake("2026.11.8 no setup repository is connected")
-assert shape(json.loads((fixtures / "status.json").read_text())) == shape(json.loads(run("status", "--json")[1]))
+assert same(shape(json.loads((fixtures / "status.json").read_text())), shape(json.loads(run("status", "--json")[1])))
 print("ok")
