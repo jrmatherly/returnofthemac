@@ -658,6 +658,18 @@ prepare() {
 answers='\ny\n' run
 check_true "an origin already connected: no question" eval '! asked'
 check_true "an origin already connected: no restore" restores 0
+check_true "an origin connected and never applied: the tool settings apply" applies 1
+check_true "… with no question and no second restore" eval '! asked && restores 0'
+
+prepare() {
+  stub gh "$saved"
+  touch "$STATE/origin"
+  mkdir -p "$HOME/.local/state/rotm" && echo '{}' > "$HOME/.local/state/rotm/effective.applied.json"
+}
+answers='\ny\n' run
+check_true "an origin connected and already applied: no question" eval '! asked'
+check_true "an origin connected and already applied: no restore" restores 0
+check_true "an origin connected and already applied: nothing is applied again" applies 0
 
 prepare() {
   stub gh "$saved"

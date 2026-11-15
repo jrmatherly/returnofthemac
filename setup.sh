@@ -506,7 +506,14 @@ load_saved_settings() {
   local origin login repo answer folder aside=""
   [ -z "$dry_run_flag" ] && github_token || return 0
   origin=$(mise dot origin 2>&1) || true
-  case "$origin" in *"no setup repository is connected"*) ;; *) return 0 ;; esac
+  case "$origin" in
+    *"no setup repository is connected"*) ;;
+    *)
+      # A run that stopped between the restore and the apply leaves the origin connected and nothing applied
+      [ -e "${XDG_STATE_HOME:-$HOME/.local/state}/rotm/effective.applied.json" ] || restored=true
+      return 0
+      ;;
+  esac
   login=$(gh api user --jq .login 2> /dev/null) && [ -n "$login" ] || return 0
   repo="$login/rotm-settings"
   [ "$(gh repo view "$repo" --json isEmpty --jq .isEmpty 2> /dev/null)" = false ] \
