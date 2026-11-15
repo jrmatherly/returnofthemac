@@ -7,7 +7,7 @@ Mole is a Mac cleaner and maintenance tool, the `brew:mole` package in `tilde/.c
 - `mo clean` and `mo optimize` are safe for this setup with the tracked whitelist. Mole leaves alone what the setup depends on: mise installs, uv tools (Serena, Scrapling), `~/.claude`, `~/.claude.json`, Claude plugin caches and the npx cache their MCP servers run from, Scrapling's Playwright Chromium, iCloud and Mail.
 - Run every destructive command from a terminal, never from an agent shell. Without a TTY, `mo clean` and `mo optimize` start deleting without asking.
 - Run `mo purge` interactively only. Its git-tracked protection can't help a project that isn't a git repo.
-- Skip `mo touchid`, `mo completion`, `mo update` and `mo remove`. The setup already covers each of them, and `mo completion` would write its line into the tracked `tilde/.zshrc`.
+- Skip `mo touchid`, `mo completion`, `mo update` and `mo remove`. The setup already covers each of them, and in a clone `mo completion` would write its line into the tracked `tilde/.zshrc`.
 - Mole's space estimate leaves out the largest caches, such as Go's build cache and Docker or OrbStack data.
 
 ## What each command does
@@ -23,7 +23,7 @@ Mole is a Mac cleaner and maintenance tool, the `brew:mole` package in `tilde/.c
 | `mo status` | Read-only live dashboard. It prints JSON when piped. | Use freely. |
 | `mo history` | Reads `~/Library/Logs/mole/operations.log`. | Use after a run. |
 | `mo touchid` | Writes `pam_tid.so` to `/etc/pam.d/sudo_local`. | Skip. `setup.sh` writes the same line, and Mole reports "already enabled" (`bin/touchid.sh`). |
-| `mo completion` | Appends an `eval` line to `~/.zshrc`. It follows the link chain and edits the final file (`_completion_rc_target`, `bin/completion.sh`). | Skip. `~/.zshrc` links to `tilde/.zshrc`, so the line would land in the repo. The formula's `share/zsh/site-functions/_mole` already completes `mo`. |
+| `mo completion` | Appends an `eval` line to `~/.zshrc`. It follows the link chain and edits the final file (`_completion_rc_target`, `bin/completion.sh`). | Skip. In a clone `~/.zshrc` links to `tilde/.zshrc`, so the line would land in the repo. The formula's `share/zsh/site-functions/_mole` already completes `mo`. |
 | `mo update` | For a Homebrew install, runs `brew update` and `brew upgrade mole` (`lib/core/common.sh`). | Skip. `sysup` upgrades the `brew:mole` package. |
 | `mo slim` | Removes the Intel code from universal apps in `/Applications` and `~/Applications` (`bin/slim.sh`). It thins a clone of each app and swaps it in only if `codesign --verify`, the same Developer ID team and `spctl --assess` all pass. The original goes to Trash. It skips App Store, Apple, running and not-owned apps. Without a TTY it only lists apps. | Optional, and safe for casks. Each cask upgrade or app update brings the Intel code back. The space returns once the Trash is emptied. Run `mo slim --dry-run` first. |
 | `mo remove` | For a Homebrew install, runs `brew uninstall --force mole` and moves `~/.config/mole` to Trash (`lib/manage/remove.sh`). It refuses to run without a TTY. | Skip. `setup.sh` reinstalls Mole from the `media` module. To drop it, turn that module off or declare `"brew:mole"` absent ([modules](modules.md)), then run `mise bootstrap packages prune --manager brew --dry-run` and review what it lists before pruning. |
@@ -110,7 +110,9 @@ Mole reads two config files at fixed paths, `~/.config/mole/whitelist` and `~/.c
 
 A `.local` file replaces the shared one; nothing is merged. Start one as a copy of the shared file and add the Mac's own lines. A `.local` is not picked up by itself. Add its entry to `tilde/.config/mise/config.local.toml` (gitignored, so it stays on this Mac) and run `mise dotfiles apply`: the local entry replaces the tracked one, and the link is repointed without asking. Delete the entry and apply again to go back. A real file at the destination stops the apply.
 
-Edit the files in the repo. Mole's own editors (`mo clean --whitelist`, `mo optimize --whitelist`) rewrite the file through the link, which drops its comments.
+In a clone, edit the files in the repo. Mole's own editors (`mo clean --whitelist`, `mo optimize --whitelist`) rewrite the file through the link, which drops its comments.
+
+On an installed copy the two links point into the copy, so do not edit them or use Mole's editors: a change there stops `rotm update`. Keep your own list in a file outside the copy, and name it as the `source` of the entry in `~/.config/mise/config.local.toml`, as for a `.local` file above.
 
 ### Clean whitelist
 

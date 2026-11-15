@@ -10,7 +10,7 @@ This folder holds what `rotm settings` writes: your changed settings, the module
 
 If this file exists, it's sourced near the end of `~/.zshrc` (after `zsh/init.zsh`), so its content can add to or override the existing aliases, settings, PATH, etc.
 
-An `export` here is a starting value. A setting changed with [`dotfiles-settings`](../settings/README.md) beats an export of the same variable in every new shell, and `dotfiles-settings reset <id>` hands the variable back to the export. The changes are stored in `~/.config/rotm/config.override.toml`, a folder of your own outside the clone, and `config.override.toml` in the mise config dir is a link to it. The modules you switched off are in `~/.config/rotm/modules-off.local`, linked the same way. `setup.sh` and `sysup` move a real file found in the config dir into the folder and make the link. [Settings sync](settings-sync.md) saves that folder to a private GitHub repository of your own and loads it on your next Mac.
+An `export` here is a starting value. A setting changed with [`dotfiles-settings`](../settings/README.md) beats an export of the same variable in every new shell, and `dotfiles-settings reset <id>` hands the variable back to the export. The changes are stored in `~/.config/rotm/config.override.toml`, a folder of your own outside the clone or the installed copy, and `config.override.toml` in the mise config dir is a link to it. The modules you switched off are in `~/.config/rotm/modules-off.local`, linked the same way. `setup.sh` and `sysup` move a real file found in the config dir into the folder and make the link. [Settings sync](settings-sync.md) saves that folder to a private GitHub repository of your own and loads it on your next Mac.
 
 ## `~/.ssh/config.local`
 

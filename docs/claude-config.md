@@ -4,7 +4,7 @@
 
 ## Summary
 
-- Run `claude-config save` after installing or removing a plugin or skill, or changing a setting, then review `git diff agents/` and commit. `save` records what this machine has now.
+- In a clone, run `claude-config save` after installing or removing a plugin or skill, or changing a setting, then review `git diff agents/` and commit. `save` records what this machine has now.
 - `save` never shrinks a tracked file whose source is missing on this machine (a Mac that is not set up yet). It warns and keeps the tracked file. Writes go through a temp file and `mv`.
 - `restore` adds. Settings already on the machine win, permission lists are unioned, and nothing is rewritten when nothing is missing. The one removal: allow rules listed in `agents/claude-permissions-retired.txt` are dropped by `restore`, `save` and `retire`. Add a rule there when you remove it from `agents/claude-settings.json`, or another Mac keeps it and its next `save` brings it back. `sysup` runs `retire`, which only removes, so a pull can't grant anything: new rules wait for a `restore` you run yourself.
 - Secrets never land in the tracked settings: credential helpers are dropped, and of `env` only Claude Code's own switches and the variables plugin hooks read (`AZURE_MCP_COLLECT_TELEMETRY`, `HINDSIGHT_API_LLM_PROVIDER` and the `HINDSIGHT_API_*LLM_MODEL` pins) survive.

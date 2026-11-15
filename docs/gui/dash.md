@@ -4,9 +4,9 @@
 
 ## Sync folder
 
-Dash's settings sync to the repo's `dash/` folder (`dash/Dash.dashsync`), which Dash creates once its sync folder points there; until then `setup.sh --dash` stops with "Dash sync file not found".
+In a clone, Dash's settings sync to the repo's `dash/` folder (`dash/Dash.dashsync`). On an installed copy they sync to `~/.local/share/rotm/dash`, which `rotm install --dash` seeds from the tracked file, because `rotm update` replaces the copy. Dash creates the sync file once its sync folder points there, and until then `setup.sh --dash` (`rotm install --dash`) stops with "Dash sync file not found".
 
-- **Dash → Settings → General → Syncing: Set Up Syncing…** opens the sync sheet; **Set Sync Folder…** → the repo's `dash/` folder (`$DOTFILES/dash`, e.g. `~/dev/dotfiles/dash`). **Stop Syncing** on the same sheet turns it off
+- **Dash → Settings → General → Syncing: Set Up Syncing…** opens the sync sheet; **Set Sync Folder…** → `~/.local/share/rotm/dash` on an installed copy, or the repo's `dash/` folder in a clone (`$DOTFILES/dash`, e.g. `~/dev/dotfiles/dash`). **Stop Syncing** on the same sheet turns it off
 - Under **What to sync**, tick: **General settings**, **View options**, **Docsets, search profiles and docset keywords**, **Bookmarks and web searches**
 - Do **not** use **Sync Snippets**: it moves the snippet database into the folder, which doesn't belong in git
 - Docsets live in `~/Library/Application Support/Dash/DocSets`; sync only records which ones you installed from Settings → Downloads, and Dash re-downloads them on other Macs. Docset order and disabled docsets stay per-Mac
