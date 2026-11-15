@@ -54,6 +54,7 @@ class FakeAdapter:
             raise self.error(self.refuse)
         self.writes.append((s.key, value))
         self.overrides[s.key] = value
+        self.touch()
 
     def reset(self, s: Setting) -> None:
         if self.refuse:
@@ -90,6 +91,8 @@ async def main():
 
         app.query_one("#w-t-flag").focus(); await pilot.press("enter"); await pilot.pause()
         assert fake.writes == [("T_FLAG", "1")]
+        seen = fake.reads; app.poll()
+        assert fake.reads == seen, "the UI's own write is read once"
         assert app.query_one("#m-t-flag").has_class("-override")
         assert "override" in str(app.query_one("#m-t-flag", Static).content)
         assert any("noted" in str(n.message) for n in app._notifications)

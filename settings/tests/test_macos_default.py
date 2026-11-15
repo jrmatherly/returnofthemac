@@ -309,6 +309,7 @@ work = profile.override_path("work")
 (user / work.name).touch()
 work.symlink_to(user / work.name)
 profile.miserc().write_text('env = ["rotm-installed", "rotm-p-work"]\n')
+assert adapter.watch_paths() == [fragment_path(), override, profile.miserc(), work]
 status([{**entry, "value": 44, "current": "44"}])
 adapter.write(dock, "44")
 assert tomllib.loads(work.read_text()) == tomllib.loads(DOCK.format(44)) and work.is_symlink(), work.read_text()
@@ -365,4 +366,5 @@ try:
 except SettingsError as e:
     assert str(user) in str(e) and "\n" not in str(e), str(e)
 profile.miserc().unlink()
+assert adapter.watch_paths() == [fragment_path(), override, profile.miserc()]
 print("ok")

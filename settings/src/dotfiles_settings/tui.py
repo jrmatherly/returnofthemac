@@ -162,6 +162,8 @@ class SettingsApp(App):
             button.remove()
 
     def refresh_values(self, force: Setting | None = None) -> None:
+        # Taken before the read, so a change that lands during the read is seen by the next poll
+        self.mtimes = self.watched()
         before = self.values
         changed = self.read_all()
         for s in self.settings:
@@ -172,9 +174,7 @@ class SettingsApp(App):
         self.show_state()
 
     def poll(self) -> None:
-        now = self.watched()
-        if now != self.mtimes or self.error:
-            self.mtimes = now
+        if self.watched() != self.mtimes or self.error:
             self.refresh_values()
 
     def commit(self, s: Setting, raw: str) -> None:

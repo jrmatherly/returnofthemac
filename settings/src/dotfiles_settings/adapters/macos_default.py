@@ -240,6 +240,10 @@ def status_entries() -> list[dict]:
 
 
 class MacosDefaultAdapter:
+    def watch_paths(self) -> list[Path]:
+        name = profile.active()
+        return [fragment_path(), override_path(), profile.miserc(), *([profile.override_path(name)] if name else [])]
+
     def write_note(self, s: Setting) -> str:
         if name := masked(*split_key(s.key)):
             where = ("Edited tilde/.config/mise/conf.d/20-macos.toml, a tracked file. Commit the file to keep the change."
