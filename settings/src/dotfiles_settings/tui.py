@@ -143,7 +143,9 @@ class SettingsApp(App):
                 and w.value != (was.value or "")):
             self.notify(f"{s.label} changed elsewhere. Your edit is kept, and saving it replaces that change.")
         elif isinstance(w, Switch):
-            w.value = v.value == s.true_value
+            # No Changed event: one still queued when a later refresh lands would flip the switch back
+            with w.prevent(Switch.Changed):
+                w.value = v.value == s.true_value
         elif isinstance(w, Select):
             if v.value in s.choices:
                 w.value = v.value
