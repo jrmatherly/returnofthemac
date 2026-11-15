@@ -6,7 +6,7 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 | Plan | Spec | Tasks | State |
 | --- | --- | --- | --- |
-| [P7 stable and the owner's Mac](2026-11-15-p7-stable-and-the-owners-mac.md) | [installable setup](../specs/2026-11-11-installable-setup-profiles-and-sync.md), the P7 brief | 6 | Written on 2026-11-15, not reviewed and not started. Tasks 1, 4 and 5 need the owner at the guest or the Mac, and Task 2 is the owner's push. Run its tasks in order |
+| [P7 stable and the owner's Mac](2026-11-15-p7-stable-and-the-owners-mac.md) | [installable setup](../specs/2026-11-11-installable-setup-profiles-and-sync.md), the P7 brief | 6 | Written and reviewed on 2026-11-15 (its last section lists what the review changed). Not started. Tasks 1, 4 and 5 need the owner at the guest or the Mac, and Task 2 is the owner's push. Run its tasks in order |
 
 [P6](completed/2026-11-15-p6-docs-for-the-new-path.md) finished on 2026-11-15.
 
