@@ -18,8 +18,9 @@ stub() {
   printf '#!/bin/bash\necho "%s $*" >> "$log"\n%s\n' "$1" "${2:-}" > "$stubs/$1"
   chmod +x "$stubs/$1"
 }
-# tmutil needs Full Disk Access for the app running it, and exits 80 without it
-stub sudo '[[ "$*" != *tmutil* ]] || exit "${TMUTIL_RC:-0}"'
+# tmutil needs Full Disk Access for the app running it, and exits 80 without it.
+# SUDO_RC, when set, is the status of every call (a refused or cancelled password)
+stub sudo '[ -z "${SUDO_RC:-}" ] || exit "$SUDO_RC"; [[ "$*" != *tmutil* ]] || exit "${TMUTIL_RC:-0}"'
 stub defaults '[ "$1" = read ] || { [ "$2" != "${DEFAULTS_DENY:-}" ]; exit; }; f="$reads/${*: -1}"; [ -e "$f" ] || exit 1; cat "$f"'
 stub killall
 stub osascript 'exit "${OSASCRIPT_RC:-0}"'
@@ -134,6 +135,14 @@ check "a differing value is set" "grep -qx 'sudo .*/pmset -a disksleep 10' '$log
 check "only that one" "[ \"\$(grep -c '^sudo .*/pmset' '$log')\" = 1 ]"
 check "an unreported key is skipped" "! grep -q 'lidwake' '$log'"
 
+: > "$log"
+SUDO_RC=1 "$repo/setup/macos-extras.sh" --restart > "$tmp/sudo.out" 2>&1
+# shellcheck disable=SC2034 # read inside the eval of check
+rc=$?
+check "a refused sudo warns and the run carries on" "[ \$rc -eq 0 ] && grep -q 'sudo failed or was cancelled' '$tmp/sudo.out'"
+check "… and sudo is asked once, not once per setting" "[ \"\$(grep -c '^sudo ' '$log')\" = 1 ]"
+check "… and the apps still restart" "grep -qx 'killall Finder' '$log'"
+
 snapshot="$TMPDIR/dotfiles-macos-defaults-before"
 echo '{"state": "differs"}' > "$status_out"
 run --before
@@ -162,8 +171,11 @@ rm -f "$snapshot"
 DEFAULTS_DENY=com.apple.TextEdit run
 check "a refused sandboxed write does not stop the run" "[ \$rc = 0 ] && grep -q 'defaults write com.apple.SoftwareUpdate' '$log' && grep -q '^chflags nohidden' '$log'"
 
-TERM_PROGRAM=Apple_Terminal run --restart
-check "Terminal.app is spared from inside Terminal.app" "! grep -qx 'killall Terminal' '$log' && grep -qx 'killall Finder' '$log'"
+stub pgrep 'exit "${PGREP_RC:-1}"'
+run --restart
+check "Terminal.app is never force-quit" "! grep -qx 'killall Terminal' '$log' && grep -qx 'killall Finder' '$log'"
+PGREP_RC=0 "$repo/setup/macos-extras.sh" --restart > "$tmp/term.out" 2>&1
+check "an open Terminal.app is told to reopen" "grep -q 'Quit and reopen Terminal' '$tmp/term.out'"
 
 run --nope
 check "an unknown flag exits 2" "[ \$rc = 2 ]"

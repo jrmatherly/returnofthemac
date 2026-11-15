@@ -111,6 +111,18 @@ sys() {
   return 1
 }
 
+# Every sudo call but tmutil's goes through root. A refused or cancelled password
+# warns once and the run carries on without asking again.
+root_refused=0
+root() {
+  # An empty command is a sys lookup that failed and printed why: stop, as before
+  [ -n "$1" ] || exit 1
+  [ "$root_refused" -eq 0 ] || return 0
+  sudo "$@" && return 0
+  root_refused=1
+  warn "Some settings need your password and were not applied: sudo failed or was cancelled. Run set-defaults again."
+}
+
 # The groups below are written here, not declared in mise's fragment, because a
 # declared preference cannot be switched off. An empty value is the settings UI's off.
 
@@ -173,7 +185,7 @@ pmset_ensure() {
   local have
   have=$(pmset -g custom | awk -v k="$1" '$1 == k { print $2 }' | sort -u)
   if [ -n "$have" ] && [ "$have" != "$2" ]; then
-    sudo "$(sys pmset)" -a "$1" "$2"
+    root "$(sys pmset)" -a "$1" "$2"
   fi
 }
 # Enable lid wakeup
@@ -190,7 +202,7 @@ pmset_ensure hibernatemode 3
 
 # Show the /Volumes folder
 if [[ "$(ls -ldO /Volumes)" == *hidden* ]]; then
-  sudo "$(sys chflags)" nohidden /Volumes
+  root "$(sys chflags)" nohidden /Volumes
 fi
 
 # Each opt-in below reads the Mac's state without sudo and calls sudo only when
@@ -211,16 +223,16 @@ if [ -n "$computer_name" ]; then
     warn "Not renaming this Mac: no local hostname can be derived from \"$computer_name\". Set macos.local_hostname or pass --local-hostname."
   elif [ "$(scutil --get ComputerName 2> /dev/null || true)" != "$computer_name" ] \
     || [ "$(scutil --get LocalHostName 2> /dev/null || true)" != "$local_hostname" ]; then
-    sudo "$(sys scutil)" --set ComputerName "$computer_name"
-    sudo "$(sys scutil)" --set HostName "$computer_name"
-    sudo "$(sys scutil)" --set LocalHostName "$local_hostname"
-    sudo "$(sys defaults)" write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$local_hostname"
+    root "$(sys scutil)" --set ComputerName "$computer_name"
+    root "$(sys scutil)" --set HostName "$computer_name"
+    root "$(sys scutil)" --set LocalHostName "$local_hostname"
+    root "$(sys defaults)" write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$local_hostname"
   fi
 fi
 
 # Enable HiDPI display modes (requires restart)
 if [ -n "$hidpi" ] && [ "$(defaults read /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled 2> /dev/null || true)" != 1 ]; then
-  sudo "$(sys defaults)" write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool true
+  root "$(sys defaults)" write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool true
 fi
 
 # Enable macOS Firewall + Stealth Mode. socketfilterfw is not on PATH; the
@@ -230,10 +242,10 @@ if [ -n "$firewall" ]; then
   fw=/usr/libexec/ApplicationFirewall/socketfilterfw
   fw_read=$(command -v socketfilterfw || echo "$fw")
   if [[ "$("$fw_read" --getglobalstate 2> /dev/null || true)" != *"State = "[1-9]* ]]; then
-    sudo "$fw" --setglobalstate on
+    root "$fw" --setglobalstate on
   fi
   if [[ "$("$fw_read" --getstealthmode 2> /dev/null || true)" != *"mode is on"* ]]; then
-    sudo "$fw" --setstealthmode on
+    root "$fw" --setstealthmode on
   fi
 fi
 
@@ -242,7 +254,7 @@ fi
 # switches macos.disable_time_machine off.
 if [ -n "$disable_tm" ] && [ "$(defaults read /Library/Preferences/com.apple.TimeMachine AutoBackup 2> /dev/null || true)" != 0 ]; then
   # tmutil refuses (exit 80) unless the app running this has Full Disk Access, which a new Mac grants no app
-  if hash tmutil &> /dev/null; then
+  if [ "$root_refused" -eq 0 ] && hash tmutil &> /dev/null; then
     tm_rc=0
     sudo "$(sys tmutil)" disable || tm_rc=$?
     if [ "$tm_rc" -eq 80 ]; then
@@ -260,13 +272,12 @@ if ! $restart && [ -e "$snapshot" ] && ! mise bootstrap macos defaults status --
   restart=true
 fi
 if $restart; then
-  for app in "Activity Monitor" Dock Finder NotificationCenter SystemUIServer Terminal; do
-    # Killing Terminal.app from inside it would end this run
-    if [ "$app" = Terminal ] && [ "${TERM_PROGRAM:-}" = Apple_Terminal ]; then
-      warn "Not restarting Terminal, which is running this. Quit and reopen it to apply its settings."
-      continue
-    fi
+  for app in "Activity Monitor" Dock Finder NotificationCenter SystemUIServer; do
     killall "$app" > /dev/null 2>&1 || true
   done
+  # Never force-quit: a run from Ghostty or the app cannot know what its windows hold
+  if pgrep -xq Terminal; then
+    warn "Quit and reopen Terminal to apply its settings."
+  fi
   info "Done! Note that some of these changes require a logout/restart to take effect."
 fi
