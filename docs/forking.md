@@ -1,6 +1,27 @@
 # Make it yours
 
-Setup already asks for your git identity and commit signing. These values are hard-coded to me, so change them in your fork:
+This setup ships with its owner's choices in it. Nothing was taken out for being his, so a few values point at him or at his own projects. This page lists each one and how you change it. Setup already asks for your git identity and commit signing.
+
+## On an installed copy
+
+You change these from your own settings and your own files. None of them needs an edit to the copy, which `rotm update` replaces.
+
+| What points at the owner | What you do |
+| --- | --- |
+| Time Machine is turned off, the firewall is on, and the locale (US English), power and Spotlight shortcut preferences are his | Switch a group off with `rotm settings set macos.<name> off` before you run `set-defaults`. The names are `disable_time_machine`, `firewall`, `locale`, `power` and `spotlight_hotkeys`. **If you use Time Machine, run `rotm settings set macos.disable_time_machine off` before `set-defaults`, which otherwise stops all backups.** |
+| The formulae, apps and VS Code extensions are the ones he uses | Turn a [module](modules.md) off with `rotm settings set modules.<name> off`, or [skip one package](modules.md#skipping-one-package-or-tool) |
+| Claude Multipass, his own project, is in the base and in no module | Declare `"brew:jrmatherly/tap/claude-multipass"` and `"brew-cask:jrmatherly/tap/claude-multipass-app"` as `{ state = "absent" }` in `~/.config/rotm/config.override.toml`, the form under [Skipping one package or tool](modules.md#skipping-one-package-or-tool) |
+| fastfetch prints his name, site and city | Edit `~/.config/fastfetch/config.jsonc`. It is your own file after the install. It stays on this Mac, because settings sync does not carry it |
+| lazygit colors his name in the commit list | Write your own `gui.authorColors` in `~/Library/Application Support/lazygit/config.yml`, which lazygit reads after the tracked file from your next new shell. It stays on this Mac |
+| The Claude Code plugins, settings and skills are his | Setup adds his on every run and removes none of yours. A plugin of his that you uninstall is installed again, and one you disable stays disabled. To stop setup adding them, turn the `claude` module off. The catalog's notes on his own MCP servers print a `lint:` line and nothing else |
+| The menu bar app updates from his releases | Nothing to change. Turn the `menubar` module off to leave the app out |
+| `github.com` uses the key at `~/.ssh/github_personal.pub` when that file exists | Export your own key to that path, or leave the file out and ssh uses its defaults. See [`~/.ssh/github_personal.pub`](local-customizations.md#sshgithub_personalpub) |
+
+A value that points at the owner, has no row here and cannot be changed without editing the copy is a bug. Please report it.
+
+## In a fork
+
+These are edits to tracked files. The values are hard-coded to me, so change them in your fork:
 
 | File | What to change |
 | --- | --- |

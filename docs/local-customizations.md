@@ -2,6 +2,10 @@
 
 The dotfiles can be extended to suit additional local requirements by using the following files:
 
+## `~/.config/rotm`
+
+This folder holds what `rotm settings` writes: your changed settings, the modules you switched off and the tool settings mise cannot hold. It is yours and sits outside the repository. It is also the folder [settings sync](settings-sync.md#what-is-saved) saves, so a file in it that sync does not know stops a save. Keep your own files elsewhere.
+
 ## `~/.zsh.local`
 
 If this file exists, it's sourced near the end of `~/.zshrc` (after `zsh/init.zsh`), so its content can add to or override the existing aliases, settings, PATH, etc.
@@ -32,7 +36,7 @@ If this file exists, it will be automatically included after the configurations 
 > [!TIP]  
 > Use `~/.gitconfig.local` to store sensitive information such as the `git` user credentials for individual repositories.
 
-`setup/dotfiles-extras.sh` writes your identity and commit signing here. Anything a tool tries to add to `~/.gitconfig` (e.g. Git Credential Manager registering itself) belongs here too, since `~/.gitconfig` is a symlink into the repo.
+`setup/dotfiles-extras.sh` writes your identity and commit signing here. Anything a tool tries to add to `~/.gitconfig` (e.g. Git Credential Manager registering itself) belongs here too. In a clone `~/.gitconfig` is a symlink into the repo. On an installed copy it is a file setup wrote once, and it is yours, so a tool may write to it there.
 
 > [!NOTE]  
 > `git config --global --get …` does **not** follow includes, so it won't show values from this file. Use `git config --get …` (or add `--includes`).
