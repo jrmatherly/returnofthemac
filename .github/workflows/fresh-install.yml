@@ -68,21 +68,18 @@ jobs:
           rc=0
           ./setup.sh -y --skip-codegraph -- --skip user || rc=$?
           [ "$rc" -eq 0 ] || [ "$rc" -eq 2 ] || exit "$rc"
-      # What a stranger does first. ~/.local/bin stays off PATH here: the
-      # install line must work without it, as on a new Mac
-      - name: Install mise
-        if: matrix.path == 'installed'
-        run: curl -fsSL https://mise.run | sh
-      # The README's install line, following the branch under test instead of
-      # stable. The checkout from actions/checkout is not used on this path
+      # The README's install line, with install.sh and the copy taken from the
+      # branch under test instead of stable. It installs mise itself, and
+      # ~/.local/bin stays off PATH, as on a new Mac. The checkout from
+      # actions/checkout is not used on this path
       - name: Install line
         if: matrix.path == 'installed'
         env:
           REF: ${{ github.ref_name }}
         run: |
           rc=0
-          { ~/.local/bin/mise -E rotm-installed bootstrap --from "https://github.com/jrmatherly/returnofthemac.git?ref=$REF" --config-dir tilde/.config/mise --save-env --only final-hook \
-            && ~/.local/share/mise/bootstrap-repo/setup.sh -y --skip-codegraph -- --skip user; } || rc=$?
+          curl -fsSL "https://raw.githubusercontent.com/jrmatherly/returnofthemac/$REF/install.sh" \
+            | bash -s -- --ref "$REF" -y --skip-codegraph -- --skip user || rc=$?
           [ "$rc" -eq 0 ] || [ "$rc" -eq 2 ] || exit "$rc"
       - name: Disk after setup
         if: always()

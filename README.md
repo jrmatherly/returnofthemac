@@ -16,14 +16,11 @@ You need macOS on Apple Silicon. The macOS defaults were reviewed for macOS 27.
 For using the setup as it is. To change it or make it your own, [clone it](#install-from-a-clone) instead.
 
 ```shell
-xcode-select --install
-curl https://mise.run | sh
-~/.local/bin/mise -E rotm-installed bootstrap --from 'https://github.com/jrmatherly/returnofthemac.git?ref=stable' --config-dir tilde/.config/mise --save-env --only final-hook && ~/.local/share/mise/bootstrap-repo/setup.sh
+curl -fsSL https://raw.githubusercontent.com/jrmatherly/returnofthemac/stable/install.sh | bash
 ```
 
-1. **Install the Command Line Tools and [mise](https://mise.run).** The line names mise by its path, because a new Mac's `PATH` does not have `~/.local/bin` yet.
 1. **Move your own files aside first.** Nothing is overwritten: the run stops and names the file. See [what must not be in the way](docs/installation.md#what-must-not-be-in-the-way).
-1. **Run the install line.** mise fetches this repository's `stable` branch and links `~/.config/mise` into it, then `setup.sh` installs from that copy. `--from` trusts this repository's configuration for the run: [read it first](tilde/.config/mise), and add `--dry-run` after `bootstrap` to preview what mise would do.
+1. **Run the install line.** [`install.sh`](install.sh) installs the Command Line Tools and [mise](https://mise.run) when they are missing. mise then fetches this repository's `stable` branch and links `~/.config/mise` into it, and `setup.sh` installs from that copy. The line runs a script from this repository and trusts its configuration: [read it first](tilde/.config/mise), and add `| bash -s -- --dry-run` to [preview](docs/installation.md#preview) it. Flags go after `bash -s --`, as in `| bash -s -- --without security,cloud`. The same steps [by hand](docs/installation.md#install-by-hand) need no piped script.
 1. **Open a new terminal.** If you declined the GitHub login that setup offered, run `gh auth login` there. Without it GitHub allows 60 anonymous API calls an hour, and an update soon after the install can run out.
 1. **Update later** with `rotm update`. `rotm settings tui` opens the settings.
 

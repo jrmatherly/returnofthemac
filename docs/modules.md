@@ -31,7 +31,7 @@ rotm settings set modules.security off
 rotm settings set modules.security on
 ```
 
-The same switches are in the Modules section of `rotm settings tui`. To leave modules out from the first install, add `--without` after `setup.sh` on the install line, as in `setup.sh --without security,cloud` ([installation](installation.md)).
+The same switches are in the Modules section of `rotm settings tui`. To leave modules out from the first install, add `--without` to the install line, as in `| bash -s -- --without security,cloud` ([installation](installation.md)).
 
 What off does:
 

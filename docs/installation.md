@@ -4,26 +4,23 @@ You need macOS on Apple Silicon. There are two ways in. [Without a clone](#insta
 
 ## Install without cloning
 
-1. Install the Command Line Tools (for `git`):
-
-   ```shell
-   xcode-select --install
-   ```
-
-1. Install [mise](https://mise.run):
-
-   ```shell
-   curl https://mise.run | sh
-   ```
-
 1. Check [what must not be in the way](#what-must-not-be-in-the-way).
-1. Run the install line. It names mise by its path, because a new Mac's `PATH` does not have `~/.local/bin` yet:
+1. Run the install line:
 
    ```shell
-   ~/.local/bin/mise -E rotm-installed bootstrap --from 'https://github.com/jrmatherly/returnofthemac.git?ref=stable' --config-dir tilde/.config/mise --save-env --only final-hook && ~/.local/share/mise/bootstrap-repo/setup.sh
+   curl -fsSL https://raw.githubusercontent.com/jrmatherly/returnofthemac/stable/install.sh | bash
    ```
 
-   mise fetches the `stable` branch into `~/.local/share/mise/bootstrap-repo`, links `~/.config/mise` into it and applies nothing itself. `setup.sh` then runs from that copy, with the prompts described under [Run setup](#run-setup), and takes the same flags after its path. `--from` trusts this repository's mise configuration for the run, so [read it](../tilde/.config/mise) first if you want to know what it does. Adding `--dry-run` after `bootstrap` previews mise's part. To leave groups out from the start, add `--without <names>` after `setup.sh`, as in `setup.sh --without security,cloud`. The groups are `fonts`, `apps`, `vscode`, `claude`, `agents`, `cloud`, `kubernetes`, `devops`, `security`, `network`, `languages`, `media`, `menubar`, `touchid` and `loginshell`.
+   [`install.sh`](../install.sh) installs the Command Line Tools (for `git`, asking for your password) and [mise](https://mise.run) when they are missing, and stops on anything but macOS on Apple Silicon. It then runs the two steps of [Install by hand](#install-by-hand). Its flags go after `bash -s --`:
+
+   | Flag | Does |
+   | --- | --- |
+   | `--ref <branch>` | Follows that branch instead of `stable` |
+   | `--dry-run` | Shows what mise would fetch and link. Nothing is installed and `setup.sh` does not run |
+   | `-h`, `--help` | Prints the flags |
+   | Anything else | Goes to `setup.sh`, as in `curl -fsSL … \| bash -s -- -y --without security,cloud` |
+
+   mise fetches the `stable` branch into `~/.local/share/mise/bootstrap-repo`, links `~/.config/mise` into it and applies nothing itself. `setup.sh` then runs from that copy, with the prompts described under [Run setup](#run-setup), and takes its flags from the install line. `--from` trusts this repository's mise configuration for the run, so [read it](../tilde/.config/mise) first if you want to know what it does. To leave groups out from the start, add `--without <names>`, as in `| bash -s -- --without security,cloud`. The groups are `fonts`, `apps`, `vscode`, `claude`, `agents`, `cloud`, `kubernetes`, `devops`, `security`, `network`, `languages`, `media`, `menubar`, `touchid` and `loginshell`.
 
 1. Open a new terminal. If you declined the GitHub login that setup offered, run `gh auth login` there. Without a login GitHub allows 60 anonymous API calls an hour, and mise uses them to read the tap formulae: an update in the same hour as the install can fail on that limit.
 1. Finish the steps setup can't do for you: see [After setup](#after-setup). macOS preferences are not applied by the install: see [Set macOS defaults](#set-macos-defaults).
@@ -35,7 +32,19 @@ Later:
 - `rotm settings tui` opens the settings (`rotm settings list` prints them). A macOS preference you change there is saved in your `config.override.toml`, not in the copy.
 - The [menu bar app](menu-bar.md), Return of the Mac, is in `/Applications`, and setup opens it once at the end of the first run. It runs these same commands from its menu and a settings window. `--without menubar` leaves it out.
 
-The copy is not for editing: `rotm update` replaces its files. `~/.gitconfig`, `~/.zshrc`, `gh`'s `config.yml`, fastfetch's `config.jsonc` and VS Code's keybindings, tasks and snippets are yours: they are written once and then left alone. With `MISE_DATA_DIR` set, the copy is at `$MISE_DATA_DIR/bootstrap-repo`, and the second path in the install line changes with it.
+The copy is not for editing: `rotm update` replaces its files. `~/.gitconfig`, `~/.zshrc`, `gh`'s `config.yml`, fastfetch's `config.jsonc` and VS Code's keybindings, tasks and snippets are yours: they are written once and then left alone. With `MISE_DATA_DIR` set, the copy is at `$MISE_DATA_DIR/bootstrap-repo`, and `install.sh` runs setup from there.
+
+### Install by hand
+
+The install line pipes a script into `bash`. These are the steps it runs, for a Mac where you would sooner type them. `xcode-select --install` opens a window. Wait for it to finish before the next line, which needs `git`:
+
+```shell
+xcode-select --install
+curl https://mise.run | sh
+~/.local/bin/mise -E rotm-installed bootstrap --from 'https://github.com/jrmatherly/returnofthemac.git?ref=stable' --config-dir tilde/.config/mise --save-env --only final-hook && ~/.local/share/mise/bootstrap-repo/setup.sh
+```
+
+The last line names mise by its path, because a new Mac's `PATH` does not have `~/.local/bin` yet. `setup.sh` takes its flags after its path.
 
 ### What must not be in the way
 
@@ -125,13 +134,13 @@ On your next Mac, once `gh` is signed in, setup looks for the private `rotm-sett
 
 ## Preview
 
-Before an install without a clone, add `--dry-run` after `bootstrap` in the install line and leave `setup.sh` off:
+Before an install without a clone, add `--dry-run` to the install line:
 
 ```shell
-~/.local/bin/mise -E rotm-installed bootstrap --dry-run --from 'https://github.com/jrmatherly/returnofthemac.git?ref=stable' --config-dir tilde/.config/mise --save-env --only final-hook
+curl -fsSL https://raw.githubusercontent.com/jrmatherly/returnofthemac/stable/install.sh | bash -s -- --dry-run
 ```
 
-It prints the `git clone` and the checkout mise would run, and fetches and links nothing. It does not show what setup installs. For that, read the [package lists](../tilde/.config/mise/conf.d/).
+It names the Command Line Tools and mise when it would install them. With mise installed it prints the `git clone` and the checkout mise would run, and fetches and links nothing. It does not show what setup installs. For that, read the [package lists](../tilde/.config/mise/conf.d/).
 
 From a clone, to see what a run would do on a Mac that has mise but not the `~/.config/mise` link:
 

@@ -1,6 +1,6 @@
 # P7 guest runs: runbook (2026-11-15)
 
-Candidate: the commit on `main` that adds this file. It changes Markdown only and its parent is `9e79b810172bf03bd094fb9069664ed6ce40d15e`, whose `check.yml` run passed (43743597226). The session gives you its full hash when it hands this runbook over, and row `a1` must print it. mise for this run: 2026.11.8, the newest release on 2026-11-15 (`gh api repos/jdx/mise/releases/latest`).
+Candidate: the commit on `main` that adds `install.sh`, once its `check.yml` run has passed. The session gives you its full hash when it hands this runbook over, and row `a1` must print it. mise for this run: 2026.11.8, the newest release on 2026-11-15 (`gh api repos/jdx/mise/releases/latest`).
 
 This run proves a fresh install from `main` at the candidate in the disposable UTM guest. It is the gate for moving `stable` (decision 9 of `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md`), run on the mise release current that day (decision 10). It is P7 plan Task 1 (`docs/superpowers/plans/2026-11-15-p7-stable-and-the-owners-mac.md`).
 
@@ -26,7 +26,7 @@ How it works:
    ls ~/.local/bin/mise
    ```
 
-   When that file is missing, run `curl https://mise.run | sh`. Then `~/.local/bin/mise --version` should print 2026.11.8 or the newer release the session named at handoff. **Not run on the host:** the two installers.
+   **Tell the session** what both printed, and install neither by hand: `install.sh` installs what is missing, and this run is its first on a real Mac. **Not run on the host:** its two installers.
 
 3. Make the record folder:
 
@@ -34,10 +34,10 @@ How it works:
    mkdir -p "/Volumes/My Shared Files/vm-proof/p7"
    ```
 
-4. Run the install line, from `main`, where the candidate is:
+4. Run the README's install line, with `main` in the two places `stable` is, where the candidate is:
 
    ```shell
-   ~/.local/bin/mise -E rotm-installed bootstrap --from 'https://github.com/jrmatherly/returnofthemac.git?ref=main' --config-dir tilde/.config/mise --save-env --only final-hook && ~/.local/share/mise/bootstrap-repo/setup.sh
+   curl -fsSL https://raw.githubusercontent.com/jrmatherly/returnofthemac/main/install.sh | bash -s -- --ref main
    ```
 
    Setup's questions, and the answers:
@@ -52,7 +52,7 @@ How it works:
    | The password | The guest's login password |
    | Anything else | Enter |
 
-   It takes a while. Setup must end with `All done!`. If it lists failed packages instead, **Tell the session** their names: the session decides with you whether each is accepted. **Not run on the host:** `setup.sh`. The mise half ran in a scratch home on 2026-11-15: it cloned `main`, printed `linked ~/.config/mise to ~/.local/share/mise/bootstrap-repo/tilde/.config/mise` and `saved env = ["rotm-installed"]`.
+   It takes a while. Setup must end with `All done!`. If it lists failed packages instead, **Tell the session** their names: the session decides with you whether each is accepted. **Not run on the host:** `setup.sh`, and `install.sh` installing the Command Line Tools or mise. `install.sh` ran in a scratch home on 2026-11-15 with mise present and `setup.sh` stubbed, piped into `bash` under a terminal: setup's flags reached it and its stdin was the terminal. The mise half cloned `main`, printed `linked ~/.config/mise to ~/.local/share/mise/bootstrap-repo/tilde/.config/mise` and `saved env = ["rotm-installed"]`.
 
 5. Quit Terminal and open it again, so the new window has the installed `PATH`. Then type these two lines, which every new Terminal window needs:
 

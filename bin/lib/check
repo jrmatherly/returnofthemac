@@ -9,6 +9,7 @@ export LC_ALL=en_US.UTF-8
 
 shell_scripts=(
   setup.sh
+  install.sh
   setup/*.sh
   setup/tests/*.sh
   vscode/*.sh
@@ -132,6 +133,8 @@ job quiet bash setup/tests/dotfiles-extras.sh
 # setup/macos-extras.sh against stubbed sudo, pmset, defaults, socketfilterfw and killall (nothing is changed)
 job quiet bash setup/tests/macos-extras.sh
 job quiet bash setup/tests/menubar-open.sh
+# install.sh with mise, curl and setup.sh stubbed: the flags it passes on, and what it installs when mise is missing
+job quiet bash setup/tests/install.sh
 # setup/dash.sh against a fixture checkout: a clone writes its own file, an installed copy writes under ~/.local/share/rotm/dash
 job quiet bash setup/tests/dash.sh
 # bin/hindsight-memory against a fixture HOME with the installer, hindsight-embed, npm and uv stubbed
