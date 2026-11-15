@@ -46,8 +46,10 @@ import Observation
   /// A refresh asked for while one runs joins it.
   public func refresh(recheckUpdates: Bool = false) async {
     guard !blocked else { return }
-    if let inFlight = reading {
+    while let inFlight = reading {
       await inFlight.value
+      // Awaiting a finished task does not suspend, so the loop would spin until its starter cleared it.
+      if reading == inFlight { reading = nil }
       guard recheckUpdates, !blocked else { return }
     }
     let task = Task { await self.read(recheckUpdates: recheckUpdates) }

@@ -183,6 +183,26 @@ struct AppStateTests {
     #expect(runner.calls.filter { $0 == statusArgs }.count == 1)
   }
 
+  @Test func twoRechecksWaitingOnOneRefreshReadOneAtATime() async {
+    let runner = FakeRunner()
+    stubClean(runner)
+    let releaseFirst = runner.hold(statusArgs)
+    let state = makeState(runner)
+    let first = Task { await state.refresh() }
+    await waitUntil { runner.calls.contains(statusArgs) }
+    let second = Task { await state.refresh(recheckUpdates: true) }
+    let third = Task { await state.refresh(recheckUpdates: true) }
+    try? await Task.sleep(nanoseconds: 50_000_000)
+    let releaseRest = runner.hold(statusArgs)
+    releaseFirst()
+    await first.value
+    try? await Task.sleep(nanoseconds: 50_000_000)
+    #expect(runner.calls.filter { $0 == statusArgs }.count == 2)
+    releaseRest()
+    await second.value
+    await third.value
+  }
+
   @Test func aFailedActionSetsTheErrorAndStillRefreshes() async {
     let runner = FakeRunner()
     stubClean(runner)
