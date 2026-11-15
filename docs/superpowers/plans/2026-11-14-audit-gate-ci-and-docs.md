@@ -166,6 +166,8 @@ This task does not prove that GitHub serves a hosted `ubuntu-26.04` image. Renov
 
 Nothing here is run by the session. Each line is one action and its expected result.
 
+Outcome, 2026-11-15, on the owner's word to the session: PR 16 is closed and PR 19 is merged as `ef4d530`. Its `check` passed after `gh pr update-branch 19 --rebase`. The `actions/runner-images` README lists `ubuntu-26.04` as a hosted label with no beta mark, and the image holds GitHub CLI 2.103.3. Not proven: the `release` job running on it, which needs an `app-v*` tag. `fresh-install` is still owed.
+
 - [ ] **G2. Run `fresh-install`.** `gh workflow run fresh-install.yml`, then `gh run watch` on it. Expected: both legs of the matrix (`clone`, `installed`) green, in about 27 minutes as on 2026-11-12. It last ran at `7f837d6`. Run it again after the install plan (`completed/2026-11-14-audit-install-and-opt-outs.md`) lands, since that plan changes the setup path.
 - [ ] **G4. Close PR 16.** Its change is on `main` in `e7fb36f` (`package.json:22` holds `0.0.0-20261102001236-gf10f41a`).
 - [ ] **G1. Close PR 20** after Task 1 is pushed.

@@ -4,6 +4,6 @@ self-hosted-runner:
     # README), which actionlint 1.7.12 does not list yet. Used by fresh-install.yml
     - xcode-27
     # Hosted, not self-hosted, and actionlint 1.7.12 does not list it yet.
-    # Renovate PR 19 wants it for app-release.yml's release job; drop this
+    # app-release.yml's release job runs on it (Renovate PR 19); drop this
     # entry once actionlint lists it
     - ubuntu-26.04

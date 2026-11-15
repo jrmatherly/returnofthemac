@@ -7,7 +7,7 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 | Plan | Spec | Tasks | State |
 | --- | --- | --- | --- |
 | [P5 menu bar app](2026-11-13-p5-menu-bar-app.md) | [installable setup](../specs/2026-11-11-installable-setup-profiles-and-sync.md) | 12 | Through Task 11: its VM proof ran over two guests on 2026-11-14 and is in the spec's "Verified facts". Task 12 waits on the owner's word. |
-| [Audit: gate, CI and docs](2026-11-14-audit-gate-ci-and-docs.md) | [project audit](../specs/2026-11-14-project-audit.md), G1 to G14 | 11 | Tasks 1, 2, 3, 5, 6 and 7 are on `main` (`9bc4017` to `97d4766`). Task 8 is the app plan's Task 5, done. Task 4 is the owner's. Tasks 9 and 10 are on `main` (`61b074a`, `8ff381a`). Task 11 is done with the P5 write-up. The plan stays open for Task 4. |
+| [Audit: gate, CI and docs](2026-11-14-audit-gate-ci-and-docs.md) | [project audit](../specs/2026-11-14-project-audit.md), G1 to G14 | 11 | Tasks 1, 2, 3, 5, 6 and 7 are on `main` (`9bc4017` to `97d4766`). Task 8 is the app plan's Task 5, done. Task 4 is the owner's. Tasks 9 and 10 are on `main` (`61b074a`, `8ff381a`). Task 11 is done with the P5 write-up. The plan stays open for Task 4's `fresh-install` run; its PRs are settled. |
 | [Audit: menu bar app](2026-11-14-audit-menu-bar-app.md) | project audit, M1 to M9 and G8 | 9 | All nine tasks are on `main` (`0cb1667` to `c448cb3`), with `c597959` added from review. Unreleased: the `app/VERSION` bump, tag and cask are the owner's. The plan moves to `completed/` after the guest steps Tasks 2 and 9 add have run. |
 
 The four audit plans were each checked line by line against the code on 2026-11-14 and corrected. Two are finished and filed in `completed/`: [install and opt-outs](completed/2026-11-14-audit-install-and-opt-outs.md) and [settings tool](completed/2026-11-14-audit-settings-tool.md). Each opens with an "Outcome" table of its commits. Stages 2 to 5 below ran on 2026-11-14, one commit per task, each with its failing check seen first. Stage 1's step 1 is done and step 2 is the owner's.
@@ -43,7 +43,7 @@ No owner decision is needed. Each task is small and independent of the others.
 3. **Gate 6.** Fail when a self-check is not wired into the gate.
 4. **Gate 7.** Compare types in the JSON fixture contract.
 5. **Gate 5.** Run the skipped self-check parts in CI.
-6. **Gate 4, the owner's steps.** Close PR 20 after Gate 1, close PR 16, decide PR 19 after Gate 3, and run `fresh-install`.
+6. **Gate 4, the owner's steps.** The three PRs are settled: PR 20 closed, PR 16 closed on 2026-11-15 as already on `main`, and PR 19 merged that day as `ef4d530` after a rebase turned its `check` green. Still owed: run `fresh-install`.
 
 ### Stage 3. Fixes a stranger hits, with no decision needed
 
