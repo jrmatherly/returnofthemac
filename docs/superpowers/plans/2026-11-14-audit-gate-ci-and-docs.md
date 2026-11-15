@@ -4,9 +4,9 @@
 
 **Goal:** Close findings G1 to G14 of the 2026-11-14 audit, so the gate catches what it missed, CI runs what it skipped, and the docs and the VM runbook say what the code and the record say.
 
-**Architecture:** No new file and no new tool. Each fix is a line or two in a file that already owns the behaviour: `bin/lib/check`, `bin/lib/test-conventions`, `renovate.json`, `.github/actionlint.yaml`, `.github/workflows/check.yml`, one Python test, one Swift test file, and the docs. Three findings are the owner's to act on and appear as checklist items. Two wait for the Guest 2 rows of the P5 VM proof.
+**Architecture:** No new file and no new tool. Each fix is a line or two in a file that already owns the behaviour: `bin/lib/check`, `bin/lib/test-conventions`, `renovate.json`, `.github/actionlint.yaml`, `.github/workflows/check.yml`, one Python test, and the docs. G8's Swift test moved to the menu bar app plan (Task 8). Three findings are the owner's to act on and appear as checklist items. Two wait for the Guest 2 rows of the P5 VM proof.
 
-**Tech Stack:** bash 3.2, uv 0.13.7, actionlint 1.7.12, Renovate (Mend app), Python 3.11+ standard library, Swift Testing, GitHub Actions on `macos-26`.
+**Tech Stack:** bash 3.2, uv 0.13.7, actionlint 1.7.12, Renovate (Mend app), Python 3.11+ standard library, GitHub Actions on `macos-26`.
 
 **Spec:** `docs/superpowers/specs/2026-11-14-project-audit.md`, section "G. Gate, CI and docs". Read it before Task 1. Tasks 2 and 11 also read `docs/superpowers/specs/2026-11-14-p5-vm-proof/RUNBOOK.md` and Task 11 of `docs/superpowers/plans/2026-11-13-p5-menu-bar-app.md`.
 
@@ -87,7 +87,7 @@ git checkout hindsight/pyproject.toml
 
 Expected: `check: failed: uv lock --check --quiet --directory hindsight`, `exit 1`. After the checkout, `git status --short hindsight/` prints nothing.
 
-- [ ] **Step 4: Change the Renovate rule.** In the rule at `renovate.json:30-34`, replace `"matchPackageNames": ["hindsight-embed", "hindsight-api"]` with `"matchFileNames": ["hindsight/pyproject.toml"]`, and keep `"enabled": false`. The rule then covers the two packages and the `requires-python` range. Extend its `description` with one clause, that the Python range is the lock's, so a bump is `uv lock --directory hindsight` in a reviewed commit. `matchFileNames` is from memory of Renovate's docs, not checked this session. Read `https://docs.renovatebot.com/configuration-options/#matchfilenames` before the edit.
+- [ ] **Step 4: Change the Renovate rule.** In the rule at `renovate.json:30-34`, replace `"matchPackageNames": ["hindsight-embed", "hindsight-api"]` with `"matchFileNames": ["hindsight/pyproject.toml"]`, and keep `"enabled": false`. The rule then covers the two packages and the `requires-python` range. Extend its `description` with one clause, that the Python range is the lock's, so a bump is `uv lock --directory hindsight` in a reviewed commit. Checked on 2026-11-14 in Renovate's `docs/usage/configuration-options.md` (`packageRules.matchFileNames`): the option takes a glob or an exact file name and is compared against the dependency's package file, and its lock file when there is one. After the push, PR 20 should close or stop updating on Renovate's next run. That effect is not measured here, and the Dependency Dashboard issue shows it.
 
 - [ ] **Step 5:** `pnpm check`. Expected: pass. Commit: "Check the Hindsight lock in the gate and keep Renovate out of it".
 
@@ -101,7 +101,7 @@ Expected: `check: failed: uv lock --check --quiet --directory hindsight`, `exit 
 
 **Finding:** G10
 
-This task is time-bound. Guest 2 is running. The step must be in the runbook, and the row in the shared copy of the script, before the owner records 2b and shuts the guest down.
+This task is time-bound, so run it before Task 1 while Guest 2 is still up. Guest 2 is running (`utmctl list` says `started`). The step must be in the runbook, and the row in the shared copy of the script, before the owner records 2b and shuts the guest down.
 
 **Files:**
 - Modify: `docs/superpowers/specs/2026-11-14-p5-vm-proof/RUNBOOK.md` (a new step 36 after line 262; today's step 36 becomes 37)
@@ -206,7 +206,7 @@ touch bin/lib/test-zz-unwired && bash bin/lib/test-conventions; echo "exit $?"; 
 
 Expected today: `conventions: all checks passed`, `exit 0`.
 
-- [ ] **Step 2: Add the check.** One loop over `bin/lib/test-* setup/tests/* .claude/hooks/test-*.sh settings/tests/test_*.py agents/catalog/test_*.py vscode/test-*.sh`. For each file, `grep -qF "$f" bin/lib/check`, else `fail "self-check not run by bin/lib/check: $f"`. Add "that bin/lib/check runs every self-check" to the header's list.
+- [ ] **Step 2: Add the check.** One loop over `bin/lib/test-* setup/tests/* .claude/hooks/test-*.sh settings/tests/test_*.py agents/catalog/test_*.py vscode/test-*.sh`. Skip anything that is not a regular file (`[ -f "$f" ] || continue`), so a `__pycache__` folder or an unmatched glob is not reported. For each file, `grep -qF "$f" bin/lib/check`, else `fail "self-check not run by bin/lib/check: $f"`. Add "that bin/lib/check runs every self-check" to the header's list.
 
 - [ ] **Step 3: See it fail, then pass.** The Step 1 command. Expected: `FAIL: self-check not run by bin/lib/check: bin/lib/test-zz-unwired`, `exit 1`. Then `bash bin/lib/test-conventions` alone. Expected: `conventions: all checks passed`.
 
@@ -332,11 +332,11 @@ Do not start this task until `~/vm-proof/p5/g2/2a/state.json` and `~/vm-proof/p5
 - [ ] **Step 2: Move each answered row** from "Still not verified" to "Verified facts", in that table's style, which is the claim, then what the record shows, with the record's path and the date 2026-11-14. Where a diff is not what the table above expects, write what it shows and keep the row in "Still not verified" with what is still owed. Add the Reset result from `2c`.
 
 - [ ] **Step 3: Correct the runbook's expectations in place**, so the file matches the record it produced:
-  - Line 158: compared with 1c1, `list.jstack.bug_fix` reads `sonnet xhigh` and `file.tools.toml` differs by that line. Step 19 set a different value because row 1c3's reset had not removed the role (no Reset was offered, fixed in `e7db2f3`).
+  - Line 158: compared with 1c1, `list.jstack.bug_fix` reads `sonnet xhigh` and `file.tools.toml` differs by that line. The record shows 1c3 still holding `haiku high` (the app offered no Reset for a role, fixed in `e7db2f3`) and 1d1 holding `sonnet xhigh`. It does not show why the value changed between them, so write what the record holds and no cause.
   - Lines 189 to 218: guest 1 installed app 0.1.1, and the release cut during the run was 0.1.2. Every `0.1.1` on lines 189, 190, 191, 196, 212 and 218 becomes `0.1.2`. Line 196's setup line reads **Setup: 2 updates waiting**.
   - Line 246: bug-fix `sonnet xhigh`, and "the tap now gives 0.1.2".
 
-- [ ] **Step 4: `proof.sh:42-43`.** The comment says rows 1c and 1d use `values`. Say that 1c does, and that the 2026-11-14 run's step 19 set `jstack.bug_fix` to `sonnet xhigh` by hand. Leave `values` as it is: row 1c2 set `haiku high`, and records 1c1 and 1c2 hold it. Copy the file to `~/vm-proof/p5/proof.sh` again.
+- [ ] **Step 4: `proof.sh:42-43`.** The comment says rows 1c and 1d use `values`. Say that 1c does, and that from row 1d1 on the 2026-11-14 record holds `sonnet xhigh` for `jstack.bug_fix`. Leave `values` as it is: row 1c2 set `haiku high`, and records 1c1 and 1c2 hold it. Copy the file to `~/vm-proof/p5/proof.sh` again.
 
 - [ ] **Step 5:** `pnpm check`, commit with the P5 write-up, under that plan's subject for the step.
 
