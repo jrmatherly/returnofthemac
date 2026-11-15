@@ -10,6 +10,24 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-14-project-audit.md`, section "G. Gate, CI and docs". Read it before Task 1. Tasks 2 and 11 also read `docs/superpowers/specs/2026-11-14-p5-vm-proof/RUNBOOK.md` and Task 11 of `docs/superpowers/plans/completed/2026-11-13-p5-menu-bar-app.md`.
 
+## Outcome
+
+Done on 2026-11-15. Every task is on `main`.
+
+| Task | Commit | Difference from the plan |
+| --- | --- | --- |
+| 1 | `45b0ce3` | None |
+| 2 | `9bc4017` | None |
+| 3 | `3a67183` | None |
+| 4 | none | The owner's steps, run by the session on the owner's word. PR 20 closed, PR 16 closed as already on `main`, PR 19 merged as `ef4d530`. `fresh-install` passed on both legs at `cbd63b0` on 2026-11-15 (run 43720059101, mise 2026.11.8) |
+| 5 | `97d4766` | None |
+| 6 | `caa4413` | None |
+| 7 | `1526fca` | None |
+| 8 | `851c141` | A pointer. The work is the app plan's Task 5 |
+| 9 | `61b074a` | The subject says "the remaining owner values", not "four more" |
+| 10 | `8ff381a` | None |
+| 11 | `18fe319`, `657cec7` | The second commit adds the owner's report on the Guest 2 load |
+
 ## Global Constraints
 
 - The gate is `pnpm check` (`bin/lib/check`). Every task ends with it passing. Edit and commit in separate Bash calls.
@@ -166,7 +184,7 @@ This task does not prove that GitHub serves a hosted `ubuntu-26.04` image. Renov
 
 Nothing here is run by the session. Each line is one action and its expected result.
 
-Outcome, 2026-11-15, on the owner's word to the session: PR 16 is closed and PR 19 is merged as `ef4d530`. Its `check` passed after `gh pr update-branch 19 --rebase`. The `actions/runner-images` README lists `ubuntu-26.04` as a hosted label with no beta mark, and the image holds GitHub CLI 2.103.3. Not proven: the `release` job running on it, which needs an `app-v*` tag. `fresh-install` is still owed.
+Outcome, 2026-11-15, on the owner's word to the session: PR 16 is closed and PR 19 is merged as `ef4d530`. Its `check` passed after `gh pr update-branch 19 --rebase`. The `actions/runner-images` README lists `ubuntu-26.04` as a hosted label with no beta mark, and the image holds GitHub CLI 2.103.3. Not proven: the `release` job running on it, which needs an `app-v*` tag. `fresh-install` passed on both legs (`clone`, `installed`) at `cbd63b0` on 2026-11-15, run 43720059101, in 21 minutes on mise 2026.11.8. It ran one commit before `b9786e9`, which removed the browser settings UI.
 
 - [ ] **G2. Run `fresh-install`.** `gh workflow run fresh-install.yml`, then `gh run watch` on it. Expected: both legs of the matrix (`clone`, `installed`) green, in about 27 minutes as on 2026-11-12. It last ran at `7f837d6`. Run it again after the install plan (`completed/2026-11-14-audit-install-and-opt-outs.md`) lands, since that plan changes the setup path.
 - [ ] **G4. Close PR 16.** Its change is on `main` in `e7fb36f` (`package.json:22` holds `0.0.0-20261102001236-gf10f41a`).

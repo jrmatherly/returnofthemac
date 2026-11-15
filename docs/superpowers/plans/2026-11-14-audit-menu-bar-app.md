@@ -190,7 +190,7 @@ private let caskRow = #"{"brew-cask":{"available":true,"packages":[{"package":"j
 
 - [ ] **Step 5: Edit `docs/menu-bar.md`.** At `:80`, after "compares the version there with its own", say that when the tap has a newer one the app asks mise (`mise bootstrap packages status --json`) whether mise installed its cask, and offers the update only then, so a copy opened from the DMG is offered none. At `:106`, replace "by `sysup` or by its own menu line" with wording that says the menu line no longer appears.
 
-- [ ] **Step 6: Not run on the host.** The proof that the menu line and the dot are absent needs an installed guest. It is one step for the "Update the setup and the app" section of `docs/superpowers/specs/2026-11-14-p5-vm-proof/RUNBOOK.md`, written by the session that runs the next app release: set `modules.menubar` off, wait for the tap to hold a newer version, open the menu, and record that it has no "Update Return of the Mac" line.
+- [ ] **Step 6: Not run on the host.** The proof that the menu line and the dot are absent needs an installed guest. It is one step for the "Update the setup and the app" section of `docs/superpowers/specs/2026-11-14-p5-vm-proof/RUNBOOK.md`, written by the session that runs the next app release: set `modules.menubar` off, wait for the tap to hold a newer version, open the menu, and record that it has no "Update Return of the Mac" line. **Corrected on 2026-11-15:** this check reads code that first ships in 0.1.3, so it needs a guest whose app is 0.1.3 and a tap that holds 0.1.4. It is in the runbook's section "The 0.1.3 and 0.1.4 releases".
 
 - [ ] **Step 7: Commit.** No image shows the menu.
 
@@ -476,7 +476,7 @@ git commit -m "Name the profile or shared settings in the review sheet"
 
 - [ ] **Step 5: Edit `docs/menu-bar.md`.** At `:82`, say the question names any changes staged in the settings window, which the update discards. At `:88`, say the app quits and opens again without asking a second time.
 
-- [ ] **Step 6: Not run on the host.** The relaunch itself is proved in the guest by the app-update step of `docs/superpowers/specs/2026-11-14-p5-vm-proof/RUNBOOK.md` ("Update the setup and the app") at the next app release, with one change staged in the settings window before the update is chosen. Record that the question named the change and that the new version opened with no second question. No image shows the alert.
+- [ ] **Step 6: Not run on the host.** The relaunch itself is proved in the guest by the app-update step of `docs/superpowers/specs/2026-11-14-p5-vm-proof/RUNBOOK.md` ("Update the setup and the app") at the next app release, with one change staged in the settings window before the update is chosen. Record that the question named the change and that the new version opened with no second question. No image shows the alert. **Corrected on 2026-11-15:** this check reads code that first ships in 0.1.3, so it needs a guest whose app is 0.1.3 and a tap that holds 0.1.4. It is in the runbook's section "The 0.1.3 and 0.1.4 releases".
 
 - [ ] **Step 7: Commit.**
 

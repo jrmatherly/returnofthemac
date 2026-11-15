@@ -279,6 +279,57 @@ How it works:
 
 37. Shut the guest down. **Tell the session.** The run is complete.
 
+## The 0.1.3 and 0.1.4 releases (2026-11-15)
+
+Two fixes in 0.1.3 can only be seen while the app that runs is 0.1.3 and the tap holds something newer (audit app plan, Tasks 2 and 9). So this run takes two releases: 0.1.3 carries the fixes, and 0.1.4 is a version bump that gives 0.1.3 an update to offer. Rows `3a` to `3d` record into `~/vm-proof/p5/g3/`.
+
+38. Use the guest from step 36 if it is still running. Otherwise start the guest with **Run without saving changes** and do steps 4 to 6. No GitHub sign-in is needed, so answer `n` to setup's GitHub login. Do this before step 41, so the guest never installs 0.1.4 directly.
+39. **Stop and tell the session.** The 0.1.3 release follows step 23, with `0.1.3` in place of `0.1.2`: the session pushes the version commit, you push the tag `app-v0.1.3` on it, the session changes the cask and pushes the tap on your word, and you wait five minutes.
+40. From the menu, choose **Quit**. In Finder, open **Applications**, then **Return of the Mac**. The menu's first line should read **Update Return of the Mac to 0.1.3…**. Choose it and confirm. When the app has opened again:
+
+    ```shell
+    p 3a
+    ```
+
+    Expected, compared with 2c: `mac.app_version` is 0.1.3 and `mac.app_started` is later. A guest installed after the tap moved already runs 0.1.3 and shows no update line: run `p 3a` and go on.
+
+41. **Stop and tell the session.** The 0.1.4 release is the same four steps with `0.1.4`. Wait five minutes after the session says the tap is pushed.
+42. Turn the module off, then restart the app so it checks for its update again:
+
+    ```shell
+    rotm settings set modules.menubar off
+    ```
+
+    From the menu, choose **Quit**, then open the app from **Applications**. Open the menu. Expected: no **Update Return of the Mac** line and no dot on the icon, because mise no longer manages the cask. Then:
+
+    ```shell
+    p 3b
+    ```
+
+    **Tell the session** what the menu's first lines say. **Not run on the host.**
+
+43. Turn the module on again and restart the app the same way:
+
+    ```shell
+    rotm settings set modules.menubar on
+    ```
+
+    Expected: the menu's first line reads **Update Return of the Mac to 0.1.4…**. Then:
+
+    ```shell
+    p 3c
+    ```
+
+44. From the menu, choose **Settings…** and change one setting, such as **Editor**. Do not choose **Review…**, so the change stays staged. From the menu, choose **Update Return of the Mac to 0.1.4…**. Expected: the question reads **Update Return of the Mac to 0.1.4 and discard 1 change?**. Confirm. The app quits and opens again by itself, and asks nothing a second time. Then:
+
+    ```shell
+    p 3d
+    ```
+
+    Expected, compared with 3c: `mac.app_version` is 0.1.4, and the setting you changed has its old value. **Tell the session** the question's words and whether a second question appeared.
+
+45. Shut the guest down. **Tell the session.**
+
 ## Compare any two records
 
 To compare two records yourself, in either guest or on the host (with the host's path):

@@ -6,10 +6,9 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 | Plan | Spec | Tasks | State |
 | --- | --- | --- | --- |
-| [Audit: gate, CI and docs](2026-11-14-audit-gate-ci-and-docs.md) | [project audit](../specs/2026-11-14-project-audit.md), G1 to G14 | 11 | Tasks 1, 2, 3, 5, 6 and 7 are on `main` (`9bc4017` to `97d4766`). Task 8 is the app plan's Task 5, done. Task 4 is the owner's. Tasks 9 and 10 are on `main` (`61b074a`, `8ff381a`). Task 11 is done with the P5 write-up. The plan stays open for Task 4's `fresh-install` run; its PRs are settled. |
 | [Audit: menu bar app](2026-11-14-audit-menu-bar-app.md) | project audit, M1 to M9 and G8 | 9 | All nine tasks are on `main` (`0cb1667` to `c448cb3`), with `c597959` added from review. Unreleased: the `app/VERSION` bump, tag and cask are the owner's. The plan moves to `completed/` after the guest steps Tasks 2 and 9 add have run. |
 
-The four audit plans were each checked line by line against the code on 2026-11-14 and corrected. Two are finished and filed in `completed/`: [install and opt-outs](completed/2026-11-14-audit-install-and-opt-outs.md) and [settings tool](completed/2026-11-14-audit-settings-tool.md). Each opens with an "Outcome" table of its commits. Stages 2 to 5 below ran on 2026-11-14, one commit per task, each with its failing check seen first. Stage 1's step 1 is done and step 2 is the owner's.
+The four audit plans were each checked line by line against the code on 2026-11-14 and corrected. Three are finished and filed in `completed/`: [install and opt-outs](completed/2026-11-14-audit-install-and-opt-outs.md), [settings tool](completed/2026-11-14-audit-settings-tool.md) and [gate, CI and docs](completed/2026-11-14-audit-gate-ci-and-docs.md). Each opens with an "Outcome" table of its commits. Stages 2 to 5 below ran on 2026-11-14, one commit per task, each with its failing check seen first. Stage 1 is done.
 
 Found while running them, and not in any plan:
 
@@ -42,7 +41,7 @@ No owner decision is needed. Each task is small and independent of the others.
 3. **Gate 6.** Fail when a self-check is not wired into the gate.
 4. **Gate 7.** Compare types in the JSON fixture contract.
 5. **Gate 5.** Run the skipped self-check parts in CI.
-6. **Gate 4, the owner's steps.** The three PRs are settled: PR 20 closed, PR 16 closed on 2026-11-15 as already on `main`, and PR 19 merged that day as `ef4d530` after a rebase turned its `check` green. Still owed: run `fresh-install`.
+6. **Gate 4, the owner's steps.** The three PRs are settled: PR 20 closed, PR 16 closed on 2026-11-15 as already on `main`, and PR 19 merged that day as `ef4d530` after a rebase turned its `check` green. `fresh-install` passed on both legs at `cbd63b0` on 2026-11-15.
 
 ### Stage 3. Fixes a stranger hits, with no decision needed
 
@@ -84,7 +83,7 @@ Decision 8 (owner values in linked files, finding I22) is not planned here. It b
 ### Stage 7. Close out
 
 1. **Gate 9, then Gate 10.** The `ci.md`, forking table and macOS doc corrections. Gate 9 comes after Install 4 and Install 7, because two of its forking rows describe what those tasks ship. Done on 2026-11-15 (`61b074a`, `8ff381a`).
-2. **The owner runs `fresh-install` again**, since the install plan changes the setup path.
+2. **The owner runs `fresh-install` again**, since the install plan changes the setup path. Done on 2026-11-15: both legs passed at `cbd63b0` (run 43720059101).
 3. **P5 Task 12** (retire `rotm settings serve`). Done on 2026-11-15, on the owner's word. The P5 plan is in `completed/`.
 4. Move each finished plan to `completed/`, and each spec to `specs/completed/` when every plan built on it is there.
 

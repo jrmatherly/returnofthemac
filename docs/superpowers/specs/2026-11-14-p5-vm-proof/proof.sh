@@ -138,7 +138,7 @@ where() {
   echo "$here/g${1:0:1}/$1"
 }
 
-rows="1a 1b1 1b2 1b3 1b4 1b5 1b6 1b7 1c1 1c2 1c3 1d1 1d2 1d3 1d4 1f1 1f2 1f3 1f4 2a 2b 2c"
+rows="1a 1b1 1b2 1b3 1b4 1b5 1b6 1b7 1c1 1c2 1c3 1d1 1d2 1d3 1d4 1f1 1f2 1f3 1f4 2a 2b 2c 3a 3b 3c 3d"
 
 run_row() {
   local row=$1 against="" sign_out=""
@@ -182,6 +182,10 @@ run_row() {
       [ "$row" = 2a ] || pointer p3 "The P3 proof ran inside the P5 run: guest 1 is ../p5/g1/1c1 to 1d4, guest 2 is ../p5/g2/2a and 2b. Steps 16 to 22 and 31 to 35 of RUNBOOK.md in docs/superpowers/specs/2026-11-14-p5-vm-proof/."
       ;;
     2c) against=2b ;;
+    3a) against=2c ;;
+    3b) against=3a ;;
+    3c) against=3b ;;
+    3d) against=3c ;;
   esac
   say "recording $row (about 15 seconds)"
   record "$d"
