@@ -37,6 +37,8 @@ mole/*.local
 tilde/.ssh/*
 !tilde/.ssh/config
 tilde/.config/amp/settings.json.amp-write-meta
+# zsh's completion cache, written here by a test shell started with ZDOTDIR=tilde
+tilde/.zcompdump*
 # Written by `gh auth login`; can contain an OAuth token
 tilde/.config/gh/hosts.yml
 
