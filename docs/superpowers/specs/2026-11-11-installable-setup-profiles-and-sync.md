@@ -38,7 +38,7 @@ These outrank everything below them. The design sections and phase briefs were w
 - The clone is the install. `setup.sh` links `~/dotfiles` and `~/.config/mise` to the clone, then runs `mise bootstrap`.
 - Every `[dotfiles]` source is written `~/dotfiles/…`, and most targets are symlinks into the clone. An app that rewrites its config writes into the clone.
 - Per-Mac values already have homes outside git: `config.override.toml` and `config.local.toml` in the mise config dir (git-ignored, but inside the clone because `~/.config/mise` is a link), `~/.zsh.local`, `~/.gitconfig.local`, `~/.ssh/config.local`.
-- `docs/forking.md` lists 13 places hard-coded to the owner. A stranger gets all of them today.
+- `docs/forking.md` lists 19 places hard-coded to the owner. A stranger gets all of them today.
 - `dotfiles-settings` reads and writes every setting through adapters and has a terminal UI and a browser UI.
 
 ## Target: three layers
