@@ -720,7 +720,10 @@ fresh() {
   rm -rf "${tmp:?}/home" "$STATE" "$tmp/mbin"
   mkdir -p "$HOME/.config/mise" "$HOME/.local/bin" "$STATE" "$tmp/mbin"
   : > "$STATE/misc.log"
-  for tool in sudo curl uv uvx npx jq rtk; do mstub "$tmp/mbin/$tool"; done
+  for tool in sudo curl uv uvx npx jq rtk supabase dotnet aspire; do mstub "$tmp/mbin/$tool"; done
+  # No default toolchain yet, so the step calls `rustup default stable`
+  mkdir -p "$HOMEBREW_PREFIX/opt/rustup/bin"
+  mstub "$HOMEBREW_PREFIX/opt/rustup/bin/rustup" '[ "$*" != default ] || echo "no default toolchain configured"'
   # No npm:typescript, so the link step warns when the apps module is on
   mstub "$tmp/mbin/mise" '[ "$1" != where ]'
   [ "${1:-}" = no-claude ] && return
@@ -741,13 +744,17 @@ check_true "all on: the font step runs" ran install-iosevka-code
 check_true "all on: Claude's config is restored" ran 'claude-config restore'
 check_true "all on: the catalog is built" ran claude-catalog
 check_true "all on: an MCP server is registered" ran 'mcp add'
-check_true "all on: a uv tool is installed" ran 'tool install'
+check_true "all on: a uv tool is installed" ran 'uv tool install'
 check_true "all on: Hindsight is set up" ran 'hindsight-memory init'
 check_true "all on: … with rustup's cargo on PATH" grep -qF ":$HOMEBREW_PREFIX/opt/rustup/bin:" "$STATE/hindsight-path"
 check_true "all on: rtk is wired" ran 'init -g'
 check_true "all on: the menu bar app step runs" ran menubar-open.sh
 check_true "all on: the TypeScript link step warns without the tool" has 'npm:typescript is not installed'
 check_true "all on: nothing is skipped" lacks 'skipped: the'
+check_true "all on: rustup's default toolchain is set" ran 'rustup default stable'
+check_true "all on: Supabase telemetry is turned off" ran 'supabase telemetry disable'
+check_true "all on: PowerShell is installed" ran 'dotnet tool install --global PowerShell'
+check_true "all on: the Aspire certificate hint is printed" has '\[Aspire\] HTTPS dev certificate not trusted'
 fresh
 : > "$STATE/warnings"
 ROTM_WARNINGS_FILE="$STATE/warnings" misc
@@ -760,13 +767,27 @@ fresh
 printf 'claude\nagents\nfonts\napps\nmenubar\n' > "$HOME/.config/mise/modules-off.local"
 misc
 check_true "modules off: misc.sh still exits 0" [ "$rc" -eq 0 ]
-for call in install-iosevka-code 'claude-config restore' claude-catalog 'mcp add' 'tool install' hindsight-memory 'init -g' menubar-open.sh; do
+for call in install-iosevka-code 'claude-config restore' claude-catalog 'mcp add' 'uv tool install' hindsight-memory 'init -g' menubar-open.sh; do
   check_true "modules off: no $call" eval '! ran "$call"'
 done
 check_true "a gated step says why it was skipped" has 'skipped: the claude module is off'
 check_true "and so does the font step" has 'skipped: the fonts module is off'
 check_true "the agents steps say it once" [ "$(grep -c 'skipped: the agents module is off' <<< "$out")" = 1 ]
 check_true "no TypeScript warning with apps off" lacks 'npm:typescript is not installed'
+
+fresh
+printf 'devops\ncloud\n' > "$HOME/.config/mise/modules-off.local"
+misc
+for call in 'supabase telemetry' 'dotnet tool' 'dev-certs'; do
+  check_true "devops and cloud off, tools present: no $call" eval '! ran "$call"'
+done
+check_true "devops off, agents on: rustup's default is still set for Hindsight" ran 'rustup default stable'
+check_true "devops and cloud off: no Aspire hint" lacks '\[Aspire\]'
+check_true "devops and cloud off: each says why" eval 'has "skipped: the devops module is off" && has "skipped: the cloud module is off"'
+fresh
+printf 'devops\nagents\n' > "$HOME/.config/mise/modules-off.local"
+misc
+check_true "devops and agents off, rustup present: no rustup default stable" eval '! ran "rustup default stable"'
 
 # rtk's note about RTK.md is false here: tilde/.claude/rules/rtk.md replaces that file
 fresh

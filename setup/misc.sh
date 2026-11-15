@@ -132,8 +132,9 @@ fi
 # stable the default when it isn't: a proxy with no default toolchain downloads
 # one on first use, which Hindsight's daemon start runs inside a 10 s
 # `cargo --version` check. `rustup default` alone is a local read.
+# Hindsight (agents module) needs it too, so either module keeps the step.
 rustup="$prefix/opt/rustup/bin/rustup"
-if [ -x "$rustup" ]; then
+if [ -x "$rustup" ] && { "$DOTFILES_DIR/bin/lib/rotm-modules" is-on agents || module_on devops; }; then
   if "$rustup" default 2> /dev/null | grep -q '^stable-'; then
     echo "Rust: stable is the default toolchain" | indent
   else
@@ -389,7 +390,7 @@ fi
 # Supabase CLI (a brew: package) — persisted telemetry opt-out, for runs that don't
 # inherit DO_NOT_TRACK from zsh/env.zsh (GUI-launched tools, scripts). The
 # variable here keeps this call itself from reporting.
-if command_exists supabase; then
+if command_exists supabase && module_on devops; then
   DO_NOT_TRACK=1 supabase telemetry disable < /dev/null 2>&1 | indent \
     || warning "supabase telemetry disable failed — run it later"
 fi
@@ -404,15 +405,15 @@ fi
 # packages, so it could not install at all.) Lift the pin once the cask
 # reaches .NET 11.
 POWERSHELL_VERSION='7.6.*'
-if command_exists dotnet; then
+if ! command_exists dotnet; then
+  echo "dotnet not found — skipping PowerShell (install the dotnet-sdk cask first)" | indent
+elif module_on cloud; then
   info "💠 Installing PowerShell (.NET global tool)…"
   if dotnet tool list --global | grep -qi '^powershell[[:space:]]'; then
     dotnet tool update --global PowerShell --version "$POWERSHELL_VERSION" | indent || warning "PowerShell install failed; re-run: dotnet tool install --global PowerShell --version '$POWERSHELL_VERSION'"
   else
     dotnet tool install --global PowerShell --version "$POWERSHELL_VERSION" | indent || warning "PowerShell install failed; re-run: dotnet tool install --global PowerShell --version '$POWERSHELL_VERSION'"
   fi
-else
-  echo "dotnet not found — skipping PowerShell (install the dotnet-sdk cask first)" | indent
 fi
 
 # Aspire HTTPS dev certificate: `aspire run` in a non-interactive session
@@ -421,7 +422,7 @@ fi
 # asks for the login password. The check greps the message rather than trusting
 # the exit code (unverified for the untrusted case); a wording change only
 # costs a redundant (idempotent) trust run.
-if command_exists aspire && command_exists dotnet; then
+if command_exists aspire && command_exists dotnet && module_on cloud; then
   if [[ "$(dotnet dev-certs https --check --trust 2>&1)" == *'A trusted certificate was found'* ]]; then
     echo "Aspire HTTPS dev certificate already trusted" | indent
   elif [ -t 0 ]; then
