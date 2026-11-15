@@ -98,6 +98,9 @@ for f in files:
     used = {tap_of(k) for k in f.packages if is_tap_key(k)}
     assert set(f.taps) == used, f"{f.name}: tap declared but unused, or used but undeclared: {set(f.taps) ^ used}"
 assert len(all_taps) <= 5, "more than 5 taps: a new Mac runs out of anonymous GitHub API calls (Review Focus 1)"
+docs = Path("docs/modules.md").read_text()
+missing = [t for t in all_taps if t not in docs]
+assert not missing, f"docs/modules.md does not name these taps: {missing}"
 assert "brew:mise" not in every_package, "mise is installed by its own installer"
 
 # The union is what the two files held before the split: nothing lost, nothing added

@@ -60,6 +60,27 @@ disable_tools = ["npm:serverless"]
 
 An absent package that is already installed is left in place, and neither setup nor `sysup` reports it as a problem. This works for a `vscode:` key too: mise reports the extension as absent and never installs or removes it. With such an extension installed, `mise bootstrap packages apply --manager vscode` exits 1, which setup treats as no problem, while a plain `apply` and `upgrade` exit 0.
 
+## Sources outside Homebrew's own lists
+
+These taps are declared by a fragment, so their formulae and casks install with the base or the module that uses them:
+
+| Tap | Serves | Module |
+| --- | --- | --- |
+| `jrmatherly/tap` | `claude-multipass`, `claude-multipass-app`, `returnofthemac-app` | base, `menubar` |
+| `kubestellar/tap` | `kubestellar-deploy`, `kubestellar-ops` | `kubernetes` |
+| `skyhook-io/tap` | `radar` | `kubernetes` |
+| `bramstein/webfonttools` | `sfnt2woff` | `media` |
+
+A tap's formula is whatever its owner last pushed, and mise's release-age hold does not cover `brew:` packages.
+
+Three mise tools install with no checksum or attestation that mise can verify: `azd` and `azure-functions-core-tools` (`cloud`) and `github:getsentry/toolkit` (`devops`). To skip them and keep their module:
+
+```toml
+# ~/.config/rotm/config.override.toml
+[settings]
+disable_tools = ["azd", "azure-functions-core-tools", "github:getsentry/toolkit"]
+```
+
 ## Working on the repo
 
 `pnpm check` and the commit hook run `pnpm` (`languages`) and `shellcheck` (`devops`), and stop without them. They skip the `actionlint` (`devops`) and `rtk` (`agents`) checks when those are missing.
