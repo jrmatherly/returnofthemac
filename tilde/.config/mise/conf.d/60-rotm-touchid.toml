@@ -1,0 +1,15 @@
+# returnofthemac module `touchid`: Touch ID for sudo, a system change, not a package.
+#
+# Switch it off with `rotm settings set modules.touchid off` (on again with `on`).
+# /etc/pam.d/sudo_local stays as it is, and setup stops rewriting it.
+# Delete the file with sudo to stop Touch ID for sudo.
+
+# /etc/pam.d/sudo includes sudo_local, and macOS updates leave the file alone.
+# mise writes it through sudo, and only when the content, the mode or the owner
+# differs. Owner and group are declared because mise does not check them when
+# unset, and this file decides who may use sudo.
+[bootstrap.files."/etc/pam.d/sudo_local"]
+content = "auth       sufficient     pam_tid.so\n"
+mode = "0644"
+owner = "root"
+group = "wheel"

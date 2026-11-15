@@ -42,7 +42,7 @@ The manual [`fresh-install`](../.github/workflows/fresh-install.yml) workflow (`
 
 With a terminal, and not on a `--dry-run`, it asks for the administrator password once (`sudo -v`) and keeps the sudo timestamp alive for the steps that need root: the packages (cask installers), `/etc/pam.d/sudo_local` and the login shell. All of them run before the tools. `setup.sh` runs `sudo -k` after the first `mise bootstrap` call, the `pre-tools` hook in [`50-bootstrap.toml`](../tilde/.config/mise/conf.d/50-bootstrap.toml) does the same for a bare `mise bootstrap`, and `misc.sh` starts with it too, so npm install scripts, the `curl | bash` installers and the uv and dotnet installs cannot use sudo without asking. `dotfiles-extras.sh` runs after that. It asks for the password itself, and only when it has to link `cot` or `code` into `/usr/local/bin`. Without a terminal there is no `sudo -v`, and mise asks for sudo at each step that needs it. Ctrl-C stops the run and drops the credential.
 
-Touch ID for `sudo` is the file `/etc/pam.d/sudo_local`, declared under `[bootstrap.files]` with its content, mode `0644` and owner `root:wheel`. mise rewrites it when any of them differs.
+Touch ID for `sudo` is the file `/etc/pam.d/sudo_local`, declared under `[bootstrap.files]` in the `touchid` module ([`60-rotm-touchid.toml`](../tilde/.config/mise/conf.d/60-rotm-touchid.toml)) with its content, mode `0644` and owner `root:wheel`. mise rewrites it when any of them differs.
 
 With `TERM` unset (a launchd job, CI), the scripts print without colors instead of aborting on a failed `tput`.
 
@@ -105,7 +105,7 @@ Eight tools that Homebrew taps used to supply are mise `[tools]` in [`config.tom
 
 ## login shell
 
-`[bootstrap.user]` in [`50-bootstrap.toml`](../tilde/.config/mise/conf.d/50-bootstrap.toml) declares `/opt/homebrew/bin/zsh` (the `brew:zsh` package) as the login shell. mise adds it to `/etc/shells` and runs `chsh` when the account's shell differs. When it is already the shell, mise reports `already set` and changes nothing.
+`[bootstrap.user]` in the `loginshell` module ([`60-rotm-loginshell.toml`](../tilde/.config/mise/conf.d/60-rotm-loginshell.toml)) declares `/opt/homebrew/bin/zsh` (the `brew:zsh` package) as the login shell. mise adds it to `/etc/shells` and runs `chsh` when the account's shell differs. When it is already the shell, mise reports `already set` and changes nothing.
 
 ## misc
 

@@ -23,7 +23,7 @@ You need macOS on Apple Silicon. There are two ways in. [Without a clone](#insta
    ~/.local/bin/mise -E rotm-installed bootstrap --from 'https://github.com/jrmatherly/returnofthemac.git?ref=stable' --config-dir tilde/.config/mise --save-env --only final-hook && ~/.local/share/mise/bootstrap-repo/setup.sh
    ```
 
-   mise fetches the `stable` branch into `~/.local/share/mise/bootstrap-repo`, links `~/.config/mise` into it and applies nothing itself. `setup.sh` then runs from that copy, with the prompts described under [Run setup](#run-setup), and takes the same flags after its path. `--from` trusts this repository's mise configuration for the run, so [read it](../tilde/.config/mise) first if you want to know what it does. Adding `--dry-run` after `bootstrap` previews mise's part. To leave groups out from the start, add `--without <names>` after `setup.sh`, as in `setup.sh --without security,cloud`. The groups are `fonts`, `apps`, `vscode`, `claude`, `agents`, `cloud`, `kubernetes`, `devops`, `security`, `network`, `languages`, `media` and `menubar`.
+   mise fetches the `stable` branch into `~/.local/share/mise/bootstrap-repo`, links `~/.config/mise` into it and applies nothing itself. `setup.sh` then runs from that copy, with the prompts described under [Run setup](#run-setup), and takes the same flags after its path. `--from` trusts this repository's mise configuration for the run, so [read it](../tilde/.config/mise) first if you want to know what it does. Adding `--dry-run` after `bootstrap` previews mise's part. To leave groups out from the start, add `--without <names>` after `setup.sh`, as in `setup.sh --without security,cloud`. The groups are `fonts`, `apps`, `vscode`, `claude`, `agents`, `cloud`, `kubernetes`, `devops`, `security`, `network`, `languages`, `media`, `menubar`, `touchid` and `loginshell`.
 
 1. Open a new terminal. If you declined the GitHub login that setup offered, run `gh auth login` there. Without a login GitHub allows 60 anonymous API calls an hour, and mise uses them to read the tap formulae: an update in the same hour as the install can fail on that limit.
 1. Finish the steps setup can't do for you: see [After setup](#after-setup). macOS preferences are not applied by the install: see [Set macOS defaults](#set-macos-defaults).
@@ -108,7 +108,7 @@ Options:
 | Flag | Effect |
 | --- | --- |
 | `-y`, `--yes` | Don't wait for confirmation before starting, and pass `--yes` to mise. The task then takes the default at its own questions: it keeps the saved VS Code font preset. `setup.sh` doesn't offer `gh auth login` either. The git identity prompt on a new Mac still asks |
-| `--without <a,b>` | Turn these modules off before anything is installed, and keep them off on later runs. The modules are `fonts`, `apps`, `vscode`, `claude`, `agents`, `cloud`, `kubernetes`, `devops`, `security`, `network`, `languages`, `media` and `menubar` |
+| `--without <a,b>` | Turn these modules off before anything is installed, and keep them off on later runs. The modules are `fonts`, `apps`, `vscode`, `claude`, `agents`, `cloud`, `kubernetes`, `devops`, `security`, `network`, `languages`, `media`, `menubar`, `touchid` and `loginshell` |
 | `--skip-codegraph` | Don't install [CodeGraph](https://github.com/colbymchenry/codegraph) or connect it to Claude Code (an existing install is left alone) |
 | `--dash` | Also run the optional [Dash docset setup](../setup/dash.sh) |
 | `-h`, `--help` | Print usage and exit |
@@ -116,7 +116,7 @@ Options:
 
 Along the way it prompts for your git identity and commit signing (`~/.gitconfig.local`), and asks for your password once more when mise changes the login shell (`chsh` does not use sudo). A real file or folder where a link belongs stops the run: `mise dotfiles apply` names every such path and writes nothing. Move it aside, or adopt it with `mise dotfiles add <path>` (your file then replaces the tracked one, so check `git diff`), and run again. There is no prompt. `mise dotfiles apply --force` replaces the file with no backup. A link that points somewhere else is repointed without asking.
 
-mise declares `/etc/pam.d/sudo_local`, which enables Touch ID for `sudo` (content, mode, owner `root:wheel`), and rewrites it when any of them differs.
+The `touchid` module declares `/etc/pam.d/sudo_local`, which enables Touch ID for `sudo` (content, mode, owner `root:wheel`), and mise rewrites it when any of them differs.
 
 Tap formulae resolve through GitHub's API. mise asks `gh` for a token itself. When `gh` isn't signed in and `MISE_GITHUB_TOKEN` is unset, `setup.sh` installs `gh` on its own first, warns that without a login GitHub allows 60 API calls an hour, and asks whether to sign in now, before the packages and the tools spend the limit. Enter signs in with `gh auth login`; only `n` skips it. With `-y`, without a terminal or after an `n`, it only warns. The anonymous limit is 60 calls an hour: one run fits, a second within the hour may not (two runs and a `mise bootstrap packages status` used all 60 on a new Mac). If packages fail to resolve, run `gh auth login` and rerun `./setup.sh`.
 

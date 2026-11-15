@@ -10,7 +10,8 @@
 # Never sets anything up. Part one runs a copy of setup.sh in a fixture clone
 # with a temp HOME and mise, sudo, xcode-select, curl, gh and code as stubs on
 # PATH, then a copy of setup/misc.sh the same way with its own stubs. Part two asks the real mise for a dry run of the tracked
-# conf.d/50-bootstrap.toml from a scratch HOME, and is skipped without mise.
+# bootstrap config (50-bootstrap.toml and the touchid and loginshell modules)
+# from a scratch HOME, with both modules on and off, and is skipped without mise.
 #
 # License: MIT
 
@@ -827,6 +828,11 @@ if command -v mise > /dev/null; then
   ! grep -q 'unknown field' <<< "$out" || fail "mise warns about an unknown key: $out"
   mise bootstrap files status | grep '/etc/pam.d/sudo_local' | grep -q 'owner root group wheel' || fail "sudo_local not declared with its owner"
   mise bootstrap user status | grep -q '^/opt/homebrew/bin/zsh' || fail "login shell not declared"
+  # The same config with both modules off, in a copy, so the repo's own miserc.local.toml is untouched
+  cp -R "$repo/tilde/.config/mise" "$tmp/mise-off"
+  echo 'ignored_config_paths = ["conf.d/60-rotm-touchid.toml", "conf.d/60-rotm-loginshell.toml"]' > "$tmp/mise-off/miserc.local.toml"
+  ! MISE_CONFIG_DIR="$tmp/mise-off" mise bootstrap files status 2>&1 | grep -q '/etc/pam.d/sudo_local' || fail "touchid off: sudo_local is still declared"
+  ! MISE_CONFIG_DIR="$tmp/mise-off" mise bootstrap user status 2>&1 | grep -q '^/opt/homebrew/bin/zsh' || fail "loginshell off: the login shell is still declared"
   out=$(mise bootstrap --dry-run --skip macos-defaults,packages,tools,task 2>&1) || fail "the skip list setup.sh passes does not parse: $out"
   ! grep -qE 'pre-defaults|post-defaults|pre-packages|system defaults|system packages|pre-tools|bootstrap: tools|`bootstrap` task' <<< "$out" || fail "a skipped part or its hook still runs"
   out=$(mise bootstrap --dry-run --only task 2>&1) || fail "--only task does not parse: $out"

@@ -5,20 +5,8 @@
 # and `mise bootstrap --only task`, so one failed tool does not stop the run.
 # https://mise.jdx.dev/bootstrap.html
 
-# Touch ID for sudo. /etc/pam.d/sudo includes sudo_local, and macOS updates
-# leave the file alone. mise writes it through sudo, and only when the content,
-# the mode or the owner differs. Owner and group are declared because mise
-# does not check them when unset, and this file decides who may use sudo.
-[bootstrap.files."/etc/pam.d/sudo_local"]
-content = "auth       sufficient     pam_tid.so\n"
-mode = "0644"
-owner = "root"
-group = "wheel"
-
-# zsh from conf.d/30-packages.toml as the login shell. mise adds it to
-# /etc/shells and runs chsh when the account's shell differs.
-[bootstrap.user]
-login_shell = "/opt/homebrew/bin/zsh"
+# Touch ID for sudo and the login shell are the modules 60-rotm-touchid.toml
+# and 60-rotm-loginshell.toml, so each can be switched off.
 
 # No [bootstrap.mise_shell_activate]: ~/.zprofile and ~/.zshrc are links into
 # this repo, which mise skips, and zsh/init.zsh delays full activation to the

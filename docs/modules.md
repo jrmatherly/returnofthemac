@@ -1,6 +1,6 @@
 # Modules: leaving parts out
 
-Everything outside the base is grouped into thirteen modules, and each one can be switched off. All of them are on by default, and a module added in a later update is on too. The base is what the dotfiles themselves run: Git, Zsh, mise, uv, jq, the shell tools, the terminals and VS Code.
+Everything outside the base is grouped into fifteen modules, and each one can be switched off. All of them are on by default, and a module added in a later update is on too. The base is what the dotfiles themselves run: Git, Zsh, mise, uv, jq, the shell tools, the terminals and VS Code.
 
 | Module | What it holds | Leans on |
 | --- | --- | --- |
@@ -17,6 +17,8 @@ Everything outside the base is grouped into thirteen modules, and each one can b
 | `languages` | Language runtimes and build tools from Homebrew, `pnpm` among them, and `ni` |  |
 | `media` | File, text and image processing formulae, Mole among them |  |
 | `menubar` | Return of the Mac, the menu bar app over `rotm settings`, which setup opens once it is installed |  |
+| `touchid` | A system change, not a package: `/etc/pam.d/sudo_local`, which lets `sudo` accept Touch ID. Off leaves the file as it is |  |
+| `loginshell` | A system change, not a package: Homebrew's zsh as the login shell. Off leaves the account's shell as it is |  |
 
 Each module is one file, `tilde/.config/mise/conf.d/60-rotm-<name>.toml`, and its first lines say what turning it off leaves behind.
 

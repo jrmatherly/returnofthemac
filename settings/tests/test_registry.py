@@ -109,6 +109,10 @@ assert [model.note_for(a, short) for a in (object(), Plain(), PerSetting())] == 
 assert model.note_for(PerSetting(), by_id["shell.editor"]) == ""
 menubar = by_id["modules.menubar"]
 assert (menubar.kind, menubar.key, menubar.default) == ("module", "menubar", "on"), menubar
+touchid = by_id["modules.touchid"]
+assert (touchid.kind, touchid.key, touchid.default) == ("module", "touchid", "on"), touchid
+loginshell = by_id["modules.loginshell"]
+assert (loginshell.kind, loginshell.key, loginshell.default) == ("module", "loginshell", "on"), loginshell
 bad(table(id="Bad Id"), "id must be dotted lowercase: 'Bad Id'")
 bad("not toml [", "registry.toml")           # the message names the file
 bad("", "no settings")

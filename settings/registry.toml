@@ -1080,6 +1080,30 @@ default = "on"
 access = "rw"
 
 [[setting]]
+id = "modules.touchid"
+section = "Modules"
+label = "Touch ID for sudo"
+help = "Writes /etc/pam.d/sudo_local so sudo accepts Touch ID. Off leaves the file as it is, and setup stops rewriting it."
+kind = "module"
+key = "touchid"
+type = "bool"
+true_value = "on"
+default = "on"
+access = "rw"
+
+[[setting]]
+id = "modules.loginshell"
+section = "Modules"
+label = "Zsh as the login shell"
+help = "Makes Homebrew's zsh the login shell. Off leaves the account's shell as it is, and setup stops changing it."
+kind = "module"
+key = "loginshell"
+type = "bool"
+true_value = "on"
+default = "on"
+access = "rw"
+
+[[setting]]
 id = "dotfiles.links"
 section = "Dotfiles"
 label = "Links and copies in the home folder"

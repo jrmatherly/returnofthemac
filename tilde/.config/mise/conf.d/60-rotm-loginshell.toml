@@ -1,0 +1,10 @@
+# returnofthemac module `loginshell`: zsh as the login shell, a system change, not a package.
+#
+# Switch it off with `rotm settings set modules.loginshell off` (on again with `on`).
+# The account's login shell stays as it is, and setup stops changing it.
+# `chsh -s <shell>` sets another one.
+
+# zsh from conf.d/30-packages.toml as the login shell. mise adds it to
+# /etc/shells and runs chsh when the account's shell differs.
+[bootstrap.user]
+login_shell = "/opt/homebrew/bin/zsh"
