@@ -791,6 +791,42 @@ default = "1"
 access = "rw"
 
 [[setting]]
+id = "macos.locale"
+section = "macOS (this Mac)"
+label = "Set language and region to US English"
+help = "en-US, US dollars, inches and Fahrenheit. Off leaves your language and region as they are. Applied by the next set-defaults."
+kind = "env"
+key = "DOTFILES_MACOS_LOCALE"
+type = "bool"
+true_value = "1"
+default = "1"
+access = "rw"
+
+[[setting]]
+id = "macos.power"
+section = "macOS (this Mac)"
+label = "Apply the power settings"
+help = "Lid wake on, disk sleep after 10 minutes, no wake for network access, hibernation mode 3. set-defaults asks for your password when one differs. Off leaves them as they are."
+kind = "env"
+key = "DOTFILES_MACOS_POWER"
+type = "bool"
+true_value = "1"
+default = "1"
+access = "rw"
+
+[[setting]]
+id = "macos.spotlight_hotkeys"
+section = "macOS (this Mac)"
+label = "Free ⌘Space from Spotlight"
+help = "Turns off the two Spotlight shortcuts so a launcher such as Raycast can use ⌘Space. Off leaves them as they are."
+kind = "env"
+key = "DOTFILES_MACOS_SPOTLIGHT_HOTKEYS"
+type = "bool"
+true_value = "1"
+default = "1"
+access = "rw"
+
+[[setting]]
 id = "macos.firewall"
 section = "macOS (this Mac)"
 label = "Turn on the firewall and stealth mode"

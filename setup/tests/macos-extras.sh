@@ -42,7 +42,8 @@ export PATH="$stubs:$PATH"
 # A1's override cache may export these into the shell that runs pnpm check
 unset DOTFILES_MACOS_SCREENSHOTS DOTFILES_MACOS_TIME_MACHINE_NEW_DISKS DOTFILES_MACOS_TEXTEDIT \
   DOTFILES_MACOS_SOFTWARE_UPDATE DOTFILES_MACOS_FIREWALL DOTFILES_MACOS_DISABLE_TIME_MACHINE \
-  DOTFILES_MACOS_HIDPI DOTFILES_MACOS_COMPUTER_NAME DOTFILES_MACOS_LOCAL_HOSTNAME
+  DOTFILES_MACOS_HIDPI DOTFILES_MACOS_COMPUTER_NAME DOTFILES_MACOS_LOCAL_HOSTNAME \
+  DOTFILES_MACOS_LOCALE DOTFILES_MACOS_POWER DOTFILES_MACOS_SPOTLIGHT_HOTKEYS
 
 fails=0
 check() {
@@ -76,6 +77,12 @@ check "Time Machine new-disk switch off" "! grep -q 'com.apple.TimeMachine DoNot
 check "TextEdit switched off" "! grep -q 'com.apple.TextEdit' '$log'"
 check "Software Update switched off" "! grep -q 'com.apple.SoftwareUpdate' '$log'"
 check "the other writes still happen" "grep -q 'defaults write com.apple.helpviewer' '$log'"
+run
+check "locale is written when unset" "grep -q 'defaults write NSGlobalDomain AppleLocale -string en_US@currency=usd' '$log' && grep -q 'defaults write NSGlobalDomain AppleMetricUnits -bool false' '$log'"
+check "the Spotlight shortcuts are turned off when unset" "grep -q 'defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 64 ' '$log' && grep -q 'AppleSymbolicHotKeys -dict-add 65 ' '$log'"
+DOTFILES_MACOS_LOCALE='' DOTFILES_MACOS_SPOTLIGHT_HOTKEYS='' run
+check "locale switched off" "! grep -q 'NSGlobalDomain Apple' '$log'"
+check "Spotlight shortcuts switched off" "! grep -q 'symbolichotkeys' '$log'"
 
 DOTFILES_MACOS_SOFTWARE_UPDATE=1 run
 check "a group switched on is written" "grep -q 'defaults write com.apple.SoftwareUpdate AutomaticCheckEnabled -bool true' '$log'"
@@ -119,8 +126,9 @@ rm -f "$reads/DisplayResolutionEnabled" "$reads/AutoBackup"
 
 DOTFILES_MACOS_FIREWALL='' DOTFILES_MACOS_DISABLE_TIME_MACHINE='' DOTFILES_MACOS_HIDPI='' DOTFILES_MACOS_COMPUTER_NAME='' run
 check "an opt-in switched off does nothing" "! grep -q 'socketfilterfw --set\|tmutil\|scutil --set\|windowserver' '$log'"
-DOTFILES_MACOS_FIREWALL=0 DOTFILES_MACOS_DISABLE_TIME_MACHINE=0 DOTFILES_MACOS_HIDPI=true DOTFILES_MACOS_SCREENSHOTS=0 run
-check "a switch that is not 1 is off, as the settings UI shows it" "! grep -q 'socketfilterfw --set\|tmutil\|windowserver\|com.apple.screencapture' '$log'"
+DOTFILES_MACOS_FIREWALL=0 DOTFILES_MACOS_DISABLE_TIME_MACHINE=0 DOTFILES_MACOS_HIDPI=true DOTFILES_MACOS_SCREENSHOTS=0 \
+  DOTFILES_MACOS_LOCALE=0 DOTFILES_MACOS_SPOTLIGHT_HOTKEYS=true run
+check "a switch that is not 1 is off, as the settings UI shows it" "! grep -q 'socketfilterfw --set\|tmutil\|windowserver\|com.apple.screencapture\|NSGlobalDomain Apple\|symbolichotkeys' '$log'"
 
 DOTFILES_MACOS_FIREWALL='' DOTFILES_MACOS_DISABLE_TIME_MACHINE='' run --firewall --disable-time-machine
 check "a flag turns a switched-off opt-in on" "grep -q '^sudo .*socketfilterfw --setglobalstate on$' '$log' && grep -qx 'sudo .*/tmutil disable' '$log'"
@@ -136,6 +144,12 @@ run
 check "a differing value is set" "grep -qx 'sudo .*/pmset -a disksleep 10' '$log'"
 check "only that one" "[ \"\$(grep -c '^sudo .*/pmset' '$log')\" = 1 ]"
 check "an unreported key is skipped" "! grep -q 'lidwake' '$log'"
+DOTFILES_MACOS_POWER='' run
+check "power settings switched off: no pmset write" "! grep -q '^sudo .*/pmset' '$log'"
+DOTFILES_MACOS_POWER=0 run
+check "power settings not 1 is off" "! grep -q '^sudo .*/pmset' '$log'"
+DOTFILES_MACOS_POWER=1 run
+check "power settings switched on: the differing value is set" "grep -qx 'sudo .*/pmset -a disksleep 10' '$log'"
 
 : > "$log"
 SUDO_RC=1 "$repo/setup/macos-extras.sh" --restart > "$tmp/sudo.out" 2>&1

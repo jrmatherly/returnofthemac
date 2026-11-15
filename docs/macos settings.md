@@ -100,7 +100,7 @@ macOS 27 has no separate Apple Intelligence pane; the sidebar entry is **Siri**.
 
 ### Spotlight
 
-Raycast handles ⌘Space on this Mac, and `set-defaults` turns off the Spotlight shortcuts (see [Keyboard](#keyboard)). Spotlight's index still runs searches in Finder and other apps, so trim what it shows:
+Raycast handles ⌘Space on this Mac, and `set-defaults` turns off the Spotlight shortcuts unless `macos.spotlight_hotkeys` is off (see [Keyboard](#keyboard)). Spotlight's index still runs searches in Finder and other apps, so trim what it shows:
 
 - **Search results**: keep apps, documents, folders, System Settings, and calculator/conversion/definition results, and turn the rest off. Category names change between macOS versions, so check them in the pane.
 - **Help Apple Improve Search** − `Off`
@@ -175,7 +175,7 @@ Raycast handles ⌘Space on this Mac, and `set-defaults` turns off the Spotlight
 - **Energy Mode** − `Automatic` on battery and on power adapter (this Mac: Low Power Mode is off in both)
 - **Battery Health** → **Optimized Battery Charging** − `On`
 - **Options…** → **Slightly dim the display while on battery power** − `On`
-- Handled by set-defaults (`pmset`): wake when the lid opens, hard disks sleep after 10 minutes, wake for network access off, hibernate mode 3
+- Handled by set-defaults (`pmset`) unless `macos.power` is off: wake when the lid opens, hard disks sleep after 10 minutes, wake for network access off, hibernate mode 3
 
 ### Lock Screen
 
@@ -196,7 +196,7 @@ Raycast handles ⌘Space on this Mac, and `set-defaults` turns off the Spotlight
 - **Press 🌐︎ key to** − `Change Input Source`
 - **Keyboard navigation** − `On`
 - **Keyboard Shortcuts…** → **Mission Control**: keep **Mission Control**, **Application windows**, **Show Desktop**, and **Move left a Space** / **Move right a Space** (`⌃←` / `⌃→`, on for this Mac) turned on, and turn the rest off
-- **Keyboard Shortcuts…** → **Spotlight**: **Show Spotlight search** and **Show Finder search window** are turned off (set-defaults), which frees ⌘Space for Raycast
+- **Keyboard Shortcuts…** → **Spotlight**: **Show Spotlight search** and **Show Finder search window** are turned off (set-defaults, unless `macos.spotlight_hotkeys` is off), which frees ⌘Space for Raycast
 - **Keyboard Shortcuts…** → **Screenshots**: the system shortcuts are off on this Mac because CleanShot X uses ⌘⇧3, ⌘⇧4 and ⌘⇧5
 - **Text Input** → **Text Replacements…**
   - `@@` → `you@example.com`
@@ -209,7 +209,7 @@ Raycast handles ⌘Space on this Mac, and `set-defaults` turns off the Spotlight
   - **Show inline predictive text** − `Off`
   - **Add period with double-space** − `Off` (set-defaults)
   - **Use smart quotes and dashes** − `Off` (set-defaults)
-- Language & region formats: set-defaults sets English (US), USD, inches, and Fahrenheit
+- Language & region formats: set-defaults sets English (US), USD, inches, and Fahrenheit unless `macos.locale` is off
 
 ### Mouse
 

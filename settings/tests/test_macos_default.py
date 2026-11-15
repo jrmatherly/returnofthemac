@@ -251,7 +251,9 @@ extras = (repo / "setup/macos-extras.sh").read_text()
 local = {s.key: s for s in settings if s.section == "macOS (this Mac)"}
 assert set(local) == set(re.findall(r"DOTFILES_MACOS_[A-Z_]+", extras)), sorted(local)
 on_by_default = {"DOTFILES_MACOS_SCREENSHOTS", "DOTFILES_MACOS_TIME_MACHINE_NEW_DISKS", "DOTFILES_MACOS_TEXTEDIT",
-                 "DOTFILES_MACOS_SOFTWARE_UPDATE", "DOTFILES_MACOS_FIREWALL", "DOTFILES_MACOS_DISABLE_TIME_MACHINE"}
+                 "DOTFILES_MACOS_SOFTWARE_UPDATE", "DOTFILES_MACOS_FIREWALL", "DOTFILES_MACOS_DISABLE_TIME_MACHINE",
+                 "DOTFILES_MACOS_LOCALE", "DOTFILES_MACOS_POWER", "DOTFILES_MACOS_SPOTLIGHT_HOTKEYS"}
+assert on_by_default <= set(local), sorted(on_by_default - set(local))
 for key, s in local.items():
     assert s.kind == "env" and s.access == "rw", key
     assert s.type == "string" or s.true_value == "1", key

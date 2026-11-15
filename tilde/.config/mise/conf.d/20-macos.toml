@@ -83,12 +83,6 @@ ApplePressAndHoldEnabled = false
 KeyRepeat = 1
 # Set a shorter delay until key repeat
 InitialKeyRepeat = 10
-# Set language and text formats (macOS stores the currency code in lower case)
-AppleLanguages = ["en-US"]
-AppleLocale = "en_US@currency=usd"
-AppleMeasurementUnits = "Inches"
-AppleTemperatureUnit = "Fahrenheit"
-AppleMetricUnits = false
 # --- Finder ---
 # Finder: show all filename extensions
 AppleShowAllExtensions = true
@@ -268,21 +262,6 @@ domain = "com.apple.finder"
 key = "StandardViewSettings"
 path = ["IconViewSettings", "iconSize"]
 value = 48.0
-
-# Spotlight search shortcut: none (frees ⌘Space for Raycast). The values are
-# strings because `defaults write -dict-add` with a plist literal wrote strings.
-[[bootstrap.settings.macos.defaults_entries]]
-domain = "com.apple.symbolichotkeys"
-key = "AppleSymbolicHotKeys"
-path = ["64"]
-value = { enabled = "0", value = { parameters = ["65535", "49", "1048576"], type = "standard" } }
-
-# Menu Bar Spotlight shortcut: none
-[[bootstrap.settings.macos.defaults_entries]]
-domain = "com.apple.symbolichotkeys"
-key = "AppleSymbolicHotKeys"
-path = ["65"]
-value = { enabled = "0", value = { parameters = ["65535", "49", "1572864"], type = "standard" } }
 
 # These two hooks run under `mise bootstrap` when its macos-defaults part runs,
 # not under `mise bootstrap macos defaults apply` (set-defaults calls the script

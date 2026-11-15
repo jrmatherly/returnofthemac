@@ -36,11 +36,12 @@
 #
 # ---
 # DOTFILES_MACOS_SCREENSHOTS, _TIME_MACHINE_NEW_DISKS, _TEXTEDIT, _SOFTWARE_UPDATE,
-# _FIREWALL and _DISABLE_TIME_MACHINE are on when unset or `1`, and any other value is off.
+# _LOCALE, _POWER, _SPOTLIGHT_HOTKEYS, _FIREWALL and _DISABLE_TIME_MACHINE are on
+# when unset or `1`, and any other value is off.
 # DOTFILES_MACOS_HIDPI is on only when `1`. _COMPUTER_NAME and _LOCAL_HOSTNAME are empty unless set.
 # By default this turns Time Machine backups off: a Mac that uses Time Machine
 # switches macos.disable_time_machine off before its first set-defaults.
-# dotfiles-settings sets all nine. Safe to repeat: sudo runs only when a value differs.
+# dotfiles-settings sets all twelve. Safe to repeat: sudo runs only when a value differs.
 #
 # License: MIT
 
@@ -164,6 +165,22 @@ if [ "${DOTFILES_MACOS_SOFTWARE_UPDATE-1}" = 1 ]; then
   defaults write com.apple.SoftwareUpdate CriticalUpdateInstall -int 1
 fi
 
+if [ "${DOTFILES_MACOS_LOCALE-1}" = 1 ]; then
+  # Set language and text formats (macOS stores the currency code in lower case)
+  defaults write NSGlobalDomain AppleLanguages -array en-US
+  defaults write NSGlobalDomain AppleLocale -string en_US@currency=usd
+  defaults write NSGlobalDomain AppleMeasurementUnits -string Inches
+  defaults write NSGlobalDomain AppleTemperatureUnit -string Fahrenheit
+  defaults write NSGlobalDomain AppleMetricUnits -bool false
+fi
+
+if [ "${DOTFILES_MACOS_SPOTLIGHT_HOTKEYS-1}" = 1 ]; then
+  # Spotlight search shortcut: none (frees ⌘Space for Raycast)
+  defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 64 "{ enabled = 0; value = { parameters = (65535, 49, 1048576); type = standard; }; }"
+  # Menu Bar Spotlight shortcut: none
+  defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 65 "{ enabled = 0; value = { parameters = (65535, 49, 1572864); type = standard; }; }"
+fi
+
 # Open new Finder windows in the home folder (NewWindowTarget PfHm is in mise's
 # fragment; this half holds a $HOME path, which mise does not template)
 defaults write com.apple.finder NewWindowTargetPath -string "file://${HOME}/"
@@ -189,17 +206,19 @@ pmset_ensure() {
     root "$(sys pmset)" -a "$1" "$2"
   fi
 }
-# Enable lid wakeup
-pmset_ensure lidwake 1
-# Put the hard disk(s) to sleep when possible: 10 min
-pmset_ensure disksleep 10
-# Disable wake for network access
-pmset_ensure womp 0
-# Hibernation mode
-# 0: Disable hibernation (speeds up entering sleep mode)
-# 3: Copy RAM to disk so the system state can still be restored in case of a
-#    power failure.
-pmset_ensure hibernatemode 3
+if [ "${DOTFILES_MACOS_POWER-1}" = 1 ]; then
+  # Enable lid wakeup
+  pmset_ensure lidwake 1
+  # Put the hard disk(s) to sleep when possible: 10 min
+  pmset_ensure disksleep 10
+  # Disable wake for network access
+  pmset_ensure womp 0
+  # Hibernation mode
+  # 0: Disable hibernation (speeds up entering sleep mode)
+  # 3: Copy RAM to disk so the system state can still be restored in case of a
+  #    power failure.
+  pmset_ensure hibernatemode 3
+fi
 
 # Show the /Volumes folder
 if [[ "$(ls -ldO /Volumes)" == *hidden* ]]; then
