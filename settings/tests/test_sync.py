@@ -27,7 +27,7 @@ exit 0
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from dotfiles_settings import profile, sync
-from dotfiles_settings.model import Setting, SettingsError, Source, Value
+from dotfiles_settings.model import InvalidValue, Setting, SettingsError, Source, Value
 
 
 def setting(id, scope="user"):
@@ -261,7 +261,11 @@ def test_on_another_name_is_used_everywhere():
 
 def test_on_refuses_a_name_that_is_not_a_repository_name():
     fresh()
-    assert "--repo" in raises(sync.on, "someone/else") and calls() == []
+    try:
+        sync.on("someone/else")
+        raise AssertionError("no error")
+    except InvalidValue as e:
+        assert "--repo" in str(e) and calls() == []
 
 
 def test_on_restores_a_settings_repository():

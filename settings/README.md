@@ -62,7 +62,7 @@ The one row in the Dotfiles section, `dotfiles.links`, is the `dotfile` kind and
 | `profile list`, `profile use <name>`, `profile new <name>` | The profiles with the active one marked, or what the switch changed, described in [Profiles](#profiles) | 0, 2 for a name that is refused or unknown, 1 when a step stops it |
 | `apply <kind>` | The adapter's lines, or `<kind>: nothing to apply` | 0, 2 for an unknown kind |
 | `status [--json]` | This copy's mode, branch and commit, the profile in use and the sync state, one line each, or the JSON object [below](#status) | 0 |
-| `sync on [--repo NAME]`, `sync off`, `sync now`, `sync status`, `sync apply` | What happened and what to run next, described in [Sync](#sync) | 0, 1 when a step stops it, 2 for an unknown action |
+| `sync on [--repo NAME]`, `sync off`, `sync now`, `sync status`, `sync apply` | What happened and what to run next, described in [Sync](#sync) | 0, 1 when a step stops it, 2 for an unknown action or a `--repo` that is not a repository name |
 | `tui` | Runs the terminal UI | 0 |
 | `serve [--no-open]` | Prints the URL and serves the UI until you stop it | 0 |
 

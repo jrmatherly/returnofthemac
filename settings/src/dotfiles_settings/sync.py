@@ -6,7 +6,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from . import mise
-from .model import Adapter, Setting, SettingsError
+from .model import Adapter, InvalidValue, Setting, SettingsError
 
 Tools = dict[str, str]
 
@@ -294,7 +294,7 @@ def _token() -> None:
 
 def on(repo: str) -> list[str]:
     if not re.fullmatch(r"[A-Za-z0-9._-]+", repo):
-        raise SettingsError(f"--repo takes the name of a repository in your own account, such as rotm-settings, "
+        raise InvalidValue(f"--repo takes the name of a repository in your own account, such as rotm-settings, "
                             f"not {repo!r}")
     _sign_in()
     _token()

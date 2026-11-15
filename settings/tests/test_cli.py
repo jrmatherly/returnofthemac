@@ -175,6 +175,8 @@ assert run("sync")[0] == 2
 os.environ["DOTFILES_SETTINGS_MISE"] = fake("2026.11.8 no setup repository is connected")
 code, out, _ = run("sync", "status")
 assert code == 0 and "not connected" in out, (code, out)
+code, out, err = run("sync", "on", "--repo", "someone/else")
+assert (code, out) == (2, "") and "--repo" in err, (code, out, err)
 
 # profile: the three actions reach profile.py, a refused or unknown name exits 2, and --shared sets profile.shared
 from dotfiles_settings import profile
