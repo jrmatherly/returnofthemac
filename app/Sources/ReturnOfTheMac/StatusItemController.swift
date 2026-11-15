@@ -145,16 +145,18 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     guard !state.blocked, confirm(command.question, "\(command.commandLine) in a console window", command.button),
       !state.blocked
     else { return }
-    let home = FileManager.default.homeDirectoryForCurrentUser
-    let session = ConsoleSession(
-      title: command.title, command: command.command(home: home), environment: ConsoleCommand.environment(home: home),
-      logDirectory: home.appendingPathComponent("Library/Logs/returnofthemac"))
     // The settings window reloads itself when sessionRunning clears (SettingsWindowController.watchActions).
     state.sessionRunning = true
-    console.run(session) { [weak self] in
-      guard let self else { return }
-      self.state.sessionRunning = false
-      Task { await self.state.refresh(recheckUpdates: true) }
+    Task {
+      await state.settled()
+      let home = FileManager.default.homeDirectoryForCurrentUser
+      let session = ConsoleSession(
+        title: command.title, command: command.command(home: home), environment: ConsoleCommand.environment(home: home),
+        logDirectory: home.appendingPathComponent("Library/Logs/returnofthemac"))
+      console.run(session) { [state] in
+        state.sessionRunning = false
+        Task { await state.refresh(recheckUpdates: true) }
+      }
     }
   }
 

@@ -108,6 +108,81 @@ struct AppStateTests {
     #expect(state.lastOutput == nil)
   }
 
+  @Test func anActionWaitsForTheRefreshInFlight() async {
+    let runner = FakeRunner()
+    stubClean(runner)
+    let sync = ["settings", "sync", "now"]
+    runner.stub(sync, .success(CommandOutput(stdout: "", stderr: "")))
+    let release = runner.hold(checkArgs)
+    let state = makeState(runner)
+    let refresh = Task { await state.refresh() }
+    await waitUntil { runner.calls.contains(checkArgs) }
+    #expect(!state.blocked)
+    let action = Task { await state.syncNow() }
+    await waitUntil { state.busy != nil }
+    try? await Task.sleep(nanoseconds: 50_000_000)
+    #expect(!runner.calls.contains(sync))
+    #expect(state.quitDecision(sessionTitle: nil, stagedEdits: 0) == .ask(message: "Quit while a command is running?", detail: "Syncing…"))
+    release()
+    await refresh.value
+    await action.value
+    #expect(runner.calls == [statusArgs, checkArgs, sync, statusArgs])
+  }
+
+  @Test func aFailedRefreshInFlightStillLetsTheActionRun() async {
+    let runner = FakeRunner()
+    stubClean(runner)
+    let sync = ["settings", "sync", "now"]
+    runner.stub(sync, .success(CommandOutput(stdout: "", stderr: "")))
+    runner.stub(checkArgs, .failure(.failed(1, "no network")))
+    let release = runner.hold(checkArgs)
+    let state = makeState(runner)
+    let refresh = Task { await state.refresh() }
+    await waitUntil { runner.calls.contains(checkArgs) }
+    let action = Task { await state.syncNow() }
+    await waitUntil { state.busy != nil }
+    try? await Task.sleep(nanoseconds: 50_000_000)
+    #expect(!runner.calls.contains(sync))
+    release()
+    await refresh.value
+    await action.value
+    #expect(runner.calls == [statusArgs, checkArgs, sync, statusArgs])
+    #expect(state.lastError == nil)
+  }
+
+  @Test func exclusiveWorkWaitsForTheRefreshInFlight() async {
+    let runner = FakeRunner()
+    stubClean(runner)
+    let release = runner.hold(checkArgs)
+    let state = makeState(runner)
+    let refresh = Task { await state.refresh() }
+    await waitUntil { runner.calls.contains(checkArgs) }
+    var ran = false
+    let work = Task { await state.exclusive("Applying settings…") { ran = true } }
+    await waitUntil { state.busy != nil }
+    try? await Task.sleep(nanoseconds: 50_000_000)
+    #expect(ran == false)
+    release()
+    await refresh.value
+    await work.value
+    #expect(ran == true)
+  }
+
+  @Test func aSecondRefreshJoinsTheOneInFlight() async {
+    let runner = FakeRunner()
+    stubClean(runner)
+    let release = runner.hold(statusArgs)
+    let state = makeState(runner)
+    let first = Task { await state.refresh() }
+    let second = Task { await state.refresh() }
+    await waitUntil { runner.calls.contains(statusArgs) }
+    try? await Task.sleep(nanoseconds: 50_000_000)
+    release()
+    await first.value
+    await second.value
+    #expect(runner.calls.filter { $0 == statusArgs }.count == 1)
+  }
+
   @Test func aFailedActionSetsTheErrorAndStillRefreshes() async {
     let runner = FakeRunner()
     stubClean(runner)

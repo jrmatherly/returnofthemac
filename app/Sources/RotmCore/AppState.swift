@@ -33,6 +33,7 @@ import Observation
   private let now: () -> Date
   private var checkedAt: Date?
   private var appCheckedAt: Date?
+  private var reading: Task<Void, Never>?
 
   public init(makeRunner: @escaping (URL) -> CommandRunner, locate: @escaping () -> URL?, now: @escaping () -> Date = Date.init) {
     self.makeRunner = makeRunner
@@ -42,10 +43,21 @@ import Observation
 
   /// `recheckUpdates` runs `update --check` now instead of at most hourly, as after the console's update.
   /// Runs nothing while a command runs: its own end refreshes.
+  /// A refresh asked for while one runs joins it.
   public func refresh(recheckUpdates: Bool = false) async {
     guard !blocked else { return }
-    await read(recheckUpdates: recheckUpdates)
+    if let inFlight = reading {
+      await inFlight.value
+      guard recheckUpdates, !blocked else { return }
+    }
+    let task = Task { await self.read(recheckUpdates: recheckUpdates) }
+    reading = task
+    await task.value
+    if reading == task { reading = nil }
   }
+
+  /// Returns when no refresh is in flight, so an action never runs beside one.
+  public func settled() async { await reading?.value }
 
   private func read(recheckUpdates: Bool = false) async {
     if runner == nil {
@@ -91,6 +103,7 @@ import Observation
     guard !blocked else { return .unchanged("Wait for the command that is running to finish.") }
     upgrading = true
     defer { upgrading = false }
+    await settled()
     var said: String
     do {
       let out = try await mise.run(AppUpdate.upgradeArguments)
@@ -138,6 +151,7 @@ import Observation
   public func exclusive(_ label: String, _ work: () async -> Void) async {
     guard !blocked else { return }
     busy = label
+    await settled()
     await work()
     await read()
     busy = nil
@@ -146,6 +160,7 @@ import Observation
   private func perform(_ label: String, _ args: [String]) async {
     guard !blocked, let runner else { return }
     busy = label
+    await settled()
     do {
       let out = try await runner.run(args)
       let text = [out.stdout, out.stderr].filter { !$0.isEmpty }.joined(separator: "\n")
