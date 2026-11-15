@@ -45,8 +45,9 @@ jobs:
         with:
           enable-cache: false
       # Named packages install without any config; mise pours Homebrew's bottles
-      # itself. shellcheck, actionlint, minijinja-cli and rtk are what pnpm check runs
-      - run: mise bootstrap packages apply --yes brew:actionlint brew:shellcheck brew:minijinja-cli brew:rtk
+      # itself. shellcheck, actionlint, minijinja-cli and rtk are what pnpm check runs;
+      # zoxide, ripgrep and fzf are what test-shell needs, tlrc what test-conventions needs
+      - run: mise bootstrap packages apply --yes brew:actionlint brew:shellcheck brew:minijinja-cli brew:rtk brew:zoxide brew:ripgrep brew:fzf brew:tlrc
         env:
           MISE_GITHUB_TOKEN: ${{ github.token }}
       # Every formula, cask, tap and dependency in the package list resolves,

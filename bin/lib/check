@@ -118,6 +118,8 @@ job quiet bash bin/lib/test-app-build
 # Lint the GitHub Actions workflows (expressions, runner labels, embedded shell)
 if command -v actionlint > /dev/null; then
   job actionlint .github/workflows/*.yml
+else
+  echo "check: actionlint not found, skipping the workflow lint" >&2
 fi
 job prettier --log-level warn --ignore-unknown --check "**/*.{js,cjs,ts,md,json,sh}" "bin/*" ".github/**/*.yml"
 # firefox/lib/get-firefox-dev-path: the profiles.ini fallback, relative and absolute Path
