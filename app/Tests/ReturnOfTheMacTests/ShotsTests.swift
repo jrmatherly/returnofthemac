@@ -13,7 +13,7 @@ import Testing
 private let shotsDir = ProcessInfo.processInfo.environment["UI_SHOTS_DIR"]
 
 @MainActor
-private func fixtureState() async -> (AppState, FakeRunner) {
+func fixtureState() async -> (AppState, FakeRunner) {
   let runner = FakeRunner()
   runner.stub(["settings", "list", "--json"], .success(CommandOutput(stdout: Fixtures.list, stderr: "")))
   runner.stub(["settings", "status", "--json"], .success(CommandOutput(stdout: Fixtures.status, stderr: "")))
@@ -25,7 +25,7 @@ private func fixtureState() async -> (AppState, FakeRunner) {
 
 /// The settings window, loaded before it is shown so the shot never catches the progress indicator.
 @MainActor
-private func settingsWindow(section: String? = nil) async -> SettingsWindowController {
+func settingsWindow(section: String? = nil) async -> SettingsWindowController {
   let (state, runner) = await fixtureState()
   let controller = SettingsWindowController(state: state, runner: runner, section: section)
   await controller.model.load()
@@ -104,11 +104,6 @@ private let colouredOutput = #"""
   printf '\033[1m\033[38;2;214;40;40m        \033[38;2;214;40;40m████\033[38;2;20;20;20m██████\033[38;2;214;40;40m████████\033[38;2;20;20;20m██████\033[38;2;214;40;40m████\033[m\n'
   """#
 
-private func editableFields(in view: NSView) -> [NSTextField] {
-  let mine = (view as? NSTextField).map { $0.isEditable ? [$0] : [] } ?? []
-  return mine + view.subviews.flatMap(editableFields)
-}
-
 @Suite(.serialized, .enabled(if: shotsDir != nil)) @MainActor struct Shots {
   init() throws {
     _ = NSApplication.shared
@@ -154,14 +149,5 @@ private func editableFields(in view: NSView) -> [NSTextField] {
       while session.phase == .running, Date() < deadline { try await Task.sleep(nanoseconds: 20_000_000) }
       #expect(session.phase == .stopped)
     }
-  }
-
-  @Test func noFieldTakesFocusOnOpen() async throws {
-    let controller = await settingsWindow()
-    try await Task.sleep(nanoseconds: 500_000_000)
-    let frame = try #require(controller.window.contentView?.superview)
-    #expect(!editableFields(in: frame).isEmpty, "the window has no text field, so the check proves nothing")
-    #expect(!(controller.window.firstResponder is NSText), "a text field took focus on open")
-    controller.window.close()
   }
 }
