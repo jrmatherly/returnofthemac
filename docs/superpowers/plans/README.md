@@ -8,8 +8,8 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 | --- | --- | --- | --- |
 | [P5 menu bar app](2026-11-13-p5-menu-bar-app.md) | [installable setup](../specs/2026-11-11-installable-setup-profiles-and-sync.md) | 12 | Through Task 10, with Task 9 and Task 11's docs done. Task 11's VM proof waits on Guest 2. Task 12 waits on the owner's word. |
 | [Audit: gate, CI and docs](2026-11-14-audit-gate-ci-and-docs.md) | [project audit](../specs/2026-11-14-project-audit.md), G1 to G14 | 11 | Tasks 1, 2, 3, 5, 6 and 7 are on `main` (`9bc4017` to `97d4766`). Task 8 is the app plan's Task 5, done. Task 4 is the owner's. Tasks 9 and 10 are Stage 7. Task 11 waits on Guest 2. |
-| [Audit: install and opt-outs](2026-11-14-audit-install-and-opt-outs.md) | project audit, I1 to I20 | 15 | Tasks 4, 5, 6, 11, 12, 14 and 15 are on `main` (`03df250` to `ac43eb6`). Tasks 1, 2, 3, 7, 8, 9, 10 and 13 wait on an owner decision. |
-| [Audit: settings tool](2026-11-14-audit-settings-tool.md) | project audit, S1 to S11 | 12 | Every task but 9 is on `main` (`aa06a68` to `7e94c04`). Task 9 needs the owner told first. |
+| [Audit: install and opt-outs](2026-11-14-audit-install-and-opt-outs.md) | project audit, I1 to I20 | 15 | Every task but 1 is on `main` (`03df250` to `0d72eb4`). Task 1 is dropped: the owner keeps the six allow rules. Task 3 holds releases for 48 hours, not seven days. Task 10 shipped its docs half, and the KubeStellar pair stays. |
+| [Audit: settings tool](2026-11-14-audit-settings-tool.md) | project audit, S1 to S11 | 12 | All twelve tasks are on `main` (`aa06a68` to `86c34f1`). Stage 7 moves the plan to `completed/`. |
 | [Audit: menu bar app](2026-11-14-audit-menu-bar-app.md) | project audit, M1 to M9 and G8 | 9 | All nine tasks are on `main` (`0cb1667` to `c448cb3`), with `c597959` added from review. Unreleased: the `app/VERSION` bump, tag and cask are the owner's. The plan moves to `completed/` after the guest steps Tasks 2 and 9 add have run. |
 
 The four audit plans were each checked line by line against the code on 2026-11-14 and corrected. Stages 2 to 5 below ran on 2026-11-14, one commit per task, each with its failing check seen first. Stage 1's step 1 is done and step 2 is the owner's.
@@ -19,6 +19,10 @@ Found while running them, and not in any plan:
 - Install 12 as planned removed `rtk.md`, `hindsight.md` and `catalog.md` from `~/.claude/rules` on the first apply of an existing install. The landed commit gives the three module entries `depends = ["~/.claude/rules"]`, and `bin/lib/test-dotfiles` holds the migration case.
 - App 1 as planned let two rechecks waiting on one refresh each start a read. `c597959` fixes it with a test.
 - The "restore it with git checkout" hint at `setup/dash.sh:158` is wrong on an installed copy. Not fixed.
+- Install 9 as planned still installed a changed or unchecked skill for an agent that lacked it. `5e75b83` holds it until `claude-config restore skills --accept <name>`.
+- Not fixed: `--accept` installs whatever the source holds at that moment, and a first install on a new Mac is unpinned. The `skills` CLI takes `owner/repo#<sha>`, but the lock records a folder hash and no commit, so `claude-config save` would have to record one.
+
+Stage 6 ran on 2026-11-14 and 2026-11-15 with the owner's answers: decision 1 declined, decisions 2, 4, 5 and 6 as recommended, decision 3 for the docs only, decision 7 at 48 hours, and Settings 9 approved.
 
 ## Recommended order
 
