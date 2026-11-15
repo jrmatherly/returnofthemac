@@ -77,7 +77,7 @@ The app has no screen for the per-project plugin stack. That screen is in the te
 
 The app updates through mise, which installed it. It has no updater of its own, and nothing installs by itself.
 
-Once a day the app reads its cask file in the tap (`Casks/returnofthemac-app.rb` in `jrmatherly/homebrew-tap`, fetched from `raw.githubusercontent.com`) and compares the version there with its own. When the tap has a newer one, the icon gains its dot and the menu's first line reads **Update Return of the Mac to 0.2.0…**. A check that fails, as with no network, says nothing and is tried again later.
+Once a day the app reads its cask file in the tap (`Casks/returnofthemac-app.rb` in `jrmatherly/homebrew-tap`, fetched from `raw.githubusercontent.com`) and compares the version there with its own. When the tap has a newer one, the app asks mise (`mise bootstrap packages status --json`) whether mise installed its cask, and offers the update only then, so a copy opened from the DMG is offered none. When mise did install it, the icon gains its dot and the menu's first line reads **Update Return of the Mac to 0.2.0…**. A check that fails, as with no network, says nothing and is tried again later.
 
 Choosing that line asks first, then runs this command from your home folder:
 
@@ -103,4 +103,4 @@ rotm settings set modules.menubar off
 
 In the app, that is the **Menu bar app** switch in the settings window. To leave the app out from the start, add `--without menubar` to the [install line](installation.md#install-without-cloning).
 
-With the module off, mise stops reading the app's cask and setup stops opening the app. The app stays installed and keeps running until you quit it, and **Launch at Login** stays as you set it. It is no longer updated, by `sysup` or by its own menu line, because mise upgrades only a cask that a config declares. [Modules](modules.md#switching-a-module-off-or-on) says how to remove what a module installed.
+With the module off, mise stops reading the app's cask and setup stops opening the app. The app stays installed and keeps running until you quit it, and **Launch at Login** stays as you set it. It is no longer updated by `sysup`, because mise upgrades only a cask that a config declares, and its menu no longer shows the update line or the dot. [Modules](modules.md#switching-a-module-off-or-on) says how to remove what a module installed.

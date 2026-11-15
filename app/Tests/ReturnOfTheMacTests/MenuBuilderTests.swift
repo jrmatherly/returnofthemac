@@ -138,7 +138,7 @@ struct MenuBuilderTests {
 
   @Test func anAppUpdateLeadsTheMenuAndReadsUpdatingWhileMiseRuns() async {
     let s = await state()
-    await s.checkAppUpdate(fetch: { _ in "  version \"0.2.0\"\n" }, current: "0.1.0")
+    await s.checkAppUpdate(fetch: { _ in "  version \"0.2.0\"\n" }, current: "0.1.0", installed: { true })
     #expect(s.needsAttention)
     #expect(
       Array(MenuBuilder.entries(for: s, launchAtLogin: false).prefix(2)) == [

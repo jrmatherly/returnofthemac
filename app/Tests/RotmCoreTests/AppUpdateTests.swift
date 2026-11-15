@@ -71,6 +71,8 @@ private func writeVersion(_ version: String?, to app: URL) throws {
 
 private struct Offline: Error {}
 
+private let caskRow = #"{"brew-cask":{"available":true,"packages":[{"package":"jrmatherly/tap/returnofthemac-app","requested_version":"latest","desired_state":"present","state":"STATE","installed_version":"0.1.2","managed_by":"mise"}]}}"#
+
 final class FetchCount: @unchecked Sendable {
   var count = 0
 }
@@ -96,19 +98,45 @@ struct AppUpdateTests {
 
   @Test func aNewerCaskOffersTheUpdate() async {
     let state = makeState(FakeRunner())
-    await state.checkAppUpdate(fetch: { _ in "  version \"0.2.0\"\n" }, current: "0.1.0")
+    await state.checkAppUpdate(fetch: { _ in "  version \"0.2.0\"\n" }, current: "0.1.0", installed: { true })
     #expect(state.appUpdate == "0.2.0")
   }
 
   @Test func theSameVersionOffersNothing() async {
     let state = makeState(FakeRunner())
-    await state.checkAppUpdate(fetch: { _ in "  version \"0.1.0\"\n" }, current: "0.1.0")
+    await state.checkAppUpdate(fetch: { _ in "  version \"0.1.0\"\n" }, current: "0.1.0", installed: { true })
     #expect(state.appUpdate == nil)
+  }
+
+  @Test func caskInstalledReadsMisesStatus() {
+    #expect(AppUpdate.statusArguments == ["bootstrap", "packages", "status", "--json"])
+    #expect(AppUpdate.caskInstalled(inStatus: caskRow.replacingOccurrences(of: "STATE", with: "installed")))
+    #expect(!AppUpdate.caskInstalled(inStatus: caskRow.replacingOccurrences(of: "STATE", with: "missing")))
+    #expect(!AppUpdate.caskInstalled(inStatus: "{}"))
+    #expect(!AppUpdate.caskInstalled(inStatus: "mise ERROR no config"))
+  }
+
+  @Test func aCopyMiseDidNotInstallIsOfferedNothing() async {
+    let runner = FakeRunner()
+    stubClean(runner, check: #"{"mode":"installed","branch":"stable","behind":0}"#)
+    let state = makeState(runner)
+    await state.refresh()
+    await state.checkAppUpdate(fetch: { _ in "  version \"0.2.0\"\n" }, current: "0.1.0", installed: { false })
+    #expect(state.appUpdate == nil)
+    #expect(state.needsAttention == false)
+  }
+
+  @Test func theSameVersionDoesNotAskMise() async {
+    let state = makeState(FakeRunner())
+    let asked = FetchCount()
+    await state.checkAppUpdate(
+      fetch: { _ in "  version \"0.1.0\"\n" }, current: "0.1.0", installed: { asked.count += 1; return true })
+    #expect(asked.count == 0)
   }
 
   @Test func aFailedCheckIsSilent() async {
     let state = makeState(FakeRunner())
-    await state.checkAppUpdate(fetch: { _ in throw Offline() }, current: "0.1.0")
+    await state.checkAppUpdate(fetch: { _ in throw Offline() }, current: "0.1.0", installed: { true })
     #expect(state.appUpdate == nil)
     #expect(state.lastError == nil)
   }
@@ -122,12 +150,12 @@ struct AppUpdateTests {
       fetches.count += 1
       return "  version \"0.2.0\"\n"
     }
-    await state.checkAppUpdate(fetch: fetch, current: "0.1.0")
+    await state.checkAppUpdate(fetch: fetch, current: "0.1.0", installed: { true })
     clock.advance(minutes: 23 * 60)
-    await state.checkAppUpdate(fetch: fetch, current: "0.1.0")
+    await state.checkAppUpdate(fetch: fetch, current: "0.1.0", installed: { true })
     #expect(fetches.count == 1)
     clock.advance(minutes: 61)
-    await state.checkAppUpdate(fetch: fetch, current: "0.1.0")
+    await state.checkAppUpdate(fetch: fetch, current: "0.1.0", installed: { true })
     #expect(fetches.count == 2)
   }
 
@@ -135,9 +163,9 @@ struct AppUpdateTests {
     let clock = Clock()
     let state = makeState(FakeRunner(), clock: clock)
     let fetches = FetchCount()
-    await state.checkAppUpdate(fetch: { _ in fetches.count += 1; throw Offline() }, current: "0.1.0")
+    await state.checkAppUpdate(fetch: { _ in fetches.count += 1; throw Offline() }, current: "0.1.0", installed: { true })
     clock.advance(minutes: 5)
-    await state.checkAppUpdate(fetch: { _ in fetches.count += 1; return "  version \"0.2.0\"\n" }, current: "0.1.0")
+    await state.checkAppUpdate(fetch: { _ in fetches.count += 1; return "  version \"0.2.0\"\n" }, current: "0.1.0", installed: { true })
     #expect(fetches.count == 2)
     #expect(state.appUpdate == "0.2.0")
   }

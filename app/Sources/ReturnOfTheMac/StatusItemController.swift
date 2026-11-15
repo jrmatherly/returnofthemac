@@ -56,8 +56,17 @@ final class StatusItemController: NSObject, NSMenuDelegate {
   private func refresh() {
     Task {
       await state.refresh()
-      if let runningVersion { await state.checkAppUpdate(fetch: Self.fetch, current: runningVersion) }
+      if let runningVersion {
+        await state.checkAppUpdate(fetch: Self.fetch, current: runningVersion, installed: Self.caskInstalled)
+      }
     }
+  }
+
+  private static func caskInstalled() async -> Bool {
+    let home = FileManager.default.homeDirectoryForCurrentUser
+    let mise = CLI(tool: home.appendingPathComponent(".local/bin/mise"), home: home)
+    guard let out = try? await mise.run(AppUpdate.statusArguments) else { return false }
+    return AppUpdate.caskInstalled(inStatus: out.stdout)
   }
 
   private static func fetch(_ url: URL) async throws -> String {

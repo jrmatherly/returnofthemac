@@ -90,12 +90,14 @@ import Observation
   }
 
   /// Reads the cask in the tap, at most once a day. A failed check is silent.
-  public func checkAppUpdate(fetch: (URL) async throws -> String, current: String) async {
+  /// `installed` asks mise whether it installed the cask, only when the tap is newer: mise updates no other copy.
+  public func checkAppUpdate(fetch: (URL) async throws -> String, current: String, installed: () async -> Bool) async {
     if let appCheckedAt, now().timeIntervalSince(appCheckedAt) < 86400 { return }
     guard let text = try? await fetch(AppUpdate.caskURL) else { return }
     appCheckedAt = now()
     guard let version = AppUpdate.version(inCask: text) else { return }
-    appUpdate = AppUpdate.isNewer(version, than: current) ? version : nil
+    let offered = AppUpdate.isNewer(version, than: current) ? await installed() : false
+    appUpdate = offered ? version : nil
   }
 
   /// Whatever mise says, the version on disk decides: mise can fail after the bundle was swapped.

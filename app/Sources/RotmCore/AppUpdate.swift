@@ -5,6 +5,16 @@ public enum AppUpdate {
   public static let caskURL = URL(string: "https://raw.githubusercontent.com/jrmatherly/homebrew-tap/HEAD/Casks/returnofthemac-app.rb")!
   public static let releasesURL = "https://github.com/jrmatherly/returnofthemac/releases"
   public static let upgradeArguments = ["bootstrap", "packages", "upgrade", "--yes", package]
+  public static let statusArguments = ["bootstrap", "packages", "status", "--json"]
+
+  /// True when mise's status has the app's cask as installed. The shape is mise's, so only that row is read.
+  public static func caskInstalled(inStatus json: String) -> Bool {
+    let root = (try? JSONSerialization.jsonObject(with: Data(json.utf8))) as? [String: Any]
+    let rows = (root?["brew-cask"] as? [String: Any])?["packages"] as? [[String: Any]] ?? []
+    return rows.contains {
+      $0["package"] as? String == "jrmatherly/tap/returnofthemac-app" && $0["state"] as? String == "installed"
+    }
+  }
 
   /// The first `version "X.Y.Z"` line; nil for anything that is not three numbers.
   public static func version(inCask text: String) -> String? {
