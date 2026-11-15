@@ -55,14 +55,14 @@ mkdir -p -m 700 ~/.config/rotm
 [ -L "$CLONE/tilde/.config/mise/config.override.toml" ] || mv "$CLONE/tilde/.config/mise/config.override.toml" ~/.config/rotm/config.override.toml
 mv "$CLONE/tilde/.config/mise/config.local.toml" "$KEEP/config.local.toml"
 sed -i '' 's|~/dotfiles/mole/whitelist.local|~/.config/mole/whitelist.local|' "$KEEP/config.local.toml"
-grep -n 'mole/whitelist' "$KEEP/config.local.toml"
+grep -n 'source = .*mole/whitelist' "$KEEP/config.local.toml"
 mv "$CLONE/mole/whitelist.local" ~/.config/mole/whitelist.local
 mv "$CLONE/tilde/.config/gh/hosts.yml" "$KEEP/hosts.yml"
 mv "$CLONE/tilde/.config/hunk/state.json" "$KEEP/state.json"
 stat -f '%Sp %N' ~/.config/rotm/config.override.toml ~/.config/mole/whitelist.local "$KEEP"/*
 ```
 
-The `grep` prints the Mole entry with `source = "~/.config/mole/whitelist.local"`. The `stat` lists six files, and `hosts.yml`, your GitHub sign-in, reads `-rw-------`. The second line moves nothing when the clone's override file is already a link into `~/.config/rotm`, as on a clone set up after P3.
+The `grep` prints one line, the Mole entry with `source = "~/.config/mole/whitelist.local"`. The `stat` lists six files, and `hosts.yml`, your GitHub sign-in, reads `-rw-------`. The second line moves nothing when the clone's override file is already a link into `~/.config/rotm`, as on a clone set up after P3.
 
 From here until step 6 ends, `gh`, mise's own settings and the Mole list are not where their tools look. That is why nothing else runs during the move.
 
@@ -122,10 +122,11 @@ The first folder lists the six names. The clone's keeps its tracked files, `sett
 | The password, once | The login password |
 | The VS Code font preset | Enter, which keeps the saved one |
 | Git identity and signing | Not asked: `~/.gitconfig.local` exists |
+| `Sign in to GitHub now (gh auth login)? [Y/n]` | Not asked: step 5 put `hosts.yml` back. If it is asked, the sign-in did not land: answer `n` and tell the session |
 
 It links `~/dotfiles` to the copy, seeds `~/.zshrc`, `~/.gitconfig` and the other files that are yours on an installed copy, repoints every other link, installs the one missing package (the menu bar app) and opens it. It must end with `All done!`.
 
-It also warns that the REA server "is registered differently" and prints the line that fixes it. Run that line in the form the warning prints, which should be:
+It also warns that the REA server "is registered differently" and prints the line that fixes it, once where it happens and once in the warnings at the end. Run the line the warning prints. It has the copy's full path where this one has `~`, and two spaces after `rea`:
 
 ```shell
 claude mcp remove rea -s user && claude mcp add --scope user rea -- ~/.local/share/mise/bootstrap-repo/bin/rea-mcp
@@ -157,6 +158,7 @@ r m9 readlink ~/.config/mole/whitelist
 r m10 git -C "$CLONE" config --get user.email
 r m11 claude mcp list
 r m12 rotm settings get updates.mac_password_op
+r m13 ls -l ~/.claude/rules
 ```
 
 | Row | Passes when |
@@ -173,20 +175,21 @@ r m12 rotm settings get updates.mac_password_op
 | `m10` | Your email, read through the seeded `~/.gitconfig` and `~/.gitconfig.local` |
 | `m11` | No server's command names the clone |
 | `m12` | The value this Mac had, read from `~/.config/rotm` |
+| `m13` | `jstack-models.md` is a regular file, and every other rule is a link into the copy, `rtk.md`, `hindsight.md` and `catalog.md` among them |
 
-Rows `m1`, `m3` to `m6` and `m9` ran in the scratch home, and `m2` there as a new `zsh` reading `~/.zshenv`. **Not run on the host:** `m7`, `m8`, `m10`, `m11` and `m12`, which need setup, a sign-in or Claude Code.
+Rows `m1`, `m3` to `m6` and `m9` ran in the scratch home, and `m2` there as a new `zsh` reading `~/.zshenv`. **Not run on the host:** `m7`, `m8`, `m10`, `m11` and `m12`, which need setup, a sign-in or Claude Code, and `m13`. This Mac's mise keeps a record of the links it made (`~/.local/state/mise/dotfiles/`), which names those four rules, and the installed copy's config leaves all four out of the folder's entry. The scratch home had no such record, so `m13` is what shows that the apply did not prune a rule it then failed to relink.
 
 Then open VS Code and see the recent folders, and see "Setup: up to date" in the menu bar app. Check your own files, which the session may not read:
 
 ```shell
-grep -l dev/dotfiles ~/.zsh.local ~/.gitconfig.local ~/.ssh/config.local
+grep -l dev/dotfiles ~/.zsh.local ~/.gitconfig.local ~/.ssh/config.local 2> /dev/null
 ```
 
-It should print nothing, or each file it names holds a path you mean to keep.
+It should print nothing, or each file it names holds a path you mean to keep. A file that does not exist is skipped: this Mac has no `~/.ssh/config.local`. **Not run on the host:** the session may not read these files.
 
 ## 8. Roll back
 
-From any step, with VS Code quit, in this order. Each line skips what its step had not yet done. A rollback from the end ran in the scratch home. A rollback from a step part way did not.
+From any step, with VS Code and Claude Code quit, in this order. Each line skips what its step had not yet done. A rollback from the end ran in the scratch home. A rollback from a step part way did not.
 
 1. Take out what the move made. A seeded file that you have changed since is kept aside in `$KEEP`:
 
@@ -210,7 +213,7 @@ From any step, with VS Code quit, in this order. Each line skips what its step h
 
    A file or folder that VS Code created at the top of `Code/User` after the move shows as untracked in the clone afterwards. Move it aside if you do not want it there.
 
-3. Restore the two links, and mise's vscode plugin, which the next step would skip:
+3. Restore the two links, and mise's vscode plugin, which the next step would skip. If `ls -ld ~/.config/mise` shows a real folder, a fetch stopped half way: move it aside first, or the second line makes its link inside it:
 
    ```shell
    ln -s "$CLONE" ~/dotfiles
