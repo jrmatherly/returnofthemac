@@ -261,7 +261,15 @@ How it works:
 
     Expected, compared with 1d4: `defaults.com.apple.dock.tilesize` is 64 on both. The row also rewrites `~/vm-proof/p3/p5-run.txt` to point at both guests.
 
-36. Shut the guest down. **Tell the session.** The run is complete.
+36. From the menu, choose **Settings…**, then **Agents**. The **jstack: bug-fix** row reads `sonnet xhigh`, loaded from guest 1, and should offer **Reset**. Choose **Reset**, then **Review…** (one `reset` line) and **Apply**. If the row offers no **Reset**, **tell the session** and record the row anyway. Then:
+
+    ```shell
+    p 2c
+    ```
+
+    Expected, compared with 2b: `list.jstack.bug_fix` goes from `"sonnet xhigh" [override]` to `null [unset]`, and `file.tools.toml` loses its `jstack.bug_fix` line. `status.sync.waiting` may gain an entry, because the reset is a local change that sync has not sent. Row 1c3 could not show this: the app offered no Reset for a role then (fixed in `e7db2f3`).
+
+37. Shut the guest down. **Tell the session.** The run is complete.
 
 ## Compare any two records
 
