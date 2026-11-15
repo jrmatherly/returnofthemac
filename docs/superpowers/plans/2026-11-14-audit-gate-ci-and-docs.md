@@ -166,7 +166,7 @@ This task does not prove that GitHub serves a hosted `ubuntu-26.04` image. Renov
 
 Nothing here is run by the session. Each line is one action and its expected result.
 
-- [ ] **G2. Run `fresh-install`.** `gh workflow run fresh-install.yml`, then `gh run watch` on it. Expected: both legs of the matrix (`clone`, `installed`) green, in about 27 minutes as on 2026-11-12. It last ran at `7f837d6`. Run it again after the install plan (`2026-11-14-audit-install-and-opt-outs.md`) lands, since that plan changes the setup path.
+- [ ] **G2. Run `fresh-install`.** `gh workflow run fresh-install.yml`, then `gh run watch` on it. Expected: both legs of the matrix (`clone`, `installed`) green, in about 27 minutes as on 2026-11-12. It last ran at `7f837d6`. Run it again after the install plan (`completed/2026-11-14-audit-install-and-opt-outs.md`) lands, since that plan changes the setup path.
 - [ ] **G4. Close PR 16.** Its change is on `main` in `e7fb36f` (`package.json:22` holds `0.0.0-20261102001236-gf10f41a`).
 - [ ] **G1. Close PR 20** after Task 1 is pushed.
 - [ ] **G3. Merge or close PR 19** after Task 3 is pushed and Renovate has rebased it. Expected: its `check` turns green.

@@ -7,12 +7,10 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 | Plan | Spec | Tasks | State |
 | --- | --- | --- | --- |
 | [P5 menu bar app](2026-11-13-p5-menu-bar-app.md) | [installable setup](../specs/2026-11-11-installable-setup-profiles-and-sync.md) | 12 | Through Task 10, with Task 9 and Task 11's docs done. Task 11's VM proof waits on Guest 2. Task 12 waits on the owner's word. |
-| [Audit: gate, CI and docs](2026-11-14-audit-gate-ci-and-docs.md) | [project audit](../specs/2026-11-14-project-audit.md), G1 to G14 | 11 | Tasks 1, 2, 3, 5, 6 and 7 are on `main` (`9bc4017` to `97d4766`). Task 8 is the app plan's Task 5, done. Task 4 is the owner's. Tasks 9 and 10 are Stage 7. Task 11 waits on Guest 2. |
-| [Audit: install and opt-outs](2026-11-14-audit-install-and-opt-outs.md) | project audit, I1 to I20 | 15 | Every task but 1 is on `main` (`03df250` to `0d72eb4`). Task 1 is dropped: the owner keeps the six allow rules. Task 3 holds releases for 48 hours, not seven days. Task 10 shipped its docs half, and the KubeStellar pair stays. |
-| [Audit: settings tool](2026-11-14-audit-settings-tool.md) | project audit, S1 to S11 | 12 | All twelve tasks are on `main` (`aa06a68` to `86c34f1`). Stage 7 moves the plan to `completed/`. |
+| [Audit: gate, CI and docs](2026-11-14-audit-gate-ci-and-docs.md) | [project audit](../specs/2026-11-14-project-audit.md), G1 to G14 | 11 | Tasks 1, 2, 3, 5, 6 and 7 are on `main` (`9bc4017` to `97d4766`). Task 8 is the app plan's Task 5, done. Task 4 is the owner's. Tasks 9 and 10 are on `main` (`61b074a`, `8ff381a`). Task 11 waits on Guest 2. |
 | [Audit: menu bar app](2026-11-14-audit-menu-bar-app.md) | project audit, M1 to M9 and G8 | 9 | All nine tasks are on `main` (`0cb1667` to `c448cb3`), with `c597959` added from review. Unreleased: the `app/VERSION` bump, tag and cask are the owner's. The plan moves to `completed/` after the guest steps Tasks 2 and 9 add have run. |
 
-The four audit plans were each checked line by line against the code on 2026-11-14 and corrected. Stages 2 to 5 below ran on 2026-11-14, one commit per task, each with its failing check seen first. Stage 1's step 1 is done and step 2 is the owner's.
+The four audit plans were each checked line by line against the code on 2026-11-14 and corrected. Two are finished and filed in `completed/`: [install and opt-outs](completed/2026-11-14-audit-install-and-opt-outs.md) and [settings tool](completed/2026-11-14-audit-settings-tool.md). Each opens with an "Outcome" table of its commits. Stages 2 to 5 below ran on 2026-11-14, one commit per task, each with its failing check seen first. Stage 1's step 1 is done and step 2 is the owner's.
 
 Found while running them, and not in any plan:
 
@@ -86,7 +84,7 @@ Decision 8 (owner values in linked files, finding I22) is not planned here. It b
 
 ### Stage 7. Close out
 
-1. **Gate 9, then Gate 10.** The `ci.md`, forking table and macOS doc corrections. Gate 9 comes after Install 4 and Install 7, because two of its forking rows describe what those tasks ship.
+1. **Gate 9, then Gate 10.** The `ci.md`, forking table and macOS doc corrections. Gate 9 comes after Install 4 and Install 7, because two of its forking rows describe what those tasks ship. Done on 2026-11-15 (`61b074a`, `8ff381a`).
 2. **The owner runs `fresh-install` again**, since the install plan changes the setup path.
 3. **P5 Task 12** (retire `rotm settings serve`), only on the owner's word.
 4. Move each finished plan to `completed/`, and each spec to `specs/completed/` when every plan built on it is there.

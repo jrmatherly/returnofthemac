@@ -10,6 +10,30 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-14-project-audit.md`, section I (findings I1 to I21) and "Decisions the owner must make" (decisions 1 to 7). Read both before Task 1. I22 is out of scope here. It belongs to the P6 plan (decision 8).
 
+## Outcome
+
+Done on 2026-11-14. Every task but Task 1 is on `main`, from `03df250` to `0d72eb4`. The owner answered decisions 1 to 7 before the tasks that wait on them.
+
+| Task | Commit | Difference from the plan |
+| --- | --- | --- |
+| 1 | None | Dropped. The owner declined decision 1 and keeps the six allow rules |
+| 2 | `b13fd42` | None |
+| 3 | `7219d58` | New tool releases are held for 48 hours, not seven days (decision 7) |
+| 4 | `03df250` | None |
+| 5 | `528f7ec` | None |
+| 6 | `7b94cea` | None |
+| 7 | `da1cc8a` | None |
+| 8 | `0d72eb4` | None |
+| 9 | `3585de0`, `5e75b83` | As planned it still installed a changed or unchecked skill for an agent that lacked it. `5e75b83` holds the skill for every agent until `claude-config restore skills --accept <name>` |
+| 10 | `30e199e` | Only the docs half shipped (decision 3). The KubeStellar pair stays |
+| 11 | `3ae0ab8` | None |
+| 12 | `ac43eb6` | As planned it removed `rtk.md`, `hindsight.md` and `catalog.md` from `~/.claude/rules` on the first apply of an existing install. The three module entries gained `depends = ["~/.claude/rules"]`, and `bin/lib/test-dotfiles` holds the migration case |
+| 13 | `db7f2db`, `f246807` | `f246807` pins the setup diagram's sources to the commit that split the two fragments, so Archify validates |
+| 14 | `d1e1bdb` | None |
+| 15 | `7af79ae` | None |
+
+Still not fixed, and not in any task: `--accept` installs whatever the source holds at that moment, and a first install on a new Mac is unpinned.
+
 ## Global Constraints
 
 - The gate is `pnpm check`. Every task ends with it passing. The commit-gate hook runs it on each commit, so edit and commit in separate Bash calls.

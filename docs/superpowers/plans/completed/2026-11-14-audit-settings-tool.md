@@ -10,6 +10,25 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-14-project-audit.md`, section "S. Settings tool and terminal UI". No entry in its "Decisions the owner must make" covers an S finding, so no task waits on one. Task 9 changes a documented rule and says so at its top: tell the owner before starting it.
 
+## Outcome
+
+Done on 2026-11-14. Every task is on `main`, one commit each, with one extra commit for Task 9.
+
+| Task | Commit | Difference from the plan |
+| --- | --- | --- |
+| 1 | `aa06a68` | None |
+| 2 | `e62eb24` | None |
+| 3 | `06bf194` | None |
+| 4 | `68fc80a` | None |
+| 5 | `411d2a4` | None |
+| 6 | `833f7bb` | None |
+| 7 | `9002de0` | None |
+| 8 | `1dc95b9` | None |
+| 9 | `4f74748`, `86c34f1` | The owner approved it first. `86c34f1` was added: a switch redraws without posting its Changed event |
+| 10 | `639d954` | None |
+| 11 | `77c1a60` | None |
+| 12 | `7e94c04` | None |
+
 ## Global Constraints
 
 - The gate is `pnpm check`. Every task ends with it passing. Edit and commit in separate Bash calls.
