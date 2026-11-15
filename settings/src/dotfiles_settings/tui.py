@@ -217,7 +217,9 @@ class SettingsApp(App):
         return None
 
     def on_switch_changed(self, event: Switch.Changed) -> None:
-        if s := self.setting_of(event.switch):
+        # A redraw sets the switch to what the stored value shows as; only a user's flip differs
+        s = self.setting_of(event.switch)
+        if s and event.value != (self.values[s.id].value == s.true_value):
             self.commit(s, "on" if event.value else "off")
 
     def on_select_changed(self, event: Select.Changed) -> None:

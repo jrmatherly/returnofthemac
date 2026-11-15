@@ -100,6 +100,11 @@ async def main():
         await pilot.press("ctrl+r"); await pilot.pause()
         assert "T_FLAG" not in fake.overrides and not app.query_one("#m-t-flag").has_class("-override"), "ctrl+r reset the focused row"
         assert app.query_one("#w-t-flag", Switch).value is False
+        fake.overrides["T_FLAG"] = "1"; app.refresh_values(); await pilot.pause()
+        fake.overrides["T_FLAG"] = "0"; app.refresh_values(); await pilot.pause()
+        assert app.query_one("#w-t-flag", Switch).value is False and fake.writes == [("T_FLAG", "1")], \
+            "a value stored elsewhere is shown, never rewritten"
+        fake.overrides.pop("T_FLAG"); app.refresh_values(); await pilot.pause()
 
         app.query_one("#w-t-name", Input).focus()
         await pilot.press("end", "!", "enter"); await pilot.pause()

@@ -192,7 +192,7 @@ The value also has to fit the setting's type. An `int` is an optional `-` and di
 
 ## Booleans
 
-A `bool` accepts `on`, `true`, `yes` or `1` for on, and `off`, `false`, `no` or `0` for off, in any case. On is stored as the setting's `true_value`, such as `1` or `true`. Off is stored as an empty value, which still beats a seed of `1`. The adapter receives `true_value` or `""`, never the word you typed. A row shows on when its value equals `true_value`.
+A `bool` accepts `on`, `true`, `yes` or `1` for on, and `off`, `false`, `no` or `0` for off, in any case. On is stored as the setting's `true_value`, such as `1` or `true`. Off is stored as an empty value, which still beats a seed of `1`. The adapter receives `true_value` or `""`, never the word you typed. A row shows on when its value equals `true_value`. `setup/macos-extras.sh` reads its switches the same way, so any other value is off in both.
 
 ## The browser UI
 

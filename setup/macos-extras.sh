@@ -36,8 +36,8 @@
 #
 # ---
 # DOTFILES_MACOS_SCREENSHOTS, _TIME_MACHINE_NEW_DISKS, _TEXTEDIT, _SOFTWARE_UPDATE,
-# _FIREWALL and _DISABLE_TIME_MACHINE are on unless set to the empty string.
-# DOTFILES_MACOS_HIDPI, _COMPUTER_NAME and _LOCAL_HOSTNAME are off or empty unless set.
+# _FIREWALL and _DISABLE_TIME_MACHINE are on when unset or `1`, and any other value is off.
+# DOTFILES_MACOS_HIDPI is on only when `1`. _COMPUTER_NAME and _LOCAL_HOSTNAME are empty unless set.
 # By default this turns Time Machine backups off: a Mac that uses Time Machine
 # switches macos.disable_time_machine off before its first set-defaults.
 # dotfiles-settings sets all nine. Safe to repeat: sudo runs only when a value differs.
@@ -124,9 +124,10 @@ root() {
 }
 
 # The groups below are written here, not declared in mise's fragment, because a
-# declared preference cannot be switched off. An empty value is the settings UI's off.
+# declared preference cannot be switched off. Each is on when unset or `1`, the
+# settings UI's on value, and off otherwise (the UI writes an empty value for off).
 
-if [ -n "${DOTFILES_MACOS_SCREENSHOTS-1}" ]; then
+if [ "${DOTFILES_MACOS_SCREENSHOTS-1}" = 1 ]; then
   # Save screenshots to the desktop (a $HOME path, which mise does not template)
   defaults write com.apple.screencapture location -string "$HOME/Desktop"
   # Save screenshots in PNG format (other options: BMP, GIF, JPG, PDF, TIFF)
@@ -139,12 +140,12 @@ if [ -n "${DOTFILES_MACOS_SCREENSHOTS-1}" ]; then
   defaults write com.apple.screencapture name -string Shot
 fi
 
-if [ -n "${DOTFILES_MACOS_TIME_MACHINE_NEW_DISKS-1}" ]; then
+if [ "${DOTFILES_MACOS_TIME_MACHINE_NEW_DISKS-1}" = 1 ]; then
   # Suppress Time Machine's "use as backup disk?" prompt for new drives
   defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
 fi
 
-if [ -n "${DOTFILES_MACOS_TEXTEDIT-1}" ]; then
+if [ "${DOTFILES_MACOS_TEXTEDIT-1}" = 1 ]; then
   # Default TextEdit to plain text and UTF-8. TextEdit is sandboxed, so mise
   # cannot read these back, but the writes are honoured.
   sandboxed com.apple.TextEdit RichText -int 0
@@ -152,7 +153,7 @@ if [ -n "${DOTFILES_MACOS_TEXTEDIT-1}" ]; then
   sandboxed com.apple.TextEdit PlainTextEncodingForWrite -int 4
 fi
 
-if [ -n "${DOTFILES_MACOS_SOFTWARE_UPDATE-1}" ]; then
+if [ "${DOTFILES_MACOS_SOFTWARE_UPDATE-1}" = 1 ]; then
   # Enable the automatic update check
   defaults write com.apple.SoftwareUpdate AutomaticCheckEnabled -bool true
   # Check for software updates daily, not just once per week
@@ -231,14 +232,14 @@ if [ -n "$computer_name" ]; then
 fi
 
 # Enable HiDPI display modes (requires restart)
-if [ -n "$hidpi" ] && [ "$(defaults read /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled 2> /dev/null || true)" != 1 ]; then
+if [ "$hidpi" = 1 ] && [ "$(defaults read /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled 2> /dev/null || true)" != 1 ]; then
   root "$(sys defaults)" write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool true
 fi
 
 # Enable macOS Firewall + Stealth Mode. socketfilterfw is not on PATH; the
 # command -v lets the self-check stub the two reads. sudo always gets the
 # system path, so a file of that name on PATH never runs as root.
-if [ -n "$firewall" ]; then
+if [ "$firewall" = 1 ]; then
   fw=/usr/libexec/ApplicationFirewall/socketfilterfw
   fw_read=$(command -v socketfilterfw || echo "$fw")
   if [[ "$("$fw_read" --getglobalstate 2> /dev/null || true)" != *"State = "[1-9]* ]]; then
@@ -252,7 +253,7 @@ fi
 # WARNING: this fully disables local Time Machine backups/snapshots.
 # It is on by default and stops all backups, so a Mac that uses Time Machine
 # switches macos.disable_time_machine off.
-if [ -n "$disable_tm" ] && [ "$(defaults read /Library/Preferences/com.apple.TimeMachine AutoBackup 2> /dev/null || true)" != 0 ]; then
+if [ "$disable_tm" = 1 ] && [ "$(defaults read /Library/Preferences/com.apple.TimeMachine AutoBackup 2> /dev/null || true)" != 0 ]; then
   # tmutil refuses (exit 80) unless the app running this has Full Disk Access, which a new Mac grants no app
   if [ "$root_refused" -eq 0 ] && hash tmutil &> /dev/null; then
     tm_rc=0

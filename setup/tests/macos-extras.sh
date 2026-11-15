@@ -119,6 +119,8 @@ rm -f "$reads/DisplayResolutionEnabled" "$reads/AutoBackup"
 
 DOTFILES_MACOS_FIREWALL='' DOTFILES_MACOS_DISABLE_TIME_MACHINE='' DOTFILES_MACOS_HIDPI='' DOTFILES_MACOS_COMPUTER_NAME='' run
 check "an opt-in switched off does nothing" "! grep -q 'socketfilterfw --set\|tmutil\|scutil --set\|windowserver' '$log'"
+DOTFILES_MACOS_FIREWALL=0 DOTFILES_MACOS_DISABLE_TIME_MACHINE=0 DOTFILES_MACOS_HIDPI=true DOTFILES_MACOS_SCREENSHOTS=0 run
+check "a switch that is not 1 is off, as the settings UI shows it" "! grep -q 'socketfilterfw --set\|tmutil\|windowserver\|com.apple.screencapture' '$log'"
 
 DOTFILES_MACOS_FIREWALL='' DOTFILES_MACOS_DISABLE_TIME_MACHINE='' run --firewall --disable-time-machine
 check "a flag turns a switched-off opt-in on" "grep -q '^sudo .*socketfilterfw --setglobalstate on$' '$log' && grep -qx 'sudo .*/tmutil disable' '$log'"
