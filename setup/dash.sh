@@ -8,7 +8,9 @@
 # Dash stores its synced preferences as a plist of absolute paths and has no
 # variable expansion, so the folders to index can't be committed in a portable
 # way. This script asks for them interactively and writes the entries into the
-# tracked sync file instead.
+# tracked sync file instead. An installed copy is replaced by `rotm update`, so
+# there the sync folder is ${XDG_DATA_HOME:-~/.local/share}/rotm/dash, seeded
+# from the tracked file on the first run.
 #
 # Usage:
 #   setup/dash.sh                            # interactive
@@ -20,7 +22,16 @@
 set -euo pipefail
 
 DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "$0")/.." && pwd -P)}"
-PLIST="$DOTFILES_DIR/dash/Dash.dashsync/Preferences.plist"
+if [ "$("$DOTFILES_DIR/bin/lib/rotm-mode" "$DOTFILES_DIR")" = installed ]; then
+  dash_dir="${XDG_DATA_HOME:-$HOME/.local/share}/rotm/dash"
+  if [ ! -f "$dash_dir/Dash.dashsync/Preferences.plist" ] && [ -f "$DOTFILES_DIR/dash/Dash.dashsync/Preferences.plist" ]; then
+    mkdir -p "$dash_dir/Dash.dashsync"
+    cp "$DOTFILES_DIR/dash/Dash.dashsync/Preferences.plist" "$dash_dir/Dash.dashsync/Preferences.plist"
+  fi
+else
+  dash_dir="$DOTFILES_DIR/dash"
+fi
+PLIST="$dash_dir/Dash.dashsync/Preferences.plist"
 
 bold=$(tput bold 2> /dev/null || true)
 reset=$(tput sgr0 2> /dev/null || true)
@@ -31,7 +42,7 @@ indent() {
 
 if [ ! -f "$PLIST" ]; then
   echo "Dash sync file not found: $PLIST" >&2
-  echo "Point Dash's sync folder (Dash → Settings → General) at $DOTFILES_DIR/dash first," >&2
+  echo "Point Dash's sync folder (Dash → Settings → General) at $dash_dir first," >&2
   echo "so Dash writes its own sync file there, then re-run this script." >&2
   exit 1
 fi
@@ -46,7 +57,7 @@ echo "Leave the folder blank to finish." | indent
 echo
 
 # Dash only reads this file once its sync folder (Dash → Settings → General) points here
-echo "${bold}Sync folder:${reset} $DOTFILES_DIR/dash" | indent
+echo "${bold}Sync folder:${reset} $dash_dir" | indent
 echo
 
 xml_escape() {
@@ -149,6 +160,6 @@ if ! plutil -lint "$PLIST" > /dev/null; then
 fi
 
 echo
-echo "Done. Make sure Dash's sync folder (Dash → Settings → General) is $DOTFILES_DIR/dash," | indent
+echo "Done. Make sure Dash's sync folder (Dash → Settings → General) is $dash_dir," | indent
 echo "then build the new docsets from Settings → Downloads → Docset Generator." | indent
 echo "(Quit Dash before running this script so it doesn't overwrite the change.)" | indent

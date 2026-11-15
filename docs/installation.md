@@ -183,4 +183,4 @@ setup/dash.sh                                          # prompts for folder, nam
 setup/dash.sh add ~/dev/myapp/docs/html "My App" myapp # or add one directly
 ```
 
-This edits the repo's Dash sync file, so it only takes effect once Dash's sync folder (Dash → Settings → General) points at the repo's `dash/` folder. Quit Dash before running it.
+In a clone this edits the repo's Dash sync file, so it only takes effect once Dash's sync folder (Dash → Settings → General) points at the repo's `dash/` folder. An installed copy is replaced by `rotm update`, so there the script writes `~/.local/share/rotm/dash` instead (seeded from the tracked file on its first run): point Dash's sync folder at that. Quit Dash before running it.

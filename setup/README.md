@@ -221,6 +221,6 @@ What changed from the old script:
 
 Optional, interactive: adds Dash docsets generated from local folders of **HTML** documentation (Dash's Docset Generator doesn't read Markdown). Docsets you download inside Dash need nothing from this: Dash syncs that list itself.
 
-Prerequisite: in Dash → Settings → General, set the sync folder to the repo's `dash/` folder and tick all four "What to sync" options (General settings, View options, Docsets/search profiles/keywords, Bookmarks and web searches), but not "Sync Snippets", which would move Dash's snippet database into the repo.
+Prerequisite: in Dash → Settings → General, set the sync folder to the repo's `dash/` folder (on an installed copy, which `rotm update` replaces, to `~/.local/share/rotm/dash`, which the script seeds from the tracked file on its first run) and tick all four "What to sync" options (General settings, View options, Docsets/search profiles/keywords, Bookmarks and web searches), but not "Sync Snippets", which would move Dash's snippet database into the repo.
 
 Dash writes absolute paths and has no variable expansion, so folder docsets can't be committed portably. Quit Dash, run `setup/dash.sh` (or `setup.sh --dash`) and enter the folders to index, then build them in Dash → Settings → Downloads → Docset Generator. Also usable non-interactively: `setup/dash.sh add <folder> [name] [keyword]`.
