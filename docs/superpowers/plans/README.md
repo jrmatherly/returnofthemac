@@ -6,7 +6,7 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 | Plan | Spec | Tasks | State |
 | --- | --- | --- | --- |
-| [P6 docs for the new path](2026-11-15-p6-docs-for-the-new-path.md) | [installable setup](../specs/2026-11-11-installable-setup-profiles-and-sync.md), the P6 brief, and audit finding I22 | 8 | Written 2026-11-15. Not started: it waits on the owner's review. Run its tasks in order. Tasks 2, 3 and 7 all touch `docs/forking.md`'s subject, and Task 7 needs 2 and 3. |
+| [P6 docs for the new path](2026-11-15-p6-docs-for-the-new-path.md) | [installable setup](../specs/2026-11-11-installable-setup-profiles-and-sync.md), the P6 brief, and audit finding I22 | 8 | Written and reviewed on 2026-11-15 (its last section lists what the review changed). Not started: it waits on the owner's word on the README's title and on how to run it. Run its tasks in order. Tasks 2, 3 and 7 all touch `docs/forking.md`'s subject, and Task 7 needs 2 and 3. |
 
 P7 (the owner's Mac moves to `stable`) is not written. It follows P6.
 
@@ -18,6 +18,7 @@ Found while running them, and not in any plan:
 - App 1 as planned let two rechecks waiting on one refresh each start a read. `c597959` fixes it with a test.
 - The "restore it with git checkout" hint at `setup/dash.sh:158` is wrong on an installed copy. Not fixed.
 - Install 9 as planned still installed a changed or unchecked skill for an agent that lacked it. `5e75b83` holds it until `claude-config restore skills --accept <name>`.
+- Not fixed, found while reviewing the P6 plan on 2026-11-15: `obsidian-vault capture` has no installed-copy guard, so on an installed copy it writes into the checkout and `rotm update` then refuses.
 - Not fixed: `--accept` installs whatever the source holds at that moment, and a first install on a new Mac is unpinned. The `skills` CLI takes `owner/repo#<sha>`, but the lock records a folder hash and no commit, so `claude-config save` would have to record one.
 
 Stage 6 ran on 2026-11-14 and 2026-11-15 with the owner's answers: decision 1 declined, decisions 2, 4, 5 and 6 as recommended, decision 3 for the docs only, decision 7 at 48 hours, and Settings 9 approved.
