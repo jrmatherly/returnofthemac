@@ -128,7 +128,23 @@ struct SettingsModelTests {
     let (model, runner) = await loaded()
     runner.stub(listArgs, .failure(.failed(1, "uv: not found")))
     await model.load()
+    await model.load()
+    await model.load()
     #expect(model.rows.count == 9)
     #expect(model.failures == ["settings list: uv: not found"])
+    runner.stub(listArgs, .failure(.timedOut))
+    await model.load()
+    #expect(model.failures == ["settings list: uv: not found", "settings list: rotm did not finish in time."])
+  }
+
+  @Test func theSameNoteIsShownOnce() async {
+    let (model, runner) = await loaded()
+    let note = "Edited tilde/.claude/rules/jstack-models.md, a tracked file. Commit it to keep the change."
+    model.stage("jstack.feature_refactoring", value: "sonnet high", shared: false)
+    model.stage("jstack.arena_runners", value: "opus high, opus high", shared: false)
+    runner.stub(["settings", "set", "jstack.feature_refactoring", "--", "sonnet high"], ok("", note))
+    runner.stub(["settings", "set", "jstack.arena_runners", "--", "opus high, opus high"], ok("", note))
+    await model.applyStaged()
+    #expect(model.notes == [note])
   }
 }

@@ -69,7 +69,8 @@ public struct Edit: Equatable, Sendable {
       staged.removeAll { !differs($0) }
     } catch {
       guard mine == generation else { return }
-      failures.append("settings list: \(AppState.message(error) ?? AppState.notFound)")
+      let text = "settings list: \(AppState.message(error) ?? AppState.notFound)"
+      if !failures.contains(text) { failures.append(text) }
     }
   }
 
@@ -99,9 +100,10 @@ public struct Edit: Equatable, Sendable {
     for edit in batch {
       do {
         let out = try await runner.run(edit.arguments)
-        if !out.stderr.isEmpty { notes.append(out.stderr) }
+        if !out.stderr.isEmpty, !notes.contains(out.stderr) { notes.append(out.stderr) }
       } catch {
-        failures.append("\(edit.settingId): \(AppState.message(error) ?? AppState.notFound)")
+        let text = "\(edit.settingId): \(AppState.message(error) ?? AppState.notFound)"
+        if !failures.contains(text) { failures.append(text) }
         // The load below drops it if it took after all; an edit staged meanwhile wins.
         if !staged.contains(where: { $0.settingId == edit.settingId }) { staged.append(edit) }
       }
