@@ -10,6 +10,23 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md`. Read its Goal and "Decisions the owner made" in full before Task 1. Decisions 7, 9, 10 and 15 and the P7 brief bind this plan.
 
+## Progress (2026-11-15)
+
+| Task | State | Record |
+| --- | --- | --- |
+| 1. Promotion runbook and guest A | Done | `b80ff2f`, `2e0dbe9`, `73300a5`. Guest A passed on candidate `2e0dbe9` with mise 2026.11.8 (rows `a1` to `a8` in `~/vm-proof/p7/`, the spec's "Verified facts") |
+| 2. Promote `stable` | Done | `stable` moved from `d09f025` to `73300a5` (`f3f18f1` records it) |
+| 3. Move runbook | Done | `5d76cfa`, corrected by a review in `2e16095`. `MOVE.md` ends with what the scratch run changed from this plan |
+| 4. Guest B | Section written and reviewed (`9ed4da0` and the commit after it). The owner has not run it | `RUNBOOK.md`, "Guest B" |
+| 5. Move the owner's Mac | Not started. Needs the owner's word in that session | |
+| 6. Close P7 and the spec | Not started | |
+
+Differences from the plan as written:
+
+- **`install.sh` was added before guest A** (`0a403c6`, `7363c2c`), on the owner's request for a one-line installer. Guest A ran it, with the guest's Command Line Tools removed first, so the run proved the tools install, the mise install and setup's prompts after a piped start. The README's install line is now `curl … /stable/install.sh | bash`. `MOVE.md` step 4 keeps the by-hand mise line, since `install.sh` would start setup before step 5.
+- **The candidate was not `9e79b81`.** Guest A installs `main`'s head, so the candidate was the head once the runbook and `install.sh` had landed: `2e0dbe9`.
+- **Task 2 Step 4's commit** is `f3f18f1`. `main` has been ahead of `stable` by Markdown-only commits since. Guest B's step 7 promotes them.
+
 ## Global Constraints
 
 - Decision 15 and the P7 brief: the move is done once, by hand. No command, flag or `setup.sh` branch is added to the product for it, and it is not a path users get.

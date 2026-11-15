@@ -137,7 +137,7 @@ This run rehearses [`MOVE.md`](MOVE.md) on a guest shaped like the owner's Mac, 
 
 ### Set up a clone install
 
-1. In UTM, start the macOS guest with **Run without saving changes**. Leave the Command Line Tools in place this time: the clone needs `git`.
+1. In UTM, start the macOS guest with **Run without saving changes**. Check the two tools, as every guest run does: `xcode-select -p` prints a folder, and `ls ~/.local/bin/mise` finds no file, which is right, since setup installs mise. Leave the Command Line Tools in place this time: the clone needs `git`.
 2. Clone and run setup, as the README's "Install from a clone" does. **Not run on the host.**
 
    ```shell
@@ -173,7 +173,7 @@ This run rehearses [`MOVE.md`](MOVE.md) on a guest shaped like the owner's Mac, 
    git -C "$CLONE" status --short
    ```
 
-   The apply prints `created symlink ~/.config/mole/whitelist -> ~/dotfiles/mole/whitelist.local`, and the last line prints nothing. **Not run on the host:** the first line. In the scratch home the override file was written directly.
+   The apply prints `created symlink ~/.config/mole/whitelist -> ~/dotfiles/mole/whitelist.local`, and the last line prints nothing. Type the `printf` line once only: a second `[dotfiles]` header in that file is a TOML error. **Not run on the host:** the first line. In the scratch home the override file was written directly.
 
 ### Reshape it to the owner's Mac
 
@@ -202,14 +202,14 @@ A clone set up today links through `~/dotfiles`, has a real `~/.config/fastfetch
 6. Quit VS Code if it is open. Run `MOVE.md` from "Then check the start" through step 7, in this one Terminal window, with these differences:
 
    - **Step 1** printed 46 in the scratch home. **Tell the session** the number.
-   - **Step 6** asks for the guest's password, and must not ask about GitHub or git identity. Run the REA line its warning prints. If it prints no such warning, tell the session.
-   - **Step 7** needs the opening block of step 3 above in its new window. Row `m11` is recorded whatever it prints: the guest's Claude Code is not signed in. Row `m12` passes when it prints `op://x/y/z`. Skip the closing `grep` of your own files.
+   - **Step 6** asks for the guest's password, and must not ask about GitHub or git identity. It installs no package here: the clone setup already installed the menu bar app, which `MOVE.md` names as the one missing on the owner's Mac. Run the REA line its warning prints. If it prints no such warning, tell the session.
+   - **Step 7** needs the opening block of step 3 above in its new window. Row `m11` is judged like the others: setup itself runs `claude mcp` on this signed-out guest. Add one row after it, `r b8 claude mcp get rea`, which passes when its `Command:` line names `bootstrap-repo`. Row `m12` passes when it prints `op://x/y/z`. Skip the closing `grep` of your own files.
 
    **Tell the session** when the rows are recorded, and wait for its word before the next step.
 
 ### Prove an update across a promotion
 
-7. The session promotes `stable` to `main`'s head on your word. `main` is ahead of the copy by Markdown-only commits. Then:
+7. The session promotes `stable` to `main`'s head on your word. It first checks that `git diff --name-only origin/stable origin/main` lists Markdown files only, which decision 9 requires of a commit no guest installed. On 2026-11-15 it listed four `.md` files. If a fix made during this run touched another file, this step waits for a new guest A. Then:
 
    ```shell
    r b1 rotm update --check
@@ -220,11 +220,11 @@ A clone set up today links through `~/dotfiles`, has a real `~/.config/fastfetch
 
    | Row | Passes when |
    | --- | --- |
-   | `b1` | `1 update is waiting. Run rotm update.` or the same with a count |
+   | `b1` | `1 update is waiting. Run rotm update.`, or `N updates are waiting. Run rotm update.` for the count the session names |
    | `b2` | The new `stable`, which the session names |
    | `b3` | `Up to date.` |
 
-   `rotm update` runs setup again: answer as in step 6 of `MOVE.md`. **Not run on the host.**
+   `rotm update` runs setup again: answer as in step 6 of `MOVE.md`. **Not run on the host:** all four lines.
 
 ### Prove the clone is inert
 
@@ -251,7 +251,7 @@ A clone set up today links through `~/dotfiles`, has a real `~/.config/fastfetch
    rotm settings set updates.mac_password_op 'op://x/y/changed'
    ```
 
-   Then run `MOVE.md` section 8, steps 1 to 5, and record the end:
+   Then run `MOVE.md` section 8, steps 1 to 5. If step 6 printed no REA warning, the `claude mcp remove` line of its step 4 fails and skips the add, which is harmless: run the `setup.sh` line after it all the same. Record the end:
 
    ```shell
    r b5 ~/dotfiles/bin/lib/rotm-mode
