@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.11+ standard library (`settings/src/dotfiles_settings`), Textual 8.2.8 (`settings/uv.lock`), bash 3.2 (`setup/macos-extras.sh`, `bin/lib/test-sync`), mise 2026.11.8.
 
-**Spec:** `docs/superpowers/specs/2026-11-14-project-audit.md`, section "S. Settings tool and terminal UI". No entry in its "Decisions the owner must make" covers an S finding, so no task waits on one.
+**Spec:** `docs/superpowers/specs/2026-11-14-project-audit.md`, section "S. Settings tool and terminal UI". No entry in its "Decisions the owner must make" covers an S finding, so no task waits on one. Task 9 changes a documented rule and says so at its top: tell the owner before starting it.
 
 ## Global Constraints
 
@@ -330,7 +330,11 @@ def test_a_vault_path_left_in_the_shared_file_names_the_set_that_moves_it():
 - Modify: `settings/src/dotfiles_settings/tui.py:203-205` (`on_switch_changed`)
 - Modify: `setup/macos-extras.sh:38-40`, `:61-62`, `:115`, `:117`, `:130`, `:135`, `:143`, `:222`, `:229`, `:243`
 - Test: `settings/tests/test_tui.py`, `setup/tests/macos-extras.sh` (after `:120`)
-- Modify: `.claude/rules/macos-defaults.md:10-11`, `settings/README.md:194`
+- Modify: `.claude/rules/macos-defaults.md:10-11`, `settings/README.md:194`, `setup/README.md:197` (says "empty means off for a group" for an export in `~/.zsh.local`)
+
+**Tell the owner before starting this task.** It is not in the spec's decision list, but it changes a documented rule. Today any non-empty value turns a switch on, so `export DOTFILES_MACOS_FIREWALL=yes` in `~/.zsh.local` is on and `=0` is on too. After this task only `1` is on, so `yes` becomes off and `0` becomes off. The owner's Mac and the guests hold only `1` or the empty string (measured above), so nothing changes for them.
+
+The install plan's Task 7 (`2026-11-14-audit-install-and-opt-outs.md`) adds three switches to the same script (`DOTFILES_MACOS_LOCALE`, `_POWER`, `_SPOTLIGHT_HOTKEYS`). If it has landed, they change here the same way, the count below is ten, not seven, and they join the test in Step 1. If it has not, that plan follows the form this task leaves.
 
 A bool is on when its value equals `true_value` and off when empty (`registry.py:68`, `cli.py:19-24`, `settings/README.md:194`). `normalize` stores nothing else, so a `0` or `true` only arrives from `mise set` or `~/.zsh.local`. The UI shows such a value as off. The script must agree, most of all for `DOTFILES_MACOS_DISABLE_TIME_MACHINE`, where "on" stops backups.
 
@@ -355,7 +359,7 @@ check "a switch that is not 1 is off, as the settings UI shows it" "! grep -q 's
 - [ ] **Step 3: Change `on_switch_changed`.** It commits only when `event.value` differs from `self.values[s.id].value == s.true_value`, which is what the stored value shows as. A redraw never differs, and a user's flip always does.
 - [ ] **Step 4: Change the script.** Each of the seven switches is on when its value is exactly `1`. The four group tests become `[ "${VAR-1}" = 1 ]`, and the `hidpi`, `firewall` and `disable_tm` tests become `[ "$x" = 1 ]`. The flags still set `1`. Unset still means on for the six default-on switches. Update the header (`:38-40`) and the comment at `:115` to say "on when unset or `1`".
 - [ ] **Step 5: Run them again.** `test_tui.py` ends with `ok`, and the script's self-check prints no `FAIL`.
-- [ ] **Step 6: Edit the docs.** In `.claude/rules/macos-defaults.md:10-11`, replace "on unless set to the empty string" with "on when unset or `1`" in both sentences, keeping the note that the settings UI writes `""` for off. In `settings/README.md:194`, add that `setup/macos-extras.sh` reads its switches the same way, so any other value is off in both.
+- [ ] **Step 6: Edit the docs.** In `.claude/rules/macos-defaults.md:10-11`, replace "on unless set to the empty string" with "on when unset or `1`" in both sentences, keeping the note that the settings UI writes `""` for off. In `settings/README.md:194`, add that `setup/macos-extras.sh` reads its switches the same way, so any other value is off in both. In `setup/README.md:197`, "empty means off for a group" becomes "`1` or unset is on, and anything else is off".
 - [ ] **Step 7: `pnpm check`, then commit** "Read a switch as on only when it holds its on value". Not run on the host, where `set-defaults` is never run. The stubbed self-check is the proof, and no VM row is needed because this Mac and the guests store only `1` or the empty string.
 
 ### Task 10: Keep a typed edit, and save a field on Tab
