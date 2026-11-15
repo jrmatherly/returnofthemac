@@ -128,7 +128,7 @@ private let colouredOutput = #"""
     model.stage("updates.mac_password_op", value: #"-a "b" #c"#, shared: false)
     model.stage("jstack.arena_runners", value: "claude-fable-5-2 medium, opus medium, sonnet high", shared: false)
     #expect(model.staged.count == 2)
-    try await shoot("settings-review") { hosting(ReviewSheet(edits: model.staged, blocked: false, apply: {}, cancel: {})) }
+    try await shoot("settings-review") { hosting(ReviewSheet(edits: model.staged, blocked: false, target: SettingsModel.targetNote(profile: "work", shared: false), apply: {}, cancel: {})) }
   }
 
   @Test func console() async throws {

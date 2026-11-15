@@ -56,7 +56,7 @@ Each row has the setting's name, its help text and a control: a switch, a menu o
 Changes are staged, not applied one by one:
 
 1. Change as many settings as you want. Each changed row gets a **Changed** badge and an **Undo** button, and the bar at the bottom counts the changes.
-1. Choose **Review…**. The sheet lists the commands that will run, one `rotm settings set` or `rotm settings reset` line per change.
+1. Choose **Review…**. The sheet lists the commands that will run, one `rotm settings set` or `rotm settings reset` line per change, and says whether they change the profile in use or your shared settings.
 1. Choose **Apply**. The app runs the commands in order. A command that fails does not stop the ones after it, and its change stays staged.
 
 After Apply the bar shows what the commands printed, such as the line that tells you to run `set-defaults`, and any failure, until you choose **Dismiss**. A macOS preference takes effect as its change is applied, and the Dock or Finder restarts when the preference needs it. Nothing is installed by a change alone: run **Run Setup Again…** or **Apply macOS Preferences…** from the menu when a note asks for it.

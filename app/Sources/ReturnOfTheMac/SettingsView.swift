@@ -30,7 +30,10 @@ struct SettingsView: View {
     .searchable(text: $model.search, placement: .sidebar, prompt: "Search settings")
     .safeAreaInset(edge: .bottom, spacing: 0) { bar }
     .sheet(isPresented: $reviewing) {
-      ReviewSheet(edits: model.staged, blocked: state.blocked, apply: apply, cancel: { reviewing = false })
+      ReviewSheet(
+        edits: model.staged, blocked: state.blocked,
+        target: SettingsModel.targetNote(profile: state.status?.profile.active ?? "default", shared: writeShared),
+        apply: apply, cancel: { reviewing = false })
     }
     .onChange(of: writeShared) { restage() }
   }

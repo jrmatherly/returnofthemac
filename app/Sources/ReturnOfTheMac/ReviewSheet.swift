@@ -5,6 +5,7 @@ import SwiftUI
 struct ReviewSheet: View {
   let edits: [Edit]
   let blocked: Bool
+  let target: String
   let apply: () -> Void
   let cancel: () -> Void
 
@@ -12,6 +13,7 @@ struct ReviewSheet: View {
     VStack(alignment: .leading, spacing: 12) {
       Text(edits.count == 1 ? "Apply 1 change?" : "Apply \(edits.count) changes?").font(.headline)
       Text("Apply runs these commands in order:").foregroundStyle(.secondary)
+      Text(target).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
       ScrollView {
         VStack(alignment: .leading, spacing: 4) {
           ForEach(Array(edits.enumerated()), id: \.offset) { _, edit in

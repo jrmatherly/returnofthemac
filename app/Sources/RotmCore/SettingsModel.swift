@@ -138,6 +138,14 @@ public struct Edit: Equatable, Sendable {
     row.access != "ro" && (shared || row.source == "override")
   }
 
+  /// Staged edits follow a profile switch, so the review sheet names where they land.
+  public static func targetNote(profile: String, shared: Bool) -> String {
+    if profile == "default" { return "No profile is in use, so these change your shared settings." }
+    return shared
+      ? "These change your shared settings, not the profile \(profile)."
+      : "The profile \(profile) is in use, so these change that profile."
+  }
+
   /// The words the command line takes for on (`cli.py` TRUE); every registry
   /// true_value is one of them, and off is stored as an empty value.
   public static func isOn(_ value: String) -> Bool {

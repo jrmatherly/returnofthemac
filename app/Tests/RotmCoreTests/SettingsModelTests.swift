@@ -139,6 +139,12 @@ struct SettingsModelTests {
     #expect(!SettingsModel.canReset(locked, shared: true))
   }
 
+  @Test func theReviewNamesWhatTheCommandsChange() {
+    #expect(SettingsModel.targetNote(profile: "default", shared: false) == "No profile is in use, so these change your shared settings.")
+    #expect(SettingsModel.targetNote(profile: "work", shared: false) == "The profile work is in use, so these change that profile.")
+    #expect(SettingsModel.targetNote(profile: "work", shared: true) == "These change your shared settings, not the profile work.")
+  }
+
   @Test func aReadOnlyRowCannotBeStaged() async {
     let (model, _) = await loaded()
     model.stage("hindsight.llm_model", value: "x", shared: false)
