@@ -22,7 +22,7 @@
 - `CLAUDE.md` is 11,995 bytes against a cap of 12,000 (`bin/lib/test-conventions:200`). An edit to it must cut at least as much as it adds. No task below needs one.
 - A new switch that `setup/macos-extras.sh` reads copies `macos.disable_time_machine` end to end:
   - a `[[setting]]` row in `settings/registry.toml`, section `"macOS (this Mac)"`, `kind = "env"`, `type = "bool"`, `true_value = "1"`, `default = "1"`, `access = "rw"` (the model row is at `settings/registry.toml:815-824`);
-  - a `${DOTFILES_MACOS_<NAME>-1}` read in `setup/macos-extras.sh` (no colon, because the settings UI writes `""` for off);
+  - a `${DOTFILES_MACOS_<NAME>-1}` read in `setup/macos-extras.sh` (no colon, because the settings UI writes `""` for off). The settings plan's Task 9 (`2026-11-14-audit-settings-tool.md`, finding S6) changes how the script reads a switch, to on only when the value is `1`. If that task has landed, a new switch here uses the form the script then holds, and the test cases for "off" stay as written;
   - the variable in the `unset` list at `setup/tests/macos-extras.sh:42-44` and a pair of cases there, written as `check "<name>" "<shell test>"` lines;
   - the key in `on_by_default` at `settings/tests/test_macos_default.py:253-254`, which also asserts that every `DOTFILES_MACOS_*` name in the script has a registry row;
   - the count in the script's header (`setup/macos-extras.sh:38-43`, "sets all nine") and the switch list in `setup/README.md` ("Four groups the old script asked about").
@@ -124,7 +124,7 @@ The dead-preference half of I19 is under "Findings the code contradicts or that 
 **Files:**
 - Modify: `tilde/.config/mise/config.toml` (`[settings]`, after `idiomatic_version_file_enable_tools`)
 - Test: `bin/lib/test-bootstrap` (the `if command -v mise` block, `:781-801`)
-- Modify: `setup/README.md:125` and `docs/rea.md:7` (both say "24 h"), `tilde/.config/mise/conf.d/60-rotm-agents.toml:26-30` (the comment names "mise's default 24 h")
+- Modify: `setup/README.md:125` (says the cutoff is "shortened from 24 h to 6 h"), `tilde/.config/mise/conf.d/60-rotm-agents.toml:26-30` (the comment names "mise's default 24 h"). `docs/rea.md:7` names only the 6 h floor, which stays true, so it needs no edit
 
 - [ ] **Step 1: Write the failing check.** Inside that block, after the `mise bootstrap user status` line (`:796`):
 
@@ -133,7 +133,7 @@ The dead-preference half of I19 is under "Findings the code contradicts or that 
 ```
 
 - [ ] **Step 2: Run it.** `bash bin/lib/test-bootstrap`. Expected: "config.toml does not hold new tool releases for 7 days".
-- [ ] **Step 3: Add the setting** with a one-line comment that it matches npm's `min-release-age 7` (`setup/misc.sh:453`) and Renovate, and that `npm:rea-agents` keeps its own 6 h. Update the three places that say 24 h.
+- [ ] **Step 3: Add the setting** with a one-line comment that it matches npm's `min-release-age 7` (`setup/misc.sh:453`) and Renovate, and that `npm:rea-agents` keeps its own 6 h. Update the two places that say 24 h.
 - [ ] **Step 4: Run it.** `bash bin/lib/test-bootstrap`. Expected: exit 0. Then `cd ~ && mise ls --missing` and confirm no installed tool is reported missing.
 - [ ] **Step 5: Not run on the host.** That a fresh install resolves every `latest` tool to a release at least seven days old is proved by the next `fresh-install` run, which the owner starts.
 - [ ] **Step 6: Commit** "Hold new mise tool releases for seven days".
@@ -414,6 +414,8 @@ check "--accept refuses a name that is not tracked" "[ \$? = 2 ] && grep -q 'no 
 - [ ] **Step 7: Update the docs** named in Files. Each says `sysup` reinstalls a changed skill.
 - [ ] **Step 8: Commit** "Report a changed third-party skill for review and stop reinstalling it".
 
+**What this task leaves open.** It stops `sysup` reinstalling a skill that moved. It does not pin a first install: `restore skills` on a new Mac still runs `npx -y skills add <source>` (`bin/claude-config:355`), which fetches whatever the source holds that day. A stranger whose install lands after an upstream change then sees that skill as `changed` at their first `sysup`, with advice (`--accept`) written for the reviewer. Whether the `skills` CLI can install a source at a given commit is not checked here, and `npx -y skills add --help` settles it. If it can, pin the install to `<reviewed>` in a follow-up. If it cannot, say so in `agents/README.md` beside the list. Tell the owner which it is when this task is reported.
+
 ---
 
 ### Task 10: Name the third-party taps and unverified tools, and drop the KubeStellar pair
@@ -424,7 +426,9 @@ check "--accept refuses a name that is not tracked" "[ \$? = 2 ] && grep -q 'no 
 **Files:**
 - Modify: `tilde/.config/mise/conf.d/60-rotm-kubernetes.toml:8`, `:27-28`
 - Test: `bin/lib/test-packages:105`
-- Modify: `docs/modules.md` (new section after "Skipping one package or tool"), `docs/privacy.md` or `README.md` wherever a package count of 144 formulae appears (`git grep -n 144 -- '*.md'`)
+- Modify: `docs/modules.md` (new section after "Skipping one package or tool", `:44`). No page outside `docs/superpowers/` holds the count of 144 formulae (`git grep -n '\b144\b' -- '*.md' ':!docs/superpowers'` prints nothing), so the count changes in `bin/lib/test-packages` only
+
+This task takes two packages out of the default set. The installable-setup spec's decision 3 says the base and its modules include everything they do today, so the removal needs the owner's explicit word, which the decision line above already requires. If the owner keeps the pair, do Steps 1, 4 and 5 without the count change and without the "add KubeStellar back" part, and leave the fragment as it is.
 
 - [ ] **Step 1: Write the failing checks.** In `bin/lib/test-packages`, change the counts at `:105` from `(144, 34, 184)` to `(142, 34, 184)`. After `:100`, in the same Python block:
 
@@ -465,7 +469,7 @@ assert not missing, f"docs/modules.md does not name these taps: {missing}"
 
 **Interfaces:**
 - Consumes: `module_on <name>` (`setup/misc.sh:52-56`), which prints `skipped: the <name> module is off`.
-- Produces: rustup and the Supabase telemetry step require `module_on devops`. PowerShell and the Aspire certificate require `module_on cloud`, the module that declares `dotnet-sdk` and Aspire. In each, the tool check comes first and the module check second, so a Mac without the tool prints what it prints today.
+- Produces: the Supabase telemetry step requires `module_on devops`. The rustup step runs when `devops` or `agents` is on, because its own comment (`setup/misc.sh:130-133`) says it exists for Hindsight's daemon start, which the `agents` module runs (`:277-282`). Its shape is `if [ -x "$rustup" ] && { "$DOTFILES_DIR/bin/lib/rotm-modules" is-on agents || module_on devops; }; then`, so the skip line prints only when both are off. `$agents_on` cannot be used here: it is set at `:163`, after this block. PowerShell and the Aspire certificate require `module_on cloud`, the module that declares `dotnet-sdk` and Aspire. In each, the tool check comes first and the module check second, so a Mac without the tool prints what it prints today.
 
 - [ ] **Step 1: Write the failing cases.** In `fresh` (`:707-718`), add logging stubs for `supabase`, `dotnet` and `aspire` to the `mstub` loop, and one at `$HOMEBREW_PREFIX/opt/rustup/bin/rustup` (create the folder under the test's prefix). Add to the "all on" block after `:736`:
 
@@ -482,14 +486,21 @@ check_true "all on: the Aspire certificate hint is printed" has '\[Aspire\] HTTP
 fresh
 printf 'devops\ncloud\n' > "$HOME/.config/mise/modules-off.local"
 misc
-for call in 'rustup default stable' 'supabase telemetry' 'dotnet tool' 'dev-certs'; do
+for call in 'supabase telemetry' 'dotnet tool' 'dev-certs'; do
   check_true "devops and cloud off, tools present: no $call" eval '! ran "$call"'
 done
+check_true "devops off, agents on: rustup's default is still set for Hindsight" ran 'rustup default stable'
 check_true "devops and cloud off: no Aspire hint" lacks '\[Aspire\]'
 check_true "devops and cloud off: each says why" eval 'has "skipped: the devops module is off" && has "skipped: the cloud module is off"'
+fresh
+printf 'devops\nagents\n' > "$HOME/.config/mise/modules-off.local"
+misc
+check_true "devops and agents off, rustup present: no rustup default stable" eval '! ran "rustup default stable"'
 ```
 
-- [ ] **Step 2: Run it.** `bash bin/lib/test-bootstrap`. Expected: the "all on" cases pass and "devops and cloud off, tools present: no rustup default stable" fails.
+  Read `:719-723` first: `ran` greps `$STATE/misc.log`, so the rustup stub at `$HOMEBREW_PREFIX/opt/rustup/bin/rustup` must log there as the `mstub` tools do, and answer `default` with a line that does not start `stable-`, or the step takes its "already the default" branch and never calls `default stable`.
+
+- [ ] **Step 2: Run it.** `bash bin/lib/test-bootstrap`. Expected: the "all on" cases pass and "devops and cloud off, tools present: no supabase telemetry" fails.
 - [ ] **Step 3: Add the four gates.** For PowerShell the shape is `if ! command_exists dotnet; then <today's "not found" line>; elif module_on cloud; then <install or update>; fi`.
 - [ ] **Step 4: Run it.** Expected: exit 0, and "all on: nothing is skipped" still passes.
 - [ ] **Step 5: Update `setup/README.md`.** Each of the four steps names its module.
@@ -557,7 +568,7 @@ done
 - Modify: `bin/lib/rotm-modules:46` (the `modules` array)
 - Modify: `settings/registry.toml` (two rows after `modules.menubar`, `:1033-1043`)
 - Test: `bin/lib/test-modules:38`, `bin/lib/test-bootstrap:795-796`, `settings/tests/test_registry.py:110-111`
-- Modify: `docs/modules.md` ("thirteen modules" and the table), `docs/installation.md:111` (the `--without` list), `setup/README.md` (the two steps)
+- Modify: `docs/modules.md` ("thirteen modules" at `:3` and the table), `docs/installation.md:111` (the `--without` list) and `:119` (says mise declares `sudo_local`), `setup/README.md:45` and `:108` (each names `50-bootstrap.toml` as the file that declares it), `bin/lib/test-bootstrap:13` (the header comment), `setup/bootstrap-runtime.archify.json:184-190` (the diagram source names `50-bootstrap.toml` for `sudo_local`; change the path and regenerate the diagram the way `setup/README.md` says it is built)
 
 **Interfaces:**
 - Produces: two modules, appended to the array in this order.
@@ -596,7 +607,7 @@ done
 - Modify: `setup/README.md:220-226`, `docs/installation.md:177-186`
 
 **Interfaces:**
-- Produces: `dash_dir` in `setup/dash.sh`. It is `$DOTFILES_DIR/dash` when `"$DOTFILES_DIR/bin/lib/rotm-mode"` prints `clone`, and `${XDG_DATA_HOME:-$HOME/.local/share}/rotm/dash` when it prints `installed`. `PLIST` is `$dash_dir/Dash.dashsync/Preferences.plist`, and every message that names the sync folder prints `$dash_dir`.
+- Produces: `dash_dir` in `setup/dash.sh`. It is `$DOTFILES_DIR/dash` when `"$DOTFILES_DIR/bin/lib/rotm-mode" "$DOTFILES_DIR"` prints `clone` (called by path with the folder as its argument, as `setup.sh:32` does), and `${XDG_DATA_HOME:-$HOME/.local/share}/rotm/dash` when it prints `installed`. `PLIST` is `$dash_dir/Dash.dashsync/Preferences.plist`, and every message that names the sync folder prints `$dash_dir`.
 - Produces: on an installed copy with no file there yet, the script copies the checkout's `dash/Dash.dashsync/Preferences.plist` to `$dash_dir` first, so the tracked Dash settings are the starting point.
 
 - [ ] **Step 1: Write the failing test,** `setup/tests/dash.sh`, in the form of `setup/tests/menubar-open.sh` (a temp dir, a `check` helper, exit 1 with a count). The fixture is a folder with a copy of `dash/Dash.dashsync/Preferences.plist`, a `bin/lib/rotm-mode` stub that prints the content of `$tmp/mode`, and a docs folder. Each run is `env -i HOME="$tmp/home" PATH=/usr/bin:/bin DOTFILES_DIR="$fx" bash "$repo/setup/dash.sh" add "$tmp/docs" Notes notes`. Cases:
