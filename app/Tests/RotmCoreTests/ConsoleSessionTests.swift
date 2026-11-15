@@ -152,6 +152,13 @@ struct ConsoleSessionTests {
     #expect(s.text == "é\nred\n")
   }
 
+  @Test func aColonSequenceSplitAcrossWritesIsDropped() async throws {
+    let s = try session(#"printf '\033[38:2:255'; sleep 0.3; printf ':0:0mred\n'"#)
+    s.start()
+    #expect(await ended(s))
+    #expect(s.text == "red\n")
+  }
+
   @Test func theNewest20LogsAreKept() throws {
     let logs = try tempDir()
     let old = logs.appendingPathComponent("20200101-000000-Old.log")

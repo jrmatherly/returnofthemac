@@ -48,7 +48,7 @@ public struct AnsiParser: Sendable {
   public private(set) var style = TextStyle()
 
   static let escape = try! NSRegularExpression(
-    pattern: "\u{1B}(\\[[0-9;?]*[A-Za-z]|\\][^\u{07}\u{1B}]*(\u{07}|\u{1B}\\\\)|[()][A-Z0-9]|[=>])|\u{07}")
+    pattern: "\u{1B}(\\[[0-?]*[ -/]*[@-~]|\\][^\u{07}\u{1B}]*(\u{07}|\u{1B}\\\\)|[()][A-Z0-9]|[78=>])|\u{07}")
 
   public init() {}
 
@@ -67,8 +67,10 @@ public struct AnsiParser: Sendable {
       guard let range = Range(match.range, in: string) else { continue }
       add(string[start..<range.lowerBound], style, &runs)
       let sequence = string[range]
-      if sequence.hasPrefix("\u{1B}["), sequence.hasSuffix("m") {
-        apply(sequence.dropFirst(2).dropLast())
+      let parameters = sequence.dropFirst(2).dropLast()
+      // A colon colour or a private `>`/`?` form is not plain SGR, so it is dropped, not read.
+      if sequence.hasPrefix("\u{1B}["), sequence.hasSuffix("m"), parameters.allSatisfy(";0123456789".contains) {
+        apply(parameters)
       }
       start = range.upperBound
     }

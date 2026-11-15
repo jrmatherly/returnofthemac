@@ -46,6 +46,13 @@ struct AnsiParserTests {
     #expect(runs == [run("abcde")])
   }
 
+  @Test func colonPrivateAndIntermediateSequencesAreStrippedUnstyled() {
+    var parser = AnsiParser()
+    #expect(parser.parse("a\(esc)[38:2:255:0:0mb\(esc)7c\(esc)8d\(esc)[ qe") == [run("abcde")])
+    // Read as SGR, >4;2 would reset the style.
+    #expect(parser.parse("\(esc)[1mf\(esc)[>4;2mg") == [run("fg", bold: true)])
+  }
+
   @Test func theStyleCarriesFromOneCallToTheNext() {
     var parser = AnsiParser()
     #expect(parser.parse("\(esc)[1;31m") == [])

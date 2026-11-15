@@ -59,7 +59,7 @@ public struct ConsoleCommand: Equatable, Sendable {
 
   static let cap = 200_000
   private static let keptLogs = 20
-  private static let partialEscape = "\u{1B}(\\[[0-9;?]*|\\][^\u{07}\u{1B}]*|[()])?\\z"
+  private static let partialEscape = "\u{1B}(\\[[0-?]*[ -/]*|\\][^\u{07}\u{1B}]*|[()])?\\z"
   private static let secretPrompt = "(?i)password.*:\\s*$"
 
   private let command: [String]
