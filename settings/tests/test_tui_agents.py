@@ -9,7 +9,7 @@ from textual.widgets import DataTable, Select, Static
 
 from dotfiles_settings import registry
 from dotfiles_settings.adapters import tool
-from dotfiles_settings.model import Setting, Source, Value
+from dotfiles_settings.model import Setting, SettingsError, Source, Value
 from dotfiles_settings.tui import SettingsApp
 from dotfiles_settings.tui_agents import LinesEditor, SeatsEditor, StackScreen
 
@@ -21,8 +21,11 @@ class FakeAdapter:
     def __init__(self, values: dict[str, str]):
         self.values = values
         self.writes: list[tuple[str, str]] = []
+        self.fail: Exception | None = None
 
     def read(self, s: Setting) -> Value:
+        if self.fail:
+            raise self.fail
         return Value(s.id, self.values[s.id], Source.SEED, self.values[s.id], False)
 
     def write(self, s: Setting, value: str) -> None:
@@ -89,6 +92,20 @@ async def test_lines_editor_saves_on_blur():
         assert ed.text == "~/work" and len(fake.writes) == 1, "a file changed elsewhere redraws without a save"
 
 
+async def test_a_read_failure_saves_nothing_from_a_focused_box():
+    fake = FakeAdapter({"hindsight.paths": "~/dev"})
+    app = SettingsApp(settings=[paths_setting], adapters={"tool": fake})
+    async with app.run_test() as pilot:
+        ed = app.query_one("#w-hindsight-paths", LinesEditor)
+        ed.focus(); await pilot.press("end", "enter", "~", "/", "h", "a"); await pilot.pause()
+        fake.fail = SettingsError("file broke"); app.refresh_values(); await pilot.pause()
+        assert app.query("#error") and ed.disabled and fake.writes == [], fake.writes
+        fake.fail = None; app.refresh_values(); await pilot.pause()
+        assert ed.text == "~/dev\n~/ha" and not ed.disabled, "the typed lines are still there"
+        ed.focus(); await pilot.press("tab"); await pilot.pause()
+        assert fake.writes == [("hindsight.paths", "~/dev\n~/ha")]
+
+
 async def test_seats_editor_saves_through_the_app():
     fake = FakeAdapter({"jstack.bug_fix": "opus medium"})
     app = SettingsApp(settings=[bug_fix_setting], adapters={"tool": fake})
@@ -131,7 +148,8 @@ async def test_stack_screen_keep_and_off():
 async def main():
     for test in (test_seats_editor_single_role, test_seats_editor_list_role,
                  test_seats_editor_opens_what_it_cannot_parse, test_lines_editor_saves_on_blur,
-                 test_seats_editor_saves_through_the_app, test_stack_screen_keep_and_off):
+                 test_a_read_failure_saves_nothing_from_a_focused_box, test_seats_editor_saves_through_the_app,
+                 test_stack_screen_keep_and_off):
         await test()
 
 asyncio.run(main())

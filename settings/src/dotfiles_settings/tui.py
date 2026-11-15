@@ -169,6 +169,9 @@ class SettingsApp(App):
             self.refresh_values()
 
     def commit(self, s: Setting, raw: str) -> None:
+        # The banner disables a focused box, and its blur must not save what the user had not finished
+        if self.error:
+            return
         adapter = self.adapters[s.kind]
         try:
             value = normalize(s, raw)
