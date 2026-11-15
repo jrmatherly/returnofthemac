@@ -104,7 +104,7 @@ mkdir -p "$tmp/bin" "$HOME/.agents" "$CLAUDE_CONFIG_DIR/skills"
 cat > "$tmp/bin/gh" << 'EOF'
 #!/bin/bash
 echo "$*" >> "$TEST_LOG.gh"
-echo '{"sha":"rootsha","tree":[{"path":"skills/a","type":"tree","sha":"aaa"},{"path":"skills/b","type":"tree","sha":"new"}]}'
+echo '{"sha":"rootsha","tree":[{"path":"skills/a","type":"tree","sha":"aaa"},{"path":"skills/b","type":"tree","sha":"new"},{"path":"skills/g","type":"tree","sha":"ggg"}]}'
 EOF
 # Only x.example publishes an index; any other site is a network error
 cat > "$tmp/bin/curl" << 'EOF'
@@ -117,19 +117,28 @@ EOF
 printf '#!/bin/bash\necho "$*" >> "$TEST_LOG.npx"\n' > "$tmp/bin/npx"
 printf '#!/bin/bash\n[ "$1" = exec ] || exit 1\nwhile [ "$1" != -- ]; do shift; done\nshift\nexec "$@"\n' > "$tmp/bin/mise"
 chmod +x "$tmp/bin/"*
-printf '%s' '{"skills":{"a":{"sourceType":"github","source":"o/r","skillPath":"skills/a/SKILL.md","skillFolderHash":"aaa"},"b":{"sourceType":"github","source":"o/r","skillPath":"skills/b/SKILL.md","skillFolderHash":"old"},"c":{"sourceType":"well-known","source":"x.example","sourceUrl":"https://x.example/.well-known/agent-skills/c/skill.md","wellKnownDigest":"sha256:cc"},"e":{"sourceType":"well-known","source":"x.example","sourceUrl":"https://x.example/.well-known/agent-skills/e/skill.md","wellKnownDigest":"sha256:old"},"f":{"sourceType":"well-known","source":"down.example","sourceUrl":"https://down.example/.well-known/agent-skills/f/skill.md","wellKnownDigest":"sha256:ff"},"d":{"sourceType":"github","source":"o/r","skillPath":"SKILL.md","skillFolderHash":"rootsha"}}}' > "$HOME/.agents/.skill-lock.json"
-printf 'skill a o/r claude-code\nskill b o/r claude-code\nskill c https://x.example claude-code\nskill d o/r claude-code\nskill e https://x.example claude-code\nskill f https://down.example claude-code\n' > "$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt"
-for n in a b c d e f; do mkdir -p "$CLAUDE_CONFIG_DIR/skills/$n"; done
+printf '%s' '{"skills":{"a":{"sourceType":"github","source":"o/r","skillPath":"skills/a/SKILL.md","skillFolderHash":"aaa"},"b":{"sourceType":"github","source":"o/r","skillPath":"skills/b/SKILL.md","skillFolderHash":"old"},"c":{"sourceType":"well-known","source":"x.example","sourceUrl":"https://x.example/.well-known/agent-skills/c/skill.md","wellKnownDigest":"sha256:cc"},"e":{"sourceType":"well-known","source":"x.example","sourceUrl":"https://x.example/.well-known/agent-skills/e/skill.md","wellKnownDigest":"sha256:old"},"f":{"sourceType":"well-known","source":"down.example","sourceUrl":"https://down.example/.well-known/agent-skills/f/skill.md","wellKnownDigest":"sha256:ff"},"d":{"sourceType":"github","source":"o/r","skillPath":"SKILL.md","skillFolderHash":"rootsha"},"g":{"sourceType":"github","source":"o/r","skillPath":"skills/g/SKILL.md","skillFolderHash":"ggg"}}}' > "$HOME/.agents/.skill-lock.json"
+printf 'skill a o/r claude-code aaa\nskill b o/r claude-code\nskill c https://x.example claude-code\nskill d o/r claude-code\nskill e https://x.example claude-code\nskill f https://down.example claude-code\nskill g o/r claude-code old\n' > "$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt"
+for n in a b c d e f g; do mkdir -p "$CLAUDE_CONFIG_DIR/skills/$n"; done
 export TEST_LOG="$tmp/log"
+# The run that reinstalls nothing never writes it, and grep would then fail on the file
+touch "$TEST_LOG.npx"
 PATH="$tmp/bin:$PATH" cc restore skills --update > "$tmp/out" 2>&1
 check "unchanged folder SHA skipped" "grep -qx 'skill same a' '$tmp/out' && ! grep -q -- '-s a ' '$TEST_LOG.npx'"
-check "moved folder SHA reinstalled" "grep -qx 'skill changed b' '$tmp/out' && grep -q -- '-s b -a claude-code' '$TEST_LOG.npx'"
+check "a moved folder SHA is reported, not reinstalled" "grep -qx 'skill changed b' '$tmp/out' && ! grep -q -- '-s b ' '$TEST_LOG.npx'"
 check "an unchanged well-known digest skipped" "grep -qx 'skill same c' '$tmp/out' && ! grep -q -- '-s c ' '$TEST_LOG.npx'"
-check "a moved well-known digest reinstalled" "grep -qx 'skill changed e' '$tmp/out' && grep -q -- '-s e -a claude-code' '$TEST_LOG.npx'"
-check "a source it can't check is reinstalled" "grep -qx 'skill unknown f' '$tmp/out' && grep -q -- '-s f -a claude-code' '$TEST_LOG.npx'"
+check "a moved well-known digest is reported, not reinstalled" "grep -qx 'skill changed e' '$tmp/out' && ! grep -q -- '-s e ' '$TEST_LOG.npx'"
+check "a source it can't check is reported, not reinstalled" "grep -qx 'skill unknown f' '$tmp/out' && ! grep -q -- '-s f ' '$TEST_LOG.npx'"
+check "a skill installed past its reviewed SHA is changed, whatever the lock says" "grep -qx 'skill changed g' '$tmp/out'"
 check "a skill at the repository root compares the root tree" "grep -qx 'skill same d' '$tmp/out'"
 check "one gh call per repository" "[ \"\$(wc -l < '$TEST_LOG.gh' | tr -d ' ')\" = 1 ]"
 check "the tree cache is removed" "! ls -d \"\${TMPDIR:-/tmp}\"/tmp.* 2> /dev/null | xargs -I{} test -e '{}/o_r'"
+PATH="$tmp/bin:$PATH" cc restore skills --accept b > "$tmp/out" 2>&1
+check "--accept reinstalls the named skill only" "grep -q -- '-s b -a claude-code' '$TEST_LOG.npx' && ! grep -q -- '-s e ' '$TEST_LOG.npx'"
+PATH="$tmp/bin:$PATH" cc restore skills --accept nope > "$tmp/out" 2>&1
+check "--accept refuses a name that is not tracked" "[ \$? = 2 ] && grep -q 'no tracked skill named nope' '$tmp/out'"
+cc save > /dev/null 2>&1
+check "save records the lock's folder SHA as the reviewed value" "grep -qx 'skill a o/r claude-code aaa' '$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt'"
 
 base="$CLAUDE_CONFIG_SAVE_DIR/claude-settings.json"
 allow() { jq -c '.permissions.allow' "$1"; }

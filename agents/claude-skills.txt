@@ -1,24 +1,24 @@
 # User skills installed with the `skills` CLI — see bin/claude-config.
-# skill <name> <source> <agents>
-skill archify tt-a1i/archify claude-code,codex
-skill better-auth-best-practices better-auth/skills claude-code,codex
-skill better-auth-security-best-practices better-auth/skills claude-code,codex
-skill coding-standards jrmatherly/skills claude-code,codex
-skill create-auth better-auth/skills claude-code,codex
-skill doc-coauthoring anthropics/skills claude-code,codex
-skill email-and-password-best-practices better-auth/skills claude-code,codex
-skill find-skills vercel-labs/skills claude-code,codex
-skill hindsight-architect vectorize-io/hindsight claude-code,codex
-skill hindsight-docs vectorize-io/hindsight claude-code,codex
-skill internal-comms anthropics/skills claude-code,codex
-skill mcp-builder anthropics/skills claude-code,codex
-skill microsoft-foundry microsoft/azure-skills codex
-skill organization-best-practices better-auth/skills claude-code,codex
-skill scrapling-official D4Vinci/Scrapling claude-code,codex
+# skill <name> <source> <agents> [<reviewed>]
+skill archify tt-a1i/archify claude-code,codex 03645a096811664da641153a4a42e862c4a6bc62
+skill better-auth-best-practices better-auth/skills claude-code,codex 2ed2719690a27752d6a01014ff217d9e3d120e43
+skill better-auth-security-best-practices better-auth/skills claude-code,codex 7cd035c1dd03aafc236ea43492d31ca3306b7ab6
+skill coding-standards jrmatherly/skills claude-code,codex 4f9b210d8a82450c0f04f00211bae88c1847f7ee
+skill create-auth better-auth/skills claude-code,codex f067ac9bee972c6320d990fd044a6da37f04fdee
+skill doc-coauthoring anthropics/skills claude-code,codex d9df960e61fe2bafe9183e37de6f9f6b73b74087
+skill email-and-password-best-practices better-auth/skills claude-code,codex cda40d2f5c4a8d3faff3017a5dfcb23f93497c29
+skill find-skills vercel-labs/skills claude-code,codex 76a98a285cb0434f3d39e1a873823556330e398b
+skill hindsight-architect vectorize-io/hindsight claude-code,codex 700c3cc559331949e2f6751eb93a49995e01fafe
+skill hindsight-docs vectorize-io/hindsight claude-code,codex 22a37a280711d5e873789e590ad97f5010643b0f
+skill internal-comms anthropics/skills claude-code,codex 9869687dcf6deb6802ca88ac11e67b6f7278017a
+skill mcp-builder anthropics/skills claude-code,codex ea6e4d7bc108b44b3009129688049e23d801f0f3
+skill microsoft-foundry microsoft/azure-skills codex 555965adb1ae9d3bda1df83facf6f998e3fc9be7
+skill organization-best-practices better-auth/skills claude-code,codex 4256d5266e6f51a4e4c718f5c2308a81eb4a0032
+skill scrapling-official D4Vinci/Scrapling claude-code,codex 2c0ad93a011224f5ee49b4cce36dff13188a80e0
 skill siderolabs https://docs.siderolabs.com claude-code,codex
-skill supabase supabase/agent-skills codex
-skill supabase-postgres-best-practices supabase/agent-skills codex
-skill supabase-prompts jrmatherly/skills claude-code,codex
-skill theme-factory anthropics/skills claude-code,codex
-skill two-factor-authentication-best-practices better-auth/skills claude-code,codex
-skill web-artifacts-builder anthropics/skills claude-code,codex
+skill supabase supabase/agent-skills codex 57b975708a53ce7a56df25822871b71da6d9312a
+skill supabase-postgres-best-practices supabase/agent-skills codex 27bde25111c4cd5e6f803fc9db5fbffe27bb26cf
+skill supabase-prompts jrmatherly/skills claude-code,codex c1259b513899689dd345921ba06ccff938fe82b4
+skill theme-factory anthropics/skills claude-code,codex e05534d132fb1b21f9917840874758e30f0a9b1a
+skill two-factor-authentication-best-practices better-auth/skills claude-code,codex 9fefe55e06966780e9d60c170d90bf37dd734318
+skill web-artifacts-builder anthropics/skills claude-code,codex 821b94f16c123d5f12e4e72eda9f7a162e2698f6

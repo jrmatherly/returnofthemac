@@ -18,7 +18,8 @@
 | `claude-config restore plugins` / `settings` / `skills` | One part only |
 | `claude-config retire` | Drop retired allow rules from this Mac's settings and change nothing else |
 | `claude-config restore ... --dry-run` | Print what that part would do |
-| `claude-config restore skills --update` | Reinstall each tracked skill whose source changed since install (on GitHub its folder's git tree SHA against `skillFolderHash` in `~/.agents/.skill-lock.json`, one `gh api` call per repository; for a well-known source such as `siderolabs`, the `digest` in the site's `/.well-known/agent-skills/index.json` against `wellKnownDigest`), plus any it can't check, for its listed agents; prints `skill same\|changed\|unknown <name>` per skill (`sysup` does this) |
+| `claude-config restore skills --update` | Compare each tracked skill's source with its reviewed value, the row's fifth field (on GitHub its folder's git tree SHA, one `gh api` call per repository; for a well-known source such as `siderolabs`, the `digest` in the site's `/.well-known/agent-skills/index.json`), or with the lock's `skillFolderHash` or `wellKnownDigest` for a row without one; prints `skill same\|changed\|unknown <name>` per skill and installs only for agents that lack it, never reinstalling a changed one (`sysup` does this) |
+| `claude-config restore skills --accept <name>` | Reinstall that one skill for every agent on its row, after you reviewed its upstream change; then run `claude-config save` to record the new value. Exits 2 for a name the list doesn't track |
 
 ## The three tracked files
 
@@ -26,7 +27,7 @@
 | --- | --- | --- |
 | `agents/claude-plugins.txt` | `marketplace <name> <source>` lines and `plugin <id>[ disabled]` lines for user-scope plugins | Missing marketplaces are added; missing plugins installed (after a `claude plugin marketplace update <name>` for a marketplace already on the machine, which may predate the plugin); recorded-disabled plugins are disabled only on a fresh install |
 | `agents/claude-settings.json` | `~/.claude/settings.json` minus the keys tools own (`enabledPlugins`, `extraKnownMarketplaces`, `hooks`), with `$HOME` written as `~` where it starts a path and permission lists sorted, with gitignore negations such as `Read(!.env.example)` moved last because a negation only carves out of the rules before it. Never saved: `apiKeyHelper`, `awsCredentialExport`, `awsAuthRefresh`, `otelHeadersHelper`, and any `env` entry other than `CLAUDE_CODE_*` (minus the LLM Router's `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY` and `CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT`), `DISABLE_*`, `MAX_*`, `AZURE_MCP_COLLECT_TELEMETRY`, `HINDSIGHT_API_LLM_PROVIDER` and the `HINDSIGHT_API_*LLM_MODEL` pins. `model` is not recorded: `save` keeps the tracked value, so change the standard by editing the file | Merged into the live file: existing values win, permission lists are unioned, no rewrite when nothing is missing. An invalid merge warns instead of aborting |
-| `agents/claude-skills.txt` | `skill <name> <source> <agents>` from `~/.agents/.skill-lock.json`. A `well-known` source is saved as the URL the CLI stored, since its bare host fails as a git clone | `npx skills add <source> -g -s <name> -a <agents> -y` for the agents that lack it, with telemetry off and stdin from `/dev/null` |
+| `agents/claude-skills.txt` | `skill <name> <source> <agents> [<reviewed>]` from `~/.agents/.skill-lock.json`, where `<reviewed>` is the lock's `skillFolderHash` or `wellKnownDigest`. A `well-known` source is saved as the URL the CLI stored, since its bare host fails as a git clone | `npx skills add <source> -g -s <name> -a <agents> -y` for the agents that lack it, with telemetry off and stdin from `/dev/null` |
 
 Agents map to folders: `claude-code` is `~/.claude/skills`, `codex` is `~/.agents/skills`.
 
@@ -36,7 +37,7 @@ Agents map to folders: `claude-code` is `~/.claude/skills`, `codex` is `~/.agent
 
 ## Why not the CLI's own update
 
-`npx skills update` reinstalls every skill with no agent list, so a skill tracked for one agent spreads to all of them. `restore skills --update` reinstalls each skill for exactly the agents the tracked file lists.
+`npx skills update` reinstalls every skill with no agent list, so a skill tracked for one agent spreads to all of them. `restore skills --accept <name>` reinstalls one skill for exactly the agents the tracked file lists.
 
 ## Dependencies
 
