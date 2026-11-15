@@ -53,7 +53,7 @@ A manual checklist for **System Settings** on this Mac (MacBook Pro, Apple M3 Pr
 
 ### General
 
-- **Software Update** → **Automatic Updates**: turn on every option (set-defaults, switch: `macos.software_update`; turns on the automatic check, download, and critical/security installs)
+- **Software Update** → **Automatic Updates**: turn on every option. set-defaults turns on three of them when `macos.software_update` is unset or `1`: the automatic check, the download, and the security and system data installs. It also sets a daily check, which Settings does not show. Turn on the rest by hand
 - **AutoFill & Passwords** → verification codes → **Delete After Use** − `On`
 - **Sharing** → **Content & Media**: turn off every option
 - **Sharing** → **Accessories & Internet**: turn off every option
@@ -175,7 +175,7 @@ Raycast handles ⌘Space on this Mac, and `set-defaults` turns off the Spotlight
 - **Energy Mode** − `Automatic` on battery and on power adapter (this Mac: Low Power Mode is off in both)
 - **Battery Health** → **Optimized Battery Charging** − `On`
 - **Options…** → **Slightly dim the display while on battery power** − `On`
-- Handled by set-defaults (`pmset`) unless `macos.power` is off: wake when the lid opens, hard disks sleep after 10 minutes, wake for network access off, hibernate mode 3
+- Handled by set-defaults (`pmset`) unless `macos.power` is off: wake when the lid opens where `pmset -g custom` lists `lidwake` (this Mac has no `lidwake` key, so it is skipped), hard disks sleep after 10 minutes, wake for network access off, hibernate mode 3
 
 ### Lock Screen
 
