@@ -9,6 +9,7 @@
 
 - It finds the Developer Edition profile with [lib/get-firefox-dev-path](lib/get-firefox-dev-path) (a `*dev-edition*` profile folder, or the `dev-edition` entry in `profiles.ini`, whose `Path` is relative to the Firefox folder unless `IsRelative=0`).
 - It **hard-links** the three files into that profile (`user.js` at the profile root, the CSS files in `chrome/`). A file there with different content is moved to a free `.backup` name first, so a pull that changes a tracked file reaches Firefox on the next run. There is no prompt.
+- `user.js` turns off Firefox Sync and password saving. A profile `user.js` that isn't ours (its first line is not `/* global user_pref */`) is left alone with a warning. Move it aside and rerun to use the tracked one.
 - If no Developer Edition profile exists, it skips this step with a warning.
 
 A preference removed from `user.js` keeps its last value in the profile. On a profile that already ran with an older `user.js`, reset `devtools.debugger.prompt-connection` in `about:config` so Firefox asks again before a debugger connects.

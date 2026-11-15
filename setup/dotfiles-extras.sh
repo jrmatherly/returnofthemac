@@ -202,8 +202,15 @@ link_cli code "Visual Studio Code.app/Contents/Resources/app/bin/code"
 # which we must never write to)
 ff_dev_profile_dir="$("$DOTFILES_DIR"/firefox/lib/get-firefox-dev-path)"
 if [ -n "$ff_dev_profile_dir" ] && [ -d "$ff_dev_profile_dir" ]; then
+  # Every user.js this repo has shipped starts with this line, so a stale copy still counts as ours
+  ours() { [ "$(head -n 1 "$1")" = '/* global user_pref */' ]; }
   for file in user.js chrome/userContent.css chrome/userChrome.css; do
-    hard_link "$DOTFILES_DIR/firefox/$file" "$ff_dev_profile_dir/$file"
+    dst="$ff_dev_profile_dir/$file"
+    if [ "$file" = user.js ] && [ -e "$dst" ] && [ ! "$dst" -ef "$DOTFILES_DIR/firefox/$file" ] && ! ours "$dst"; then
+      warn "$(tildify "$ff_dev_profile_dir")/user.js is your own, so the tracked preferences were not linked. They turn off Firefox Sync and password saving. Move it aside and rerun to use them."
+      continue
+    fi
+    hard_link "$DOTFILES_DIR/firefox/$file" "$dst"
   done
 else
   warn "No Firefox Developer Edition profile found — skipping Firefox styles"
