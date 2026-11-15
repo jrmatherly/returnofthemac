@@ -108,7 +108,6 @@ user_pref('apz.overscroll.enabled', false);
 // Enable remote debugging (useful for debugging userChrome.css)
 user_pref('devtools.chrome.enabled', true);
 user_pref('devtools.debugger.remote-enabled', true);
-user_pref('devtools.debugger.prompt-connection', false);
 
 //////////////////////////////////
 // 04: Security and performance //
@@ -190,7 +189,7 @@ user_pref('browser.places.speculativeConnect.enabled', false);
 // https://www.bleepingcomputer.com/news/software/major-browsers-to-prevent-disabling-of-click-tracking-privacy-risk/
 user_pref('browser.send_pings', false);
 
-// Enable DNS over HTTPS (DoH)
+// DNS over HTTPS (DoH) is off: mode 5. Set 2 or 3 to use the resolver below
 // 0=default, 2=increased (TRR (Trusted Recursive Resolver) first), 3=max (TRR only), 5=off (no rollout)
 // NOTE: This is primarily meant to be used when you are disconnected from a VPN service, or on devices where it's not possible or desirable to connect to the VPN.
 // When you are already connected to VPN service the security benefits of using encrypted DNS is negligible and it will always be slower than using the DNS resolver on the VPN server that you are connected to.

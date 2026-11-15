@@ -129,6 +129,9 @@ check "a pulled change reaches the profile" "[ \"\$(cat '$prof/user.js')\" = v2 
 check "the first backup is kept" "[ \"\$(cat '$prof/user.js.backup')\" = mine ]"
 check "the stale copy gets its own backup name" "find '$prof' -maxdepth 1 -name 'user.js.backup.*' | grep -q ."
 
+check "the tracked user.js leaves the debugger's connection prompt on" "! grep -q 'devtools.debugger.prompt-connection' '$repo/firefox/user.js'"
+check "the DoH comment says the mode it sets" "grep -B1 -F '0=default, 2=increased' '$repo/firefox/user.js' | grep -q '^// DNS over HTTPS (DoH) is off'"
+
 check "the real ~/.gitconfig.local, /usr/local/bin, bat cache and Firefox profile are untouched" "[ \"\$(fingerprint)\" = \"\$before\" ]"
 
 [ "$fails" -eq 0 ] || {

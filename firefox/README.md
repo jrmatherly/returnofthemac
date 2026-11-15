@@ -11,6 +11,8 @@
 - It **hard-links** the three files into that profile (`user.js` at the profile root, the CSS files in `chrome/`). A file there with different content is moved to a free `.backup` name first, so a pull that changes a tracked file reaches Firefox on the next run. There is no prompt.
 - If no Developer Edition profile exists, it skips this step with a warning.
 
+A preference removed from `user.js` keeps its last value in the profile. On a profile that already ran with an older `user.js`, reset `devtools.debugger.prompt-connection` in `about:config` so Firefox asks again before a debugger connects.
+
 After installing Developer Edition, launch it once so it creates its profile, quit it, then run `setup/dotfiles-extras.sh`.
 
 ## Install theme
