@@ -74,7 +74,7 @@ struct SettingsModelTests {
     #expect(Edit(settingId: "t.text", change: .set("a=b"), shared: false).commandLine == "rotm settings set t.text -- a=b")
   }
 
-  @Test func applyRunsEveryEditPastAFailureThenReloads() async {
+  @Test func applyRunsEveryEditPastAFailure() async {
     let (model, runner) = await loaded()
     model.stage("setup.skip_codegraph", value: "off", shared: false)
     model.stage("updates.slow_step_seconds", value: "20", shared: false)
@@ -86,10 +86,25 @@ struct SettingsModelTests {
     runner.stub(second, .failure(.readOnly("t.count is read-only")))
     runner.stub(third, ok())
     await model.applyStaged()
-    #expect(runner.calls == [listArgs, first, second, third, listArgs])
+    #expect(runner.calls == [listArgs, first, second, third])
     #expect(model.failures == ["updates.slow_step_seconds: t.count is read-only"])
     #expect(model.notes == ["Run set-defaults to apply it now."])
     #expect(model.staged == [Edit(settingId: "updates.slow_step_seconds", change: .set("20"), shared: false)])
+  }
+
+  @Test func anEditStagedDuringApplyWinsOverTheFailedOne() async {
+    let (model, runner) = await loaded()
+    model.stage("updates.slow_step_seconds", value: "20", shared: false)
+    let set = ["settings", "set", "updates.slow_step_seconds", "--", "20"]
+    runner.stub(set, .failure(.failed(1, "disk full")))
+    let release = runner.hold(set)
+    let apply = Task { await model.applyStaged() }
+    await waitUntil { runner.calls.contains(set) }
+    model.stage("updates.slow_step_seconds", value: "30", shared: false)
+    release()
+    await apply.value
+    #expect(model.staged == [Edit(settingId: "updates.slow_step_seconds", change: .set("30"), shared: false)])
+    #expect(model.failures == ["updates.slow_step_seconds: disk full"])
   }
 
   @Test func aReloadDropsOnlyTheEditsThatNoLongerDiffer() async {

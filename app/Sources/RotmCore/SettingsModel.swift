@@ -104,11 +104,10 @@ public struct Edit: Equatable, Sendable {
       } catch {
         let text = "\(edit.settingId): \(AppState.message(error) ?? AppState.notFound)"
         if !failures.contains(text) { failures.append(text) }
-        // The load below drops it if it took after all; an edit staged meanwhile wins.
+        // The window's reload drops it if it took after all; an edit staged meanwhile wins.
         if !staged.contains(where: { $0.settingId == edit.settingId }) { staged.append(edit) }
       }
     }
-    await load()
   }
 
   private func put(_ edit: Edit) {
