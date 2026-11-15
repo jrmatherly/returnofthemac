@@ -121,14 +121,21 @@ public struct Edit: Equatable, Sendable {
   }
 
   /// False once the row already holds what the edit would make it, or is gone or read-only.
+  /// A shared edit always differs: the row shows the profile's value, not the shared one.
   private func differs(_ edit: Edit) -> Bool {
     guard let row = rows.first(where: { $0.settingId == edit.settingId }), row.access != "ro" else { return false }
+    if edit.shared { return true }
     switch edit.change {
     case .reset: return row.source == "override"
     case .set(let value):
       let current = row.value ?? ""
       return row.type == "bool" ? Self.isOn(value) != Self.isOn(current) : value != current
     }
+  }
+
+  /// The window shows the profile's value, so with `shared` it cannot tell whether the shared layer holds one.
+  public static func canReset(_ row: SettingRow, shared: Bool) -> Bool {
+    row.access != "ro" && (shared || row.source == "override")
   }
 
   /// The words the command line takes for on (`cli.py` TRUE); every registry

@@ -120,6 +120,25 @@ struct SettingsModelTests {
     #expect(model.staged == [Edit(settingId: "apps.obsidian_vault", change: .set("/tmp/v"), shared: false)])
   }
 
+  @Test func aSharedEditIsStagedWhateverTheProfileShows() async throws {
+    let (model, _) = await loaded()
+    model.stage("updates.slow_step_seconds", value: "10", shared: true)
+    model.stageReset("apps.obsidian_vault", shared: true)
+    #expect(model.staged.map(\.settingId) == ["updates.slow_step_seconds", "apps.obsidian_vault"])
+    await model.load()
+    #expect(model.staged.count == 2)
+    model.stage("updates.slow_step_seconds", value: "10", shared: false)
+    model.stageReset("apps.obsidian_vault", shared: false)
+    #expect(model.staged.isEmpty)
+    model.stage("hindsight.llm_model", value: "x", shared: true)
+    #expect(model.staged.isEmpty)
+    let vault = try #require(model.rows.first { $0.settingId == "apps.obsidian_vault" })
+    let locked = try #require(model.rows.first { $0.settingId == "hindsight.llm_model" })
+    #expect(SettingsModel.canReset(vault, shared: true))
+    #expect(!SettingsModel.canReset(vault, shared: false))
+    #expect(!SettingsModel.canReset(locked, shared: true))
+  }
+
   @Test func aReadOnlyRowCannotBeStaged() async {
     let (model, _) = await loaded()
     model.stage("hindsight.llm_model", value: "x", shared: false)

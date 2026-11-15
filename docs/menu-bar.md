@@ -61,7 +61,7 @@ Changes are staged, not applied one by one:
 
 After Apply the bar shows what the commands printed, such as the line that tells you to run `set-defaults`, and any failure, until you choose **Dismiss**. A macOS preference takes effect as its change is applied, and the Dock or Finder restarts when the preference needs it. Nothing is installed by a change alone: run **Run Setup Again…** or **Apply macOS Preferences…** from the menu when a note asks for it.
 
-While a [profile](settings-sync.md#profiles) is in use, changes go to that profile. Tick **Write to shared settings** in the bar to change your shared settings instead, which adds `--shared` to every staged command.
+While a [profile](settings-sync.md#profiles) is in use, changes go to that profile. Tick **Write to shared settings** in the bar to change your shared settings instead, which adds `--shared` to every staged command. With the box ticked every change is staged, even one equal to the value shown, because the window shows the profile's value and not the shared one, and every row that can be changed offers **Reset**.
 
 The window reads the settings again each time you bring it to the front and after every command the app runs. A staged change that a terminal command or a sync has already made is dropped from the list, and the others stay.
 

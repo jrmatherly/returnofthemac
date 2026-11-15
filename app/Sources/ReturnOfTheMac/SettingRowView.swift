@@ -69,7 +69,7 @@ struct SettingRowView: View {
     if pending != nil {
       Button("Undo") { model.unstage(row.settingId) }
         .accessibilityLabel("Undo the change to \(row.label)")
-    } else if row.source == "override" && !readOnly {
+    } else if SettingsModel.canReset(row, shared: shared) {
       Button("Reset") { model.stageReset(row.settingId, shared: shared) }
         .accessibilityLabel("Reset \(row.label)")
     }
