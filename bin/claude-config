@@ -18,7 +18,7 @@
 #
 # `claude-config retire`
 #
-# - Report each tracked skill whose GitHub folder or well-known site digest moved past its reviewed value, and install only the ones an agent lacks (`sysup` runs this):
+# - Report each tracked skill whose GitHub folder or well-known site digest moved past its reviewed value, and install for an agent that lacks one only when it matches its review (`sysup` runs this):
 #
 # `claude-config restore skills --update`
 #
@@ -352,10 +352,15 @@ restore_skills() {
     # shellcheck disable=SC2206 # agents is a comma list of plain names
     [ -z "$accept" ] || missing=(${agents//,/ })
     # One line per skill for sysup: skill <same|changed|unknown> <name>. A
-    # changed skill waits for a review and --accept: upstream is third-party code
+    # changed or unknown skill waits for a review and --accept: upstream is
+    # third-party code, so an agent that lacks it gets nothing (skill held <name>)
     if [ "$update" = true ]; then
       state=$(upstream "$name" "$reviewed")
       echo "skill $state $name"
+      if [ "$state" != same ] && [ -z "$accept" ] && [ ${#missing[@]} -gt 0 ]; then
+        echo "skill held $name"
+        continue
+      fi
     fi
     [ ${#missing[@]} -gt 0 ] || continue
     # run keeps going after a failure; a skill the source no longer ships is

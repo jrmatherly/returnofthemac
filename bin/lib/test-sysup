@@ -159,7 +159,7 @@ case $1 in
   retire) [ -e "$STATE/retire-fails" ] && exit 1
     [ -e "$STATE/settings" ] && echo "{}" > "$CLAUDE_CONFIG_DIR/settings.json" ;;
   restore) case "$*" in *--dry-run*) [ -e "$STATE/config-pending" ] && [ "$2" = settings ] && echo "merge tracked"; exit 0 ;; esac
-    if [ -e "$STATE/skills" ]; then printf "skill changed one\n\033[38;5;250mART\033[0m\n\033[?25l◒  Cloning…\033[1G\033[J◐  Cloning…\033[1G\033[J◇  Repository cloned\n\033[?25h\nskill same two\n"; else printf "skill same one\nskill unknown two\n"; fi
+    if [ -e "$STATE/skills" ]; then printf "skill changed one\n\033[38;5;250mART\033[0m\n\033[?25l◒  Cloning…\033[1G\033[J◐  Cloning…\033[1G\033[J◇  Repository cloned\n\033[?25h\nskill same two\nskill held one\nskill unknown three\nskill held three\n"; else printf "skill same one\nskill unknown two\n"; fi
     [ ! -e "$STATE/bad-byte" ] || printf "\377\nafter the bad byte\n" ;;
 esac
 exit 0'
@@ -274,7 +274,7 @@ check_true "changes: REA skill reinstalled" has '^↻ REA skill +reinstalled for
 check_true "changes: newer Hindsight release is a notice" has '^● Hindsight memory +newer release 0.9.0 on npm; bump CODING_AGENTS_VERSION in bin/hindsight-memory$'
 check_true "changes: the installer's ▲ warning is a notice, first line only" has '^● Hindsight memory +installer: macOS needs a current Rust toolchain to build the daemon.s dependencies \(litellm; see the log$'
 check_true "changes: a warned or newer Hindsight step is not also ok" lacks '^✔ Hindsight memory'
-check_true "changes: skills that changed upstream named" has '^● agent skills +1 skill changed upstream: one; 1 unchanged; review, then run: claude-config restore skills --accept one$'
+check_true "changes: skills that changed upstream named" has '^● agent skills +1 skill changed upstream: one; not installed until reviewed: one, three; 1 unchanged, could not check: three; review, then run: claude-config restore skills --accept <name>$'
 check_true "changes: Hindsight hooks change seen" has '^↻ Hindsight memory +hooks, runtime or daemon environment updated$'
 check_true "cache: a prune that removed entries is a change" has '^↻ uv cache +pruned 25 entries$'
 [ ! -x /Applications/SnippetsLab.app/Contents/Helpers/lab ] || check_true "changes: SnippetsLab change seen" has '^↻ SnippetsLab skill +updated from SnippetsLab$'
