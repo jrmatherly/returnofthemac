@@ -195,7 +195,7 @@ How it works:
 
 23. **Stop and tell the session.** Leave the guest running. From here:
     1. The session sets `app/VERSION` to `0.1.2`, runs `pnpm check`, commits and pushes to `main`. That commit is also the update guest 1 sees waiting.
-    1. You push the tag on that commit, from the clone on the host: `git tag app-v0.1.2 <commit> && git push origin app-v0.1.2`. **Not run on the host.**
+    1. You push the tag on that commit, from the clone on the host: `git tag -m "Return of the Mac 0.1.2" app-v0.1.2 <commit> && git push origin app-v0.1.2`. The message is needed because `tag.gpgsign` is on in `~/.gitconfig.local`: without one, git stops with "no tag message?" and makes no tag (seen on 2026-11-15 for 0.1.3).
     1. The session waits for the release workflow to publish `returnofthemac-app_0.1.2_arm64.dmg`, then changes the cask in `~/dev/homebrew-tap/Casks/returnofthemac-app.rb` to `version "0.1.2"` and the release's `sha256`, and pushes it when you say so.
     1. The session tells you when the tap is pushed. Wait five minutes after that: the app reads the cask through `raw.githubusercontent.com`, which caches it for up to five minutes.
 
@@ -284,7 +284,7 @@ How it works:
 Two fixes in 0.1.3 can only be seen while the app that runs is 0.1.3 and the tap holds something newer (audit app plan, Tasks 2 and 9). So this run takes two releases: 0.1.3 carries the fixes, and 0.1.4 is a version bump that gives 0.1.3 an update to offer. Rows `3a` to `3d` record into `~/vm-proof/p5/g3/`.
 
 38. Use the guest from step 36 if it is still running. Otherwise start the guest with **Run without saving changes** and do steps 4 to 6. No GitHub sign-in is needed, so answer `n` to setup's GitHub login. Do this before step 41, so the guest never installs 0.1.4 directly.
-39. **Stop and tell the session.** The 0.1.3 release follows step 23, with `0.1.3` in place of `0.1.2`: the session pushes the version commit, you push the tag `app-v0.1.3` on it, the session changes the cask and pushes the tap on your word, and you wait five minutes.
+39. **Stop and tell the session.** The 0.1.3 release follows step 23, with `0.1.3` in place of `0.1.2`: the session pushes the version commit, you push the tag `app-v0.1.3` on it with its message, the session changes the cask and pushes the tap on your word, and you wait five minutes.
 40. From the menu, choose **Quit**. In Finder, open **Applications**, then **Return of the Mac**. The menu's first line should read **Update Return of the Mac to 0.1.3…**. Choose it and confirm. When the app has opened again:
 
     ```shell
