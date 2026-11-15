@@ -22,18 +22,20 @@ class FakeAdapter:
         self.values = values
         self.writes: list[tuple[str, str]] = []
         self.fail: Exception | None = None
+        self.source = Source.SEED
+        self.resets: list[str] = []
 
     def read(self, s: Setting) -> Value:
         if self.fail:
             raise self.fail
-        return Value(s.id, self.values[s.id], Source.SEED, self.values[s.id], False)
+        return Value(s.id, self.values[s.id], self.source, self.values[s.id], False)
 
     def write(self, s: Setting, value: str) -> None:
         self.writes.append((s.id, value))
         self.values[s.id] = value
 
     def reset(self, s: Setting) -> None:
-        pass
+        self.resets.append(s.id)
 
 
 def host(widget):
@@ -125,6 +127,15 @@ async def test_seats_editor_saves_through_the_app():
         assert len(fake.writes) == 1, "a re-synced or model-only seat writes nothing"
 
 
+async def test_ctrl_r_resets_from_inside_a_seat_picker():
+    fake = FakeAdapter({"jstack.bug_fix": "opus high"}); fake.source = Source.OVERRIDE
+    app = SettingsApp(settings=[bug_fix_setting], adapters={"tool": fake})
+    async with app.run_test() as pilot:
+        app.query_one("#w-jstack-bug_fix #model-0").focus(); await pilot.pause()
+        await pilot.press("ctrl+r"); await pilot.pause()
+        assert fake.resets == ["jstack.bug_fix"]
+
+
 async def test_stack_screen_keep_and_off():
     tool.stack_scan = lambda cwd: [tool.StackRow("off", "b@m", "no signal")]
     applied = []
@@ -155,7 +166,7 @@ async def main():
     for test in (test_seats_editor_single_role, test_seats_editor_list_role,
                  test_seats_editor_opens_what_it_cannot_parse, test_lines_editor_saves_on_blur,
                  test_a_read_failure_saves_nothing_from_a_focused_box, test_seats_editor_saves_through_the_app,
-                 test_stack_screen_keep_and_off):
+                 test_ctrl_r_resets_from_inside_a_seat_picker, test_stack_screen_keep_and_off):
         await test()
 
 asyncio.run(main())

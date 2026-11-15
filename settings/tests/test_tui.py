@@ -112,7 +112,7 @@ async def main():
         app.query_one("#w-t-name", Input).focus()
         await pilot.press("end", "?", "enter"); await pilot.pause()
         assert app.query_one("#w-t-name", Input).value == "seeded", "a refused value does not stay on screen"
-        assert any(n.severity == "error" and "nope" in str(n.message) for n in app._notifications)
+        assert any(n.severity == "error" and "nope" in str(n.message) and n.timeout == 20 for n in app._notifications)
         fake.refuse = None
 
         fake.refuse = FileNotFoundError(2, "No such file or directory", "bin/hindsight-memory")

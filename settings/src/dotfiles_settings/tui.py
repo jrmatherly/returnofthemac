@@ -13,6 +13,8 @@ from .adapters import tool
 from .model import FAILURES, Adapter, Setting, Source, Value, note_for
 from .tui_agents import LinesEditor, SeatsEditor, StackScreen
 
+ERROR_SECONDS = 20  # a refused value returns to the stored one, so this notice is its only explanation
+
 CSS = """
 #sections { width: 24; border-right: solid $panel; }
 #error { background: $error; color: $text; padding: 0 1; }
@@ -186,7 +188,7 @@ class SettingsApp(App):
                 return
             adapter.write(s, value)
         except FAILURES as e:
-            self.notify(str(e), severity="error")
+            self.notify(str(e), severity="error", timeout=ERROR_SECONDS)
             self.refresh_values(force=s)
             return
         self.refresh_values(force=s)
@@ -200,7 +202,7 @@ class SettingsApp(App):
         try:
             adapter.reset(s)
         except FAILURES as e:
-            self.notify(str(e), severity="error")
+            self.notify(str(e), severity="error", timeout=ERROR_SECONDS)
             self.refresh_values(force=s)
             return
         self.refresh_values(force=s)
@@ -208,7 +210,11 @@ class SettingsApp(App):
             self.notify(note)
 
     def setting_of(self, w: Widget | None) -> Setting | None:
-        return self.by_slug.get((w.id or "")[2:]) if w is not None else None
+        # A seat picker's selects have ids of their own, so a focused one finds its row through its ancestors
+        for a in w.ancestors_with_self if w is not None else ():
+            if s := self.by_slug.get((a.id or "")[2:]):
+                return s
+        return None
 
     def on_switch_changed(self, event: Switch.Changed) -> None:
         if s := self.setting_of(event.switch):
