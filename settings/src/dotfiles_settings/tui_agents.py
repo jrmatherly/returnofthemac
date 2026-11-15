@@ -88,10 +88,13 @@ class SeatsEditor(Widget):
         names = tool.seat_models(self.role)
         if model and model not in names:
             names.append(model)  # a full model id stays selectable, so opening the row never changes it
+        efforts = list(tool.EFFORTS)
+        if effort and effort not in efforts:
+            efforts.append(effort)  # the same for an effort parse_seats would refuse; a save still goes through it
         return Horizontal(
             Select([(m, m) for m in names], value=model or Select.NULL, allow_blank=not model, prompt="unset",
                    id=f"model-{n}"),
-            Select([(e, e) for e in tool.EFFORTS], value=effort or "medium", allow_blank=False, id=f"effort-{n}",
+            Select([(e, e) for e in efforts], value=effort or "medium", allow_blank=False, id=f"effort-{n}",
                    disabled=model in NO_EFFORT),
             classes="seat")
 

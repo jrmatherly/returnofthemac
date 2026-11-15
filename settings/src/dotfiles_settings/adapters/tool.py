@@ -211,7 +211,7 @@ def _read_jstack(role: str, s: Setting) -> Value:
     i = _role_line(lines, role)
     if i is None:
         return Value(s.id, None, Source.UNSET, None, False)
-    value = lines[i].split(": ", 1)[1] if ": " in lines[i] else ""
+    value = lines[i].split(": ", 1)[1].strip() if ": " in lines[i] else ""
     # The rules file holds the shipped roles and the user's alike; the user's own tools file says which they set
     return Value(s.id, value, Source.OVERRIDE if s.id in sync.wanted_tools() else Source.SEED, value, False)
 

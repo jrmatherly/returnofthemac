@@ -67,6 +67,14 @@ async def test_seats_editor_list_role():
         assert e.value == "fable medium"
 
 
+async def test_seats_editor_opens_what_it_cannot_parse():
+    for role, value, effort in (("bug-fix", "opus fast", "fast"),
+                                ("arena runners", "fable medium,opus medium", "medium,opus medium")):
+        async with host(SeatsEditor(role, value, id="e")).run_test() as pilot:
+            e = pilot.app.query_one("#e", SeatsEditor)
+            assert e.value == value and e.query_one("#effort-0", Select).value == effort, "opening changes nothing"
+
+
 async def test_lines_editor_saves_on_blur():
     fake = FakeAdapter({"hindsight.paths": "~/dev"})
     app = SettingsApp(settings=[paths_setting], adapters={"tool": fake})
@@ -115,7 +123,8 @@ async def test_stack_screen_keep_and_off():
 
 
 async def main():
-    for test in (test_seats_editor_single_role, test_seats_editor_list_role, test_lines_editor_saves_on_blur,
+    for test in (test_seats_editor_single_role, test_seats_editor_list_role,
+                 test_seats_editor_opens_what_it_cannot_parse, test_lines_editor_saves_on_blur,
                  test_seats_editor_saves_through_the_app, test_stack_screen_keep_and_off):
         await test()
 

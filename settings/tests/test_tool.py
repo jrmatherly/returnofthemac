@@ -278,6 +278,8 @@ def test_jstack_read():
     v = A.read(by_id("jstack.hillclimb"))
     assert (v.value, v.source, v.drift) == (None, Source.UNSET, False)
     assert A.read(by_id("jstack.arena_runners")).source is Source.SEED
+    tracked.write_text(RULE.replace("bug-fix: opus", "bug-fix: opus medium \t"))
+    assert A.read(by_id("jstack.bug_fix")).value == "opus medium"
 
 
 def test_seat_fields_for_a_gui():
@@ -324,7 +326,8 @@ def test_parse_seats():
     assert tool.parse_seats("arena cross-judge pool", "fable medium, codex") == [("fable", "medium"), ("codex", "")]
     assert tool.parse_seats("swarm workers", "claude-opus-5-5 max") == [("claude-opus-5-5", "max")]
     for role, bad in (("bug-fix", "opus"), ("bug-fix", "opus huge"), ("bug-fix", "gpt medium"),
-                      ("bug-fix", "opus medium, sonnet medium"), ("bug-fix", "codex"), ("arena runners", "")):
+                      ("bug-fix", "opus medium, sonnet medium"), ("bug-fix", "codex"), ("arena runners", ""),
+                      ("arena runners", "fable medium,opus medium")):
         assert raises_type(lambda: tool.parse_seats(role, bad), InvalidValue)
 
 
