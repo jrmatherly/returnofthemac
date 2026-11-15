@@ -127,8 +127,13 @@ def use(name: str) -> list[str]:
         if still:  # a quoted key, or a list under another spelling: nothing here can remove it safely
             raise SettingsError(f"could not remove the env list from {path}; edit it by hand")
         path.write_text(left)
-    return [f"Now using {'the shared settings' if name == DEFAULT else f'the profile {name}'}.", *sync.apply(),
-            "Open a new shell to pick this up."]
+    now = f"Now using {'the shared settings' if name == DEFAULT else f'the profile {name}'}."
+    try:
+        applied = sync.apply()
+    except SettingsError as e:
+        raise SettingsError(f"{now} Its settings were not applied: {e}. Run `rotm settings sync apply`, "
+                            "then open a new shell.") from None
+    return [now, *applied, "Open a new shell to pick this up."]
 
 
 def state() -> dict:

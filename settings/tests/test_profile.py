@@ -93,6 +93,19 @@ assert rc.read_text() == split
 rc.write_text('env = ["rotm-installed"] # was [x]]\n')
 profile.use("work")
 assert calls()[-1] == "mise -E rotm-installed,rotm-p-work bootstrap --save-env --only final-hook"
+
+
+# an apply that fails after the switch says the switch happened, and what is left to run
+def broken_apply():
+    raise SettingsError("rotm-modules: broke")
+
+
+sync.apply = broken_apply
+rc.write_text('env = ["rotm-installed"]\n')
+for needle in ("Now using the profile work.", "rotm-modules: broke", "rotm settings sync apply", "new shell"):
+    raises(profile.use, SettingsError, needle, "work")
+assert calls()[-1] == "mise -E rotm-installed,rotm-p-work bootstrap --save-env --only final-hook"
+sync.apply = lambda: ["APPLIED"]
 # a line this module cannot remove is an error, not a false "now using the shared settings"
 quoted = '"env" = ["rotm-p-work"]\n'
 rc.write_text(quoted)
