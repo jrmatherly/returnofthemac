@@ -94,7 +94,7 @@ In a clone, `$HOME` is links into the clone, so you change a config by editing t
 | Page | What it covers |
 | --- | --- |
 | [Installation](docs/installation.md) | The full install, setup's flags and prompts, a preview, the steps after setup, and the extras (color themes, Obsidian, Dash) |
-| [Updating](docs/updating.md) | What `sysup` does step by step, Renovate, and the macOS update password from 1Password |
+| [Updating](docs/updating.md) | `rotm update` on an installed copy, what `sysup` does step by step, Renovate, and the macOS update password from 1Password |
 | [Settings sync](docs/settings-sync.md) | Saving your `rotm settings` changes and opt-outs to a private GitHub repository of your own, loading them on a second Mac, deciding a conflict, and keeping a profile such as work beside your own |
 | [Menu bar app](docs/menu-bar.md) | Return of the Mac in the menu bar: each menu line and the command it runs, the console, the settings window, how the app starts and updates, its logs, and how to switch it off |
 | [Local customizations](docs/local-customizations.md) | The per-Mac files outside the repo: `~/.zsh.local`, `~/.gitconfig.local`, `~/.ssh/config.local` and the 1Password SSH key |

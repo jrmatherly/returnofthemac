@@ -1,5 +1,20 @@
 # Updating
 
+Two commands keep a Mac current. `rotm update` brings this project's changes to an installed copy, and [`sysup`](../bin/sysup) upgrades everything the setup installed.
+
+## On an installed copy
+
+```shell
+rotm update
+sysup
+```
+
+Run both, in that order. `rotm update` fetches the newest `stable` into the copy and runs setup again, which links what is new and installs what is missing. It does not upgrade what is already installed. `sysup` does that: macOS, mise, the packages, the runtimes and the agent tooling. On an installed copy `sysup` skips the pull and prints `installed copy: run rotm update` in its place. Its other steps are the ones listed under [In a clone](#in-a-clone).
+
+To see whether an update is waiting without installing anything, run `rotm update --check`: it fetches the copy's branch and prints `Up to date.` or `2 updates are waiting. Run rotm update.`, leaving the copy as it was. Add `--json` for `{"mode":"installed","branch":"stable","behind":2}`. In a development clone it prints `This is a development clone. Pull it yourself.` (`"behind":null` in JSON) and exits 0. A failed fetch, or a copy that is not on a branch, exits 1 with one line on stderr. The [menu bar app](menu-bar.md) shows the same count in its menu, runs `rotm update -y` from its **Update…** line, and upgrades itself through mise when you choose to.
+
+## In a clone
+
 ```shell
 sysup
 ```
@@ -38,9 +53,11 @@ It doesn't re-apply the dotfiles. When a pull brings new symlinks, tools or conf
 
 `setup.sh` installs what's missing but doesn't upgrade what's already there, except PowerShell (`dotnet tool update`) and the Iosevka Code font. There are two ways to upgrade. `./setup.sh -- --upgrade` upgrades what the mise config declares: the packages, one manager at a time with a warning on failure, and the tools. `sysup` upgrades everything: macOS, mise itself, the packages, the tools, Rust, the uv tools and the agent tooling.
 
-An installed copy (see [Installation](installation.md)) is updated with `rotm update` instead. To see whether an update is waiting without installing anything, run `rotm update --check`: it fetches the copy's branch and prints `Up to date.` or `2 updates are waiting. Run rotm update.`, leaving the copy as it was. Add `--json` for `{"mode":"installed","branch":"stable","behind":2}`. In a development clone it prints `This is a development clone. Pull it yourself.` (`"behind":null` in JSON) and exits 0. A failed fetch, or a copy that is not on a branch, exits 1 with one line on stderr. The [menu bar app](menu-bar.md) shows the same count in its menu, runs `rotm update -y` from its **Update…** line, and upgrades itself through mise when you choose to.
+## The repository's own updates
 
 The repo's own pins get update PRs from [Renovate](https://docs.renovatebot.com/) (config in [`renovate.json`](../renovate.json)): `package.json` and its `packageManager` pnpm, the single-version tools in the global mise config, and the action pins and `setup-python` version in `.github/workflows/`. It waits 7 days after a release, like `pnpm-workspace.yaml`'s `minimumReleaseAge`, opens or refreshes the daily `@ampcode/plugin` snapshots only early on Monday (New York time), and keeps mise's `npm:typescript` below 7 and `azure-functions-core-tools` below 5. It skips mise's `node` and `python`: its mise manager reads only the first entry of a version list, so it would rewrite the default and leave the rest. Those, like `.nvmrc`'s `lts/*`, stay manual. The `check` workflow ([`.github/workflows/check.yml`](../.github/workflows/check.yml)) runs `pnpm check` on macOS for every PR, its PRs included, and every push to `main`. Its Dependency Dashboard issue lists held and pending updates; tick a PR's rebase box there to re-run the check on a PR opened before a workflow change. The packages in `30-packages.toml` and mise's `latest` entries stay with `sysup`; VS Code updates its own extensions.
+
+## After a VS Code update
 
 An update of VS Code replaces the files the SpaceBox UI Enhancer patched, so run **SpaceBox Enable UI Enhancer** again afterwards (see [vscode](../vscode/README.md#spacebox-ui-enhancer)).
 
@@ -51,7 +68,7 @@ An update of VS Code replaces the files the SpaceBox UI Enhancer patched, so run
 1. In 1Password, save your Mac login password as an item (a Login or Password item; any vault).
 1. Turn on **Settings → Developer → Integrate with 1Password CLI**. The `op` command is the `brew-cask:1password-cli` package.
 1. Copy the field's secret reference: open the item, click the arrow next to the password field → **Copy Secret Reference**. It looks like `op://Private/Mac login/password`.
-1. Store it with [`dotfiles-settings`](../settings/README.md), which keeps it in a git-ignored file inside the clone:
+1. Store it with [`dotfiles-settings`](../settings/README.md), which keeps it in `~/.config/rotm/config.override.toml`, a file of your own outside the repository:
 
    ```shell
    dotfiles-settings set updates.mac_password_op 'op://Private/Mac login/password'
