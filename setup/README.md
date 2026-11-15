@@ -52,6 +52,18 @@ The macOS preferences are deliberately not part of the run; use `set-defaults`. 
 
 To preview a run without changing anything, once `~/.config/mise` is the link: `cd ~ && mise bootstrap --dry-run --skip macos-defaults`. The [installation guide](../docs/installation.md#preview) has the form for a Mac without the link.
 
+## install.sh
+
+[`../install.sh`](../install.sh) is what the README's install line pipes into `bash`. It is the only script that runs before a copy exists, so it reads nothing from the repository. In order, it:
+
+1. Stops on anything but macOS on Apple Silicon.
+1. Installs the Command Line Tools when `xcode-select -p` fails. It asks for the password and installs them through `softwareupdate`, as Homebrew's installer does. When that finds nothing it opens Apple's installer window and waits, and when no window can open it stops.
+1. Installs mise from `https://mise.run` when `~/.local/bin/mise` (or `MISE_INSTALL_PATH`) is missing.
+1. Has mise fetch the branch into its `bootstrap-repo` and link `~/.config/mise` into it, with `--only final-hook`, which applies nothing. An existing mise is not checked against the floor here: `setup.sh` does that next, and a mise too old to know the flags fails with a hint to run `mise self-update`.
+1. Runs the copy's `setup.sh` with the terminal as its input, passing every flag that is not `--ref`, `--dry-run` or `--help`, and everything after a `--`.
+
+`--dry-run` stops after mise's preview. [`tests/install.sh`](tests/install.sh) runs it against stubs. The Command Line Tools step cannot run on a hosted runner, which has Xcode: a disposable VM without the tools is its proof.
+
 ## Installed copies
 
 A copy that `mise bootstrap --from` fetched lives in `~/.local/share/mise/bootstrap-repo` (under `$MISE_DATA_DIR` when that is set) and is updated by `rotm update`, never edited. `bin/lib/rotm-mode` prints `installed` for it and `clone` for any other folder. Four scripts read it:

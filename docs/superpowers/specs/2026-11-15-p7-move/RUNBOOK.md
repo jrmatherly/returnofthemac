@@ -14,19 +14,19 @@ How it works:
 ## Guest A
 
 1. In UTM, start the macOS guest with **Run without saving changes**.
-2. In the guest's Terminal, check the two tools the install needs:
+2. In the guest's Terminal, see which of the two tools the install needs are there. Install neither by hand:
 
    ```shell
    xcode-select -p
    ```
 
-   It prints a folder. When it says the tools are missing, run `xcode-select --install` and wait for it to finish. Then:
+   It prints a folder, or says the tools are missing. Then:
 
    ```shell
    ls ~/.local/bin/mise
    ```
 
-   **Tell the session** what both printed, and install neither by hand: `install.sh` installs what is missing, and this run is its first on a real Mac. **Not run on the host:** its two installers.
+   **Tell the session** what both printed. `install.sh` installs what is missing, and this run is its first on a real Mac. When the tools are missing it asks for the guest's password and installs them with no window; if a window opens instead, finish it and **tell the session**. **Not run on the host:** its two installers.
 
 3. Make the record folder:
 
@@ -34,7 +34,7 @@ How it works:
    mkdir -p "/Volumes/My Shared Files/vm-proof/p7"
    ```
 
-4. Run the README's install line, with `main` in the two places `stable` is, where the candidate is:
+4. Run the README's install line with `main` for `stable`, and `--ref main` so the copy follows `main` too, where the candidate is:
 
    ```shell
    curl -fsSL https://raw.githubusercontent.com/jrmatherly/returnofthemac/main/install.sh | bash -s -- --ref main
@@ -112,7 +112,7 @@ How it works:
 
 10. **Tell the session** that the rows are recorded. When it says they passed, or asks for nothing more, shut the guest down from the Apple menu. Nothing it did is kept.
 
-On the scratch copy of `9e79b81` on 2026-11-15, rows `a1` to `a5` and `a7` passed through the same `r`, with `DOTFILES` set to the copy because no setup had run: `a1` printed the hash, `a2` `installed`, `a3` `"mode": "installed"`, `"branch": "main"`, `"commit": "9e79b81"`, `a4` `2026.11.8 macos-arm64 (2026-11-13)`, `a5` only `exit 0`, and `a7` `Up to date.`
+The rows' commands were checked before the candidate existed. On a scratch copy of `9e79b81`, the candidate's grandparent, on 2026-11-15, rows `a1` to `a5` and `a7` passed through the same `r`, with `DOTFILES` set to the copy because no setup had run: `a1` printed the hash, `a2` `installed`, `a3` `"mode": "installed"`, `"branch": "main"`, `"commit": "9e79b81"`, `a4` `2026.11.8 macos-arm64 (2026-11-13)`, `a5` only `exit 0`, and `a7` `Up to date.`
 
 ## Guest B
 

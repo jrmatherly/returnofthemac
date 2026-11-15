@@ -29,14 +29,18 @@ install_clt() {
   echo "Installing the Command Line Tools (for git). This asks for your password."
   # A subshell, so its trap removes the placeholder on Ctrl-C too
   (
+    sudo touch "$placeholder" || exit 1
     trap 'sudo rm -f "$placeholder"' EXIT
-    sudo touch "$placeholder"
     label=$(softwareupdate -l 2> /dev/null | sed -n 's/^.*Label: \(Command Line Tools.*\)$/\1/p' | sort -V | tail -1)
     [ -n "$label" ] && sudo softwareupdate -i "$label" && sudo xcode-select --switch /Library/Developer/CommandLineTools
   ) || true
   xcode-select -p > /dev/null 2>&1 && return
-  echo "Finish the installer window that opens. This waits for it: Ctrl-C stops the wait, and the line can be run again."
-  xcode-select --install > /dev/null 2>&1 || true
+  # No window can open over ssh, and the wait below would never end
+  if ! xcode-select --install > /dev/null 2>&1; then
+    echo "install: could not install the Command Line Tools. Run xcode-select --install on the Mac itself, then this again" >&2
+    exit 1
+  fi
+  echo "Finish the installer window that opened. This waits for it: Ctrl-C stops the wait, and the line can be run again."
   until xcode-select -p > /dev/null 2>&1; do sleep 5; done
 }
 
@@ -47,6 +51,11 @@ main() {
     case "$1" in
       --ref)
         ref=${2:?--ref needs a branch}
+        case "$ref" in -*)
+          echo "install: --ref needs a branch, not $ref" >&2
+          exit 1
+          ;;
+        esac
         shift
         ;;
       --dry-run) dry=1 ;;
@@ -89,13 +98,15 @@ main() {
       exit 0
     fi
     echo "Installing mise…"
-    curl -fsSL https://mise.run | sh
+    # Its closing advice is to add mise to ~/.zshrc, which setup.sh links itself
+    curl -fsSL https://mise.run | MISE_INSTALL_HELP=0 sh
   fi
 
   local copy="${MISE_DATA_DIR:-$HOME/.local/share/mise}/bootstrap-repo"
   # --only final-hook: fetch and link, apply nothing. setup.sh does the installing
   if ! "$mise" -E rotm-installed bootstrap ${dry:+--dry-run} --from "$repo?ref=$ref" --config-dir tilde/.config/mise --save-env --only final-hook; then
-    [ -z "$had_mise" ] || echo "install: if mise did not know a flag above, it is too old: run $mise self-update, then this again" >&2
+    echo "install: mise could not fetch the copy. Move aside what it names and run this again" >&2
+    [ -z "$had_mise" ] || echo "install: if it did not know a flag, this mise is too old: run $mise self-update first" >&2
     exit 1
   fi
   [ -z "$dry" ] || exit 0

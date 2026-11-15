@@ -26,9 +26,10 @@ stub() {
 }
 stub "$tmp/bin/uname" 'case "$1" in -s) echo "${FAKE_OS:-Darwin}" ;; -m) echo arm64 ;; esac'
 # Fails until softwareupdate's stub has "installed" the tools
-stub "$tmp/bin/xcode-select" "[ \"\$1\" != -p ] || [ ! -f '$tmp/no-clt' ]; rc=\$?; [ \"\$1\" = -p ] || echo xcode-select \"\$@\" >> '$log'; exit \$rc"
-stub "$tmp/bin/sudo" 'exec "$@"'
-stub "$tmp/bin/softwareupdate" "if [ \"\$1\" = -l ]; then printf '* Label: Command Line Tools for Xcode-16.0\\n\\tTitle: x\\n* Label: Command Line Tools for Xcode-26.1\\n'; else echo softwareupdate \"\$@\" >> '$log'; rm '$tmp/no-clt'; fi"
+stub "$tmp/bin/xcode-select" "if [ \"\$1\" = -p ]; then [ ! -f '$tmp/no-clt' ]; exit; fi; echo xcode-select \"\$@\" >> '$log'; [ \"\$1\" != --install ] || { [ -z \"\${FAKE_NO_GUI:-}\" ] && rm '$tmp/no-clt'; }"
+# touch and rm name the real placeholder in /tmp, so they are logged, not run
+stub "$tmp/bin/sudo" "case \"\$1\" in touch | rm) echo sudo \"\$@\" >> '$log' ;; *) exec \"\$@\" ;; esac"
+stub "$tmp/bin/softwareupdate" "if [ \"\$1\" = -l ]; then [ -z \"\${FAKE_NO_LABEL:-}\" ] && printf '* Label: Command Line Tools for Xcode-16.0\\n\\tTitle: x\\n* Label: Command Line Tools for Xcode-26.1\\n'; else echo softwareupdate \"\$@\" >> '$log'; rm '$tmp/no-clt'; fi"
 # What https://mise.run would do: put a mise where the script looks for it
 stub "$tmp/bin/curl" "echo \"echo curl \$* >> '$log'; cp '$tmp/mise' '$HOME/.local/bin/mise'\""
 stub "$tmp/mise" "echo mise \"\$@\" >> '$log'; exit \${FAKE_MISE_RC:-0}"
@@ -36,6 +37,7 @@ stub "$copy/setup.sh" "echo setup \"\$@\" >> '$log'"
 export PATH="$tmp/bin:/usr/bin:/bin"
 unset MISE_INSTALL_PATH MISE_DATA_DIR
 
+placeholder=/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
 repo=$(sed -n 's/^repo=//p' "$root/install.sh")
 fetch() { echo "--from $repo?ref=$1 --config-dir tilde/.config/mise --save-env --only final-hook"; }
 expect() { # <name> <the log's lines>...
@@ -69,10 +71,23 @@ expect "what follows -- is setup.sh's, even this script's own flags" \
 
 touch "$tmp/no-clt"
 bash "$root/install.sh" > /dev/null
-expect "missing Command Line Tools: the newest label is installed and selected before mise runs" \
-  "softwareupdate -i Command Line Tools for Xcode-26.1" "xcode-select --switch /Library/Developer/CommandLineTools" \
-  "mise -E rotm-installed bootstrap $(fetch stable)" "setup"
-[ ! -e /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress ] || fail "the placeholder was left behind"
+expect "missing Command Line Tools: the newest label is installed and selected, and the placeholder removed, before mise runs" \
+  "sudo touch $placeholder" "softwareupdate -i Command Line Tools for Xcode-26.1" "xcode-select --switch /Library/Developer/CommandLineTools" \
+  "sudo rm -f $placeholder" "mise -E rotm-installed bootstrap $(fetch stable)" "setup"
+
+touch "$tmp/no-clt"
+FAKE_NO_LABEL=1 bash "$root/install.sh" > /dev/null
+expect "softwareupdate lists no tools: the installer window is opened and waited for" \
+  "sudo touch $placeholder" "sudo rm -f $placeholder" "xcode-select --install" "mise -E rotm-installed bootstrap $(fetch stable)" "setup"
+
+touch "$tmp/no-clt"
+if FAKE_NO_LABEL=1 FAKE_NO_GUI=1 bash "$root/install.sh" > /dev/null 2> "$tmp/err"; then fail "no tools and no window must stop the run"; fi
+grep 'Command Line Tools' "$tmp/err" > /dev/null || fail "the message when no window can open"
+grep '^mise' "$log" > /dev/null && fail "mise ran without the Command Line Tools"
+rm -f "$log" "$tmp/no-clt"
+
+if bash "$root/install.sh" --ref -y > /dev/null 2>&1; then fail "--ref followed by a flag must stop"; fi
+[ ! -f "$log" ] || fail "--ref followed by a flag ran something"
 
 if FAKE_MISE_RC=1 bash "$root/install.sh" > /dev/null 2> "$tmp/err"; then fail "a failed fetch must stop the run"; fi
 grep -q 'self-update' "$tmp/err" || fail "a failed fetch on an existing mise names self-update"
