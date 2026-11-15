@@ -128,6 +128,19 @@ async def main():
         assert "Permission denied" in str(app.query_one("#error", Static).content)
         fake.fail = None; app.refresh_values(); await pilot.pause()
 
+        app.query_one("#w-t-name", Input).focus()
+        await pilot.press("end", "X", "tab"); await pilot.pause()
+        assert fake.overrides["T_NAME"] == "seededX", "Tab saves a single-line field, as it saves a lines box"
+        app.query_one("#w-t-name", Input).focus()
+        await pilot.press("end", "Y"); await pilot.pause()
+        fake.overrides["T_NAME"] = "elsewhere"; app.refresh_values(); await pilot.pause()
+        assert app.query_one("#w-t-name", Input).value == "seededXY", "a change on disk does not replace a typed edit"
+        assert any("changed elsewhere" in str(n.message) for n in app._notifications)
+        await pilot.press("enter"); await pilot.pause()
+        assert fake.overrides["T_NAME"] == "seededXY"
+        fake.overrides.pop("T_NAME"); app.refresh_values(); await pilot.pause()
+        assert app.query_one("#w-t-name", Input).value == "seeded", "a box with no edit follows the disk"
+
         fake.overrides["T_PICK"] = "b"; fake.touch()
         await pilot.pause(2.5)
         assert app.query_one("#w-t-pick", Select).value == "b", "a second UI's write shows up"

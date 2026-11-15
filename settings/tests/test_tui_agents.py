@@ -88,8 +88,14 @@ async def test_lines_editor_saves_on_blur():
         assert fake.writes == [("hindsight.paths", "~/dev\n/opt/src")]
         ed.focus(); await pilot.press("end", "p"); await pilot.pause()
         assert "p\n" in ed.text + "\n" and not isinstance(app.screen, StackScreen), "p types into the box"
+        await pilot.press("backspace", "tab"); await pilot.pause()
         fake.values["hindsight.paths"] = "~/work"; app.refresh_values(); await pilot.pause()
-        assert ed.text == "~/work" and len(fake.writes) == 1, "a file changed elsewhere redraws without a save"
+        assert ed.text == "~/work" and len(fake.writes) == 1, "a box without focus redraws without a save"
+        ed.focus(); await pilot.press("end", "p"); await pilot.pause()
+        fake.values["hindsight.paths"] = "~/other"; app.refresh_values(); await pilot.pause()
+        assert ed.text.endswith("p") and len(fake.writes) == 1, "a change on disk does not replace a typed edit"
+        await pilot.press("tab"); await pilot.pause()
+        assert fake.writes[-1] == ("hindsight.paths", "~/workp"), fake.writes
 
 
 async def test_a_read_failure_saves_nothing_from_a_focused_box():

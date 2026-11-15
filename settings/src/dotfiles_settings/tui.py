@@ -130,13 +130,17 @@ class SettingsApp(App):
             for w in self.query(f"#w-{slug(s)}, #r-{slug(s)}"):
                 w.disabled = bool(self.error) or s.access == "ro"
 
-    def redraw(self, s: Setting) -> None:
+    def redraw(self, s: Setting, was: Value | None = None) -> None:
+        """was: the value before this refresh, or None to replace the widget's text whatever it holds."""
         v = self.values.get(s.id)
         if v is None:
             return
         # self.values is current before the widget changes, so the Changed event this fires is a no-op
         w = self.query_one(f"#w-{slug(s)}")
-        if isinstance(w, Switch):
+        if (was is not None and w is self.focused and isinstance(w, (Input, LinesEditor))
+                and w.value != (was.value or "")):
+            self.notify(f"{s.label} changed elsewhere. Your edit is kept, and saving it replaces that change.")
+        elif isinstance(w, Switch):
             w.value = v.value == s.true_value
         elif isinstance(w, Select):
             if v.value in s.choices:
@@ -156,10 +160,13 @@ class SettingsApp(App):
             button.remove()
 
     def refresh_values(self, force: Setting | None = None) -> None:
+        before = self.values
         changed = self.read_all()
         for s in self.settings:
-            if s.id in changed or s is force:
+            if s is force:
                 self.redraw(s)
+            elif s.id in changed:
+                self.redraw(s, before.get(s.id))
         self.show_state()
 
     def poll(self) -> None:
@@ -212,10 +219,12 @@ class SettingsApp(App):
         if s and event.value != Select.NULL:
             self.commit(s, str(event.value))
 
-    def on_input_submitted(self, event: Input.Submitted) -> None:
+    def on_input_submitted(self, event: Input.Submitted | Input.Blurred) -> None:
         s = self.setting_of(event.input)
         if s and event.value != (self.values[s.id].value or ""):
             self.commit(s, event.value)
+
+    on_input_blurred = on_input_submitted  # Tab saves a field, as blur saves a lines box
 
     def on_lines_editor_submitted(self, event: LinesEditor.Submitted) -> None:
         if s := self.setting_of(event.editor):
