@@ -4,7 +4,11 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 ## Open plans
 
-None. P7 (the owner's Mac moves to `stable`) is not written. It is next: [P6](completed/2026-11-15-p6-docs-for-the-new-path.md) finished on 2026-11-15.
+| Plan | Spec | Tasks | State |
+| --- | --- | --- | --- |
+| [P7 stable and the owner's Mac](2026-11-15-p7-stable-and-the-owners-mac.md) | [installable setup](../specs/2026-11-11-installable-setup-profiles-and-sync.md), the P7 brief | 6 | Written on 2026-11-15, not reviewed and not started. Tasks 1, 4 and 5 need the owner at the guest or the Mac, and Task 2 is the owner's push. Run its tasks in order |
+
+[P6](completed/2026-11-15-p6-docs-for-the-new-path.md) finished on 2026-11-15.
 
 The four audit plans were each checked line by line against the code on 2026-11-14 and corrected. All four are finished and filed in `completed/`: [install and opt-outs](completed/2026-11-14-audit-install-and-opt-outs.md), [settings tool](completed/2026-11-14-audit-settings-tool.md), [gate, CI and docs](completed/2026-11-14-audit-gate-ci-and-docs.md) and [menu bar app](completed/2026-11-14-audit-menu-bar-app.md). Each opens with an "Outcome" table of its commits. Stages 2 to 5 below ran on 2026-11-14, one commit per task, each with its failing check seen first. Stage 1 is done.
 
