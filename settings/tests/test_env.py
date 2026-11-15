@@ -132,6 +132,8 @@ if shutil.which("mise"):
     # invalid TOML: the error names the file
     env.override_path().write_text("[env]\nbroken = [\n")
     raises(lambda: a.read(S("T_VAL")), SettingsError, "config.override.toml")
+    env.override_path().write_bytes(b'[env]\nT = "\xff"\n')
+    raises(lambda: a.read(S("T_VAL")), SettingsError, "config.override.toml")
     env.override_path().unlink()
     assert env.read_override() == {} and not env.override_path().exists()
     a.reset(S("T_VAL"))

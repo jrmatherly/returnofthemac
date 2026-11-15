@@ -12,6 +12,10 @@ class InvalidValue(SettingsError):
     """A value the setting does not accept (exit 2)."""
 
 
+# What a front end reports in one line. Not Exception, so a bug still shows its traceback.
+FAILURES = (SettingsError, OSError, UnicodeDecodeError)
+
+
 class Source(Enum):
     OVERRIDE = "override"
     SEED = "seed"

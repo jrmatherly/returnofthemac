@@ -68,7 +68,7 @@ The one row in the Dotfiles section, `dotfiles.links`, is the `dotfile` kind and
 
 In Claude Code, `set`, `reset` and `apply` ask first.
 
-Exit 1 is any other failure: mise missing or older than 2026.11.8, an override file that is not valid TOML, a failed mise call. Every failure prints one `dotfiles-settings: <message>` line to stderr, with no traceback. `--section` matches the section name in any case. The `env` kind has nothing to apply.
+Exit 1 is any other failure: mise missing or older than 2026.11.8, an override file that is not valid TOML, a file that cannot be read or is not UTF-8, a failed mise call. Every failure prints one `dotfiles-settings: <message>` line to stderr, with no traceback. `--section` matches the section name in any case. The `env` kind has nothing to apply.
 
 A setting's JSON object has these seventeen keys:
 

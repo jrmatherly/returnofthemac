@@ -10,7 +10,7 @@ from textual.widgets import Button, Footer, Input, Label, ListItem, ListView, Se
 from . import registry
 from .cli import normalize
 from .adapters import tool
-from .model import Adapter, Setting, SettingsError, Source, Value, note_for
+from .model import FAILURES, Adapter, Setting, Source, Value, note_for
 from .tui_agents import LinesEditor, SeatsEditor, StackScreen
 
 CSS = """
@@ -110,7 +110,7 @@ class SettingsApp(App):
         """Re-read every value; returns the ones that changed. A failure sets self.error."""
         try:
             fresh = {s.id: self.adapters[s.kind].read(s) for s in self.settings}
-        except SettingsError as e:
+        except FAILURES as e:
             self.error = str(e)
             return {}
         self.error = None
@@ -175,7 +175,7 @@ class SettingsApp(App):
             if value == (self.values[s.id].value or ""):
                 return
             adapter.write(s, value)
-        except SettingsError as e:
+        except FAILURES as e:
             self.notify(str(e), severity="error")
             self.refresh_values(force=s)
             return
@@ -189,7 +189,7 @@ class SettingsApp(App):
         adapter = self.adapters[s.kind]
         try:
             adapter.reset(s)
-        except SettingsError as e:
+        except FAILURES as e:
             self.notify(str(e), severity="error")
             self.refresh_values(force=s)
             return

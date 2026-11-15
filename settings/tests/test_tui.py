@@ -19,12 +19,17 @@ class FakeAdapter:
     def __init__(self, seeds: dict[str, str]):
         self.overrides: dict[str, str] = {}
         self.seeds = seeds
-        self.fail: str | None = None
-        self.refuse: str | None = None
+        self.fail: str | Exception | None = None
+        self.refuse: str | Exception | None = None
         self.writes: list[tuple[str, str]] = []
+        self.reads = 0
         self.path = tmp / "watched"
         self.ticks = 0
         self.touch()
+
+    @staticmethod
+    def error(e: str | Exception) -> Exception:
+        return e if isinstance(e, Exception) else SettingsError(e)
 
     def touch(self):
         self.ticks += 1
@@ -34,8 +39,9 @@ class FakeAdapter:
         return [self.path]
 
     def read(self, s: Setting) -> Value:
+        self.reads += 1
         if self.fail:
-            raise SettingsError(self.fail)
+            raise self.error(self.fail)
         seed = self.seeds.get(s.key)
         if s.key in self.overrides:
             return Value(s.id, self.overrides[s.key], Source.OVERRIDE, seed, False)
@@ -45,11 +51,13 @@ class FakeAdapter:
 
     def write(self, s: Setting, value: str) -> None:
         if self.refuse:
-            raise SettingsError(self.refuse)
+            raise self.error(self.refuse)
         self.writes.append((s.key, value))
         self.overrides[s.key] = value
 
     def reset(self, s: Setting) -> None:
+        if self.refuse:
+            raise self.error(self.refuse)
         self.overrides.pop(s.key, None)
 
 
@@ -107,6 +115,19 @@ async def main():
         assert any(n.severity == "error" and "nope" in str(n.message) for n in app._notifications)
         fake.refuse = None
 
+        fake.refuse = FileNotFoundError(2, "No such file or directory", "bin/hindsight-memory")
+        app.query_one("#w-t-name", Input).focus()
+        await pilot.press("end", "?", "enter"); await pilot.pause()
+        assert app.is_running and any("hindsight-memory" in str(n.message) for n in app._notifications)
+        fake.overrides["T_NAME"] = "set"; app.refresh_values(); await pilot.pause()
+        app.query_one("#w-t-name", Input).focus(); await pilot.press("ctrl+r"); await pilot.pause()
+        assert app.is_running and fake.overrides["T_NAME"] == "set", "a reset that cannot run is a notice"
+        fake.refuse = None; fake.overrides.pop("T_NAME")
+        fake.fail = PermissionError(13, "Permission denied", "config.override.toml")
+        app.refresh_values(); await pilot.pause()
+        assert "Permission denied" in str(app.query_one("#error", Static).content)
+        fake.fail = None; app.refresh_values(); await pilot.pause()
+
         fake.overrides["T_PICK"] = "b"; fake.touch()
         await pilot.pause(2.5)
         assert app.query_one("#w-t-pick", Select).value == "b", "a second UI's write shows up"
@@ -123,6 +144,13 @@ async def main():
     async with empty.run_test(size=(120, 40)) as pilot:
         await pilot.pause()
         assert not empty.query("#sections ListItem"), "empty means empty, not the real registry"
+
+    locked = FakeAdapter(seeds={})
+    locked.fail = PermissionError(13, "Permission denied", "config.override.toml")
+    unreadable = SettingsApp(SETTINGS, {"env": locked})
+    async with unreadable.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        assert "Permission denied" in str(unreadable.query_one("#error", Static).content)
 
 asyncio.run(main())
 print("ok")

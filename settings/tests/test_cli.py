@@ -153,6 +153,13 @@ if shutil.which("mise"):
     env.override_path().write_text("[env]\nbroken = [\n")
     code, _, err = run("list", "--json")
     assert code == 1 and "config.override.toml" in err and "Traceback" not in err
+    env.override_path().write_bytes(b'[env]\nT = "\xff"\n')
+    code, _, err = run("list", "--json")
+    assert code == 1 and "config.override.toml" in err and "Traceback" not in err and err.count("\n") == 1, err
+    (conf / "miserc.local.toml").write_bytes(b'env = ["\xff"]\n')
+    code, _, err = run("profile", "list")
+    assert code == 1 and err.startswith("dotfiles-settings: ") and err.count("\n") == 1 and "Traceback" not in err, err
+    (conf / "miserc.local.toml").unlink()
     env.override_path().unlink()
 else:
     print("skipped: mise not found")

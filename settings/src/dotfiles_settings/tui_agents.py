@@ -11,7 +11,7 @@ from textual.widget import Widget
 from textual.widgets import Button, DataTable, Footer, Select, Static, TextArea
 
 from .adapters import tool
-from .model import SettingsError
+from .model import FAILURES
 
 NO_EFFORT = ("inherit", "codex")
 
@@ -165,7 +165,7 @@ class StackScreen(Screen):
             if keep or off:
                 self.app.call_from_thread(self.notify, tool.stack_apply(self.cwd, keep=list(keep), off=list(off)))
             rows, state = tool.stack_scan(self.cwd), ""
-        except SettingsError as e:
+        except FAILURES as e:
             self.app.call_from_thread(self.notify, str(e), severity="error")
             rows, state = self.rows, "Scan failed"
         self.app.call_from_thread(self.fill, rows, state)

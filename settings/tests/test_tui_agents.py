@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from textual.app import App
-from textual.widgets import DataTable, Select
+from textual.widgets import DataTable, Select, Static
 
 from dotfiles_settings import registry
 from dotfiles_settings.adapters import tool
@@ -120,6 +120,12 @@ async def test_stack_screen_keep_and_off():
         assert len(app.screen_stack) == 2, "p on the stack screen opens no second one"
         await pilot.press("escape"); await pilot.pause()
         assert not isinstance(app.screen, StackScreen)
+
+        def missing(cwd):
+            raise FileNotFoundError(2, "No such file", "bin/claude-stack")
+        tool.stack_scan = missing
+        await pilot.press("p"); await pilot.pause(0.2)
+        assert app.is_running and str(app.screen.query_one("#stack-state", Static).content) == "Scan failed"
 
 
 async def main():

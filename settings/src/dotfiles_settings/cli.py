@@ -5,7 +5,7 @@ from pathlib import Path
 
 from . import mise, profile, registry, sync
 from .adapters import ADAPTERS, tool
-from .model import InvalidValue, Setting, SettingsError, Value, note_for
+from .model import FAILURES, InvalidValue, Setting, SettingsError, Value, note_for
 
 TRUE = ("true", "on", "yes", "1")
 FALSE = ("false", "off", "no", "0")
@@ -192,7 +192,7 @@ def main(argv: list[str] | None = None) -> None:
     args = parser().parse_args(argv)
     try:
         run(args)
-    except SettingsError as e:
+    except FAILURES as e:
         print(f"dotfiles-settings: {e}", file=sys.stderr)
         raise SystemExit(3 if isinstance(e, ReadOnly) else 2 if isinstance(e, InvalidValue) else 1) from None
     raise SystemExit(0)

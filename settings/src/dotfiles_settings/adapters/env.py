@@ -35,7 +35,7 @@ def read_env(path: Path) -> dict[str, str]:
         data = tomllib.loads(path.read_text())
     except FileNotFoundError:
         return {}
-    except tomllib.TOMLDecodeError as e:
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as e:
         raise SettingsError(f"{path}: {e}") from None
     table = data.get("env", {})
     return {k: v for k, v in table.items() if isinstance(v, str)} if isinstance(table, dict) else {}
