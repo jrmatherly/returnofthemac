@@ -10,6 +10,28 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md`. Read its Goal and "Decisions the owner made" in full before Task 1. This plan implements the P6 brief, and finding I22 of `docs/superpowers/specs/completed/2026-11-14-project-audit.md` (its decision 8).
 
+## Outcome (2026-11-15)
+
+Run natively in one session, with the docs audit of Task 8 and one independent code review at the end. Every commit passed `pnpm check`.
+
+| Task | Commit | Difference from the plan |
+| --- | --- | --- |
+| 1. Link and anchor check | `d190531` | The script is `setup/tests/doc-links.py`, not `bin/lib/test-doc-links`: the gate and the lint hook read every `bin/lib/test-*` file as bash. It has no `--self-test` flag and always runs its cases first. First run: 301 relative links in 60 pages, none broken |
+| 2. fastfetch's seeded config | `405de82` | None. Removing `depends` failed the fourth case, as measured |
+| 3. lazygit's second file | `5916f6d` | None. lazygit has no way to print its merged config, so the merge order still rests on its documentation |
+| 4. README | `576820c` | Also corrected `rotm settings` to `rotm settings tui` in the README and `docs/installation.md`: a bare `rotm settings` prints usage and exits |
+| 5. Installation page | `8127115` | The preview check's literal `bootstrap --from` does not match, because `--dry-run` sits between the two words. Measured in a scratch home: the dry run prints the `git clone` and checkout it would run, exits 0, and fetches and links nothing. The page says that |
+| 6. Updating page | `36a4945` | The VS Code paragraph has its own heading, "After a VS Code update", since it is not about the repository |
+| 7. Make it yours | `f3617df` | The Claude row was confirmed in `restore_plugins`: a tracked plugin you uninstall is installed again, and one you disable stays disabled |
+| 8. Docs audit | `12c9d0d` | `docs-auditor` reported twelve mismatches in nine files. All twelve held when checked against the line cited, so there is no table of contradicted findings. None was in the install line, the `rotm` commands or the installed table |
+| Review | `e0e4276` | Not a task of the plan. The review found the installed-migration case passed without a migration, and blind spots in the link check (titled and nested links, case-only mismatches, fence tracking). Both are fixed, and the reviewer's mutation now fails |
+
+The title is "Return of the Mac" and the run was native, both taken from the record (decision 6, and the owner's word to continue) without asking again.
+
+Not done, and not planned here: Mole's two whitelists are links into the copy on an installed copy, so Mole's own editors would change it. `docs/mole.md` says to keep a list outside the copy. It is in the plan index beside the `obsidian-vault capture` guard.
+
+P6's "Done when" was met on `main` at `e0e4276`: the audit's findings are corrected, and it was not run a second time.
+
 ## Global Constraints
 
 - The gate is `pnpm check`. Every task ends with it passing. Edit and commit in separate Bash calls.

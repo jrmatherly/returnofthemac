@@ -4,11 +4,7 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 ## Open plans
 
-| Plan | Spec | Tasks | State |
-| --- | --- | --- | --- |
-| [P6 docs for the new path](2026-11-15-p6-docs-for-the-new-path.md) | [installable setup](../specs/2026-11-11-installable-setup-profiles-and-sync.md), the P6 brief, and audit finding I22 | 8 | Written and reviewed on 2026-11-15 (its last section lists what the review changed). Not started: it waits on the owner's word on the README's title and on how to run it. Run its tasks in order. Tasks 2, 3 and 7 all touch `docs/forking.md`'s subject, and Task 7 needs 2 and 3. |
-
-P7 (the owner's Mac moves to `stable`) is not written. It follows P6.
+None. P7 (the owner's Mac moves to `stable`) is not written. It is next: [P6](completed/2026-11-15-p6-docs-for-the-new-path.md) finished on 2026-11-15.
 
 The four audit plans were each checked line by line against the code on 2026-11-14 and corrected. All four are finished and filed in `completed/`: [install and opt-outs](completed/2026-11-14-audit-install-and-opt-outs.md), [settings tool](completed/2026-11-14-audit-settings-tool.md), [gate, CI and docs](completed/2026-11-14-audit-gate-ci-and-docs.md) and [menu bar app](completed/2026-11-14-audit-menu-bar-app.md). Each opens with an "Outcome" table of its commits. Stages 2 to 5 below ran on 2026-11-14, one commit per task, each with its failing check seen first. Stage 1 is done.
 
@@ -19,6 +15,7 @@ Found while running them, and not in any plan:
 - The "restore it with git checkout" hint at `setup/dash.sh:158` is wrong on an installed copy. Not fixed.
 - Install 9 as planned still installed a changed or unchecked skill for an agent that lacked it. `5e75b83` holds it until `claude-config restore skills --accept <name>`.
 - Not fixed, found while reviewing the P6 plan on 2026-11-15: `obsidian-vault capture` has no installed-copy guard, so on an installed copy it writes into the checkout and `rotm update` then refuses.
+- Not fixed, found by the P6 docs audit on 2026-11-15: on an installed copy Mole's two whitelists are links into the checkout, so `mo clean --whitelist` and `mo optimize --whitelist` write into it and `rotm update` then refuses. `docs/mole.md` says to keep a list outside the copy.
 - Not fixed: `--accept` installs whatever the source holds at that moment, and a first install on a new Mac is unpinned. The `skills` CLI takes `owner/repo#<sha>`, but the lock records a folder hash and no commit, so `claude-config save` would have to record one.
 
 Stage 6 ran on 2026-11-14 and 2026-11-15 with the owner's answers: decision 1 declined, decisions 2, 4, 5 and 6 as recommended, decision 3 for the docs only, decision 7 at 48 hours, and Settings 9 approved.
