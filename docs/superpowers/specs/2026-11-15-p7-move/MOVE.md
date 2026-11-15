@@ -5,7 +5,8 @@ This moves one Mac, by hand and once, from a clone install to a copy that follow
 How it works:
 
 - You type every line, in order, in **one Terminal window**. Step 3 removes `~/.zshrc`, so open no other shell until step 7 says to.
-- A step's block ran as written in a scratch home shaped like this Mac on 2026-11-15, in `zsh`, with only the home folder changed, and ended in the state the step names. The lines that could not run there say **Not run on the host**. The guest rehearsal (Task 4) is their first run.
+- A step's block ran as written in a scratch home shaped like this Mac on 2026-11-15, in `zsh`, with only the home folder changed, and ended in the state the step names. The lines that could not run there say **Not run on the host**. The guest rehearsal ran them the same day (`RUNBOOK.md`, "Guest B"), and [what it changed](#what-the-guest-rehearsal-changed) is at the end.
+- The first line of the opening block is not optional. Your own shell reads `find` as `fd` and `rm` as `trash`, and refuses `>>` to a file that does not exist yet (`zsh/aliases.zsh`, `zsh/options.zsh`). Without that line `inclone` finds nothing and says so to no one.
 - When a line prints something this page does not expect, stop. [Roll back](#8-roll-back) works from any step.
 
 ## Before
@@ -17,12 +18,15 @@ How it works:
 Type this block first. Step 7's new window needs it again:
 
 ```shell
+setopt clobber; unalias cat cp find grep ls man mv ping rm top 2> /dev/null; unfunction git 2> /dev/null
 CLONE=~/dev/dotfiles COPY=~/.local/share/mise/bootstrap-repo KEEP=~/rotm-move-keep A="$HOME/Library/Application Support"
 P7=~/vm-proof/p7/mac   # in the guest: "/Volumes/My Shared Files/vm-proof/p7"
 r() { local row=$1; shift; { "$@"; echo "exit $?"; } > "$P7/$row.txt" 2>&1; tail -3 "$P7/$row.txt"; }
 # every link in the folders setup links into whose resolved target is inside the clone
 inclone() { find ~ ~/.config ~/.claude ~/.claude/rules ~/.claude/skills ~/.codex ~/.ssh ~/.gnupg ~/.config/mole ~/.local/share/mise/plugins "$A/Code" "$A/lazydocker" "$A/rtk" -maxdepth 1 -type l 2> /dev/null | sort -u | while IFS= read -r l; do case "$(realpath "$l" 2> /dev/null)" in "$CLONE" | "$CLONE"/*) echo "$l" ;; esac; done; }
 ```
+
+The first line is the one `zsh/aliases.zsh` runs for an agent's shell, plus `setopt clobber`. It comes before `inclone` because zsh writes an alias into a function when the function is defined. `inclone | wc -l` must print the link count, 46 on this Mac, before step 1: 0 means the line was missed.
 
 `inclone` resolves each link, so it finds a link through `~/dotfiles` as well as an absolute one. Its folders are the ones `40-dotfiles.toml` and the module fragments name a target in, plus mise's plugin folder. A new entry in another folder adds its folder here.
 
@@ -118,7 +122,7 @@ The first folder lists the six names. The clone's keeps its tracked files, `sett
 | Setup asks | Answer |
 | --- | --- |
 | `Press Enter key to continue…` | Enter |
-| `Load your saved settings from jrmatherly/rotm-settings before installing? [Y/n]` | **`n`**. The repository holds the P5 guests' test values, and Enter would load them. It appears only if the repository still exists |
+| `Load your saved settings from jrmatherly/rotm-settings before installing? [Y/n]` | **`n`**. The repository holds the P5 guests' test values, and Enter would load them. It appears only if the repository still exists, and the guest rehearsal was asked it |
 | The password, once | The login password |
 | The VS Code font preset | Enter, which keeps the saved one |
 | Git identity and signing | Not asked: `~/.gitconfig.local` exists |
@@ -189,7 +193,7 @@ It should print nothing, or each file it names holds a path you mean to keep. A 
 
 ## 8. Roll back
 
-From any step, with VS Code and Claude Code quit, in this order. Each line skips what its step had not yet done. A rollback from the end ran in the scratch home. A rollback from a step part way did not.
+From any step, with VS Code and Claude Code quit, in this order. Each line skips what its step had not yet done. A rollback from the end ran in the scratch home and in the guest. A rollback from a step part way did not.
 
 1. Take out what the move made. A seeded file that you have changed since is kept aside in `$KEEP`:
 
@@ -275,3 +279,15 @@ The plan's Task 3 text was the specification. Running it found these, each fixed
 | Deleting the real `Code/User` and `~/.config/gh` needed `rm -r` on folders holding state | Rollback step 2 moves both into `$KEEP` |
 | `r` takes one command, and rows `m2`, `m4` and `m6` are two commands or need the shell | They run through `eval` |
 | One apply under `rotm-installed` was enough for `mise dotfiles status --missing` to exit 0, where the plan expected two | Nothing to change: setup runs the apply |
+
+## What the guest rehearsal changed
+
+Guest B ran this page on 2026-11-15, on a guest reshaped to this Mac's layout (`RUNBOOK.md`, "Guest B"). Every row met its "Passes when", and no step's lines changed. One thing did:
+
+| Found | Change |
+| --- | --- |
+| In the owner's own shell `inclone` printed nothing, because `find` is an alias for `fd` there and the function's errors go to `/dev/null`. `rm` is `trash`, and `>>` to a new file fails under `no_clobber`. The scratch home ran `zsh -f`, which has none of the three | The opening block's first line, and the `inclone \| wc -l` check under it |
+
+The guest then ran the steps from four scripts in `~/vm-proof/p7/` on the host, not line by line: `move.zsh` (the start check through step 6), `rows.zsh` (step 7), `update.zsh` and `rollback.zsh` (section 8). They hold this page's lines, stop at the first result the page does not expect, and need no opening block, because `zsh <file>` reads no `~/.zshrc`. `move.zsh` adds one check: step 2 moves nothing unless all four files it moves are there. Their `P7` default is the guest's shared folder.
+
+What the rehearsal ran for the first time, all as written: step 4's fetch, step 6's `setup.sh` on a moved home and the REA line its warning printed, rows `m7`, `m8` and `m10` to `m13`, and section 8's `claude mcp` line and setup.

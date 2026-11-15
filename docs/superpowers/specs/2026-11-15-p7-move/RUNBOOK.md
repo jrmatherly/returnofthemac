@@ -150,13 +150,14 @@ This run rehearses [`MOVE.md`](MOVE.md) on a guest shaped like the owner's Mac, 
 3. Quit Terminal and open it again. Open VS Code, wait for its window and quit it (⌘Q). Then type `MOVE.md`'s opening block with the guest's record folder:
 
    ```shell
+   setopt clobber; unalias cat cp find grep ls man mv ping rm top 2> /dev/null; unfunction git 2> /dev/null
    CLONE=~/dev/dotfiles COPY=~/.local/share/mise/bootstrap-repo KEEP=~/rotm-move-keep A="$HOME/Library/Application Support"
    P7="/Volumes/My Shared Files/vm-proof/p7"
    r() { local row=$1; shift; { "$@"; echo "exit $?"; } > "$P7/$row.txt" 2>&1; tail -3 "$P7/$row.txt"; }
    inclone() { find ~ ~/.config ~/.claude ~/.claude/rules ~/.claude/skills ~/.codex ~/.ssh ~/.gnupg ~/.config/mole ~/.local/share/mise/plugins "$A/Code" "$A/lazydocker" "$A/rtk" -maxdepth 1 -type l 2> /dev/null | sort -u | while IFS= read -r l; do case "$(realpath "$l" 2> /dev/null)" in "$CLONE" | "$CLONE"/*) echo "$l" ;; esac; done; }
    ```
 
-   Every new Terminal window in this run needs this block again, with this `P7` line and not `MOVE.md`'s.
+   Every new Terminal window in this run needs this block again, with this `P7` line and not `MOVE.md`'s. Its first line was added by this run: without it step 4's `>>` fails and `inclone` finds nothing (`MOVE.md`, "What the guest rehearsal changed").
 
 ### Give it the state a used Mac has
 
@@ -268,3 +269,17 @@ A clone set up today links through `~/dotfiles`, has a real `~/.config/fastfetch
    **Not run on the host:** `rotm settings set` and `get`, and section 8's step 4.
 
 10. **Tell the session** the rows are recorded. Shut the guest down when it says so.
+
+### Result (2026-11-15)
+
+Passed. The guest was set up from a clone of `main` at `02be67df838bed0974d5e5e187d4eab0b0e847ad`, moved to a copy on `stable` at `73300a519691f6d0191063aed01407fca8676433`, updated across a promotion to `02be67d` and rolled back. Every row met its "Passes when". The rows are in the spec's "Verified facts". The newest mise release that day was 2026.11.8, and no row recorded the guest's version.
+
+What did not go as written, each fixed above or in `MOVE.md`:
+
+- **Step 4's `printf … >>` failed** with `no such file or directory`: the repo's `no_clobber` refuses `>>` to a new file. The guest ran it with `>>|`.
+- **Step 5's first line did nothing**, and `b0b` printed 2. `inclone` found no link, because `find` is `fd` in the owner's shell. With the aliases off it found 46, the line was run again and `b0b` printed 24. The other three lines had worked, through `trash` in place of `rm`. Rows `d1` to `d3` are the diagnosis.
+- **Steps 6 to 9 ran from four scripts in `~/vm-proof/p7/`** (`move.zsh`, `rows.zsh`, `update.zsh`, `rollback.zsh`), which hold the same lines. `move.log` and `rollback.log` beside the rows are their output.
+- **Step 7's diff listed six `.md` files**, not four. The promotion moved `stable` five commits.
+- **Step 8 ran in the same window** as step 7, not a new one: `b4` reads the file `~/.zshenv` links to, which no window changes.
+
+Setup on the moved home asked for Enter, the saved-settings question (answered `n`), the password and the font preset, and nothing about GitHub or git identity (the owner's report). It printed the REA warning, and its line was run.

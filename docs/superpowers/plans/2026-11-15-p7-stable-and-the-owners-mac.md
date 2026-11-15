@@ -17,7 +17,7 @@
 | 1. Promotion runbook and guest A | Done | `b80ff2f`, `2e0dbe9`, `73300a5`. Guest A passed on candidate `2e0dbe9` with mise 2026.11.8 (rows `a1` to `a8` in `~/vm-proof/p7/`, the spec's "Verified facts") |
 | 2. Promote `stable` | Done | `stable` moved from `d09f025` to `73300a5` (`f3f18f1` records it) |
 | 3. Move runbook | Done | `5d76cfa`, corrected by a review in `2e16095`. `MOVE.md` ends with what the scratch run changed from this plan |
-| 4. Guest B | Section written and reviewed (`9ed4da0` and the commit after it). The owner has not run it | `RUNBOOK.md`, "Guest B" |
+| 4. Guest B | Done | `9ed4da0`, `02be67d`. Guest B passed on 2026-11-15 (rows `b0` to `b8` and `m1` to `m13` in `~/vm-proof/p7/`, `RUNBOOK.md` "Result", the spec's "Verified facts"). `stable` moved from `73300a5` to `02be67d` in step 7 |
 | 5. Move the owner's Mac | Not started. Needs the owner's word in that session | |
 | 6. Close P7 and the spec | Not started | |
 
@@ -25,7 +25,8 @@ Differences from the plan as written:
 
 - **`install.sh` was added before guest A** (`0a403c6`, `7363c2c`), on the owner's request for a one-line installer. Guest A ran it, with the guest's Command Line Tools removed first, so the run proved the tools install, the mise install and setup's prompts after a piped start. The README's install line is now `curl … /stable/install.sh | bash`. `MOVE.md` step 4 keeps the by-hand mise line, since `install.sh` would start setup before step 5.
 - **The candidate was not `9e79b81`.** Guest A installs `main`'s head, so the candidate was the head once the runbook and `install.sh` had landed: `2e0dbe9`.
-- **Task 2 Step 4's commit** is `f3f18f1`. `main` has been ahead of `stable` by Markdown-only commits since. Guest B's step 7 promotes them.
+- **Task 2 Step 4's commit** is `f3f18f1`. `main` was ahead of `stable` by Markdown-only commits until guest B's step 7 promoted them.
+- **Guest B ran `MOVE.md` from scripts,** after its typed lines failed in the owner's shell (`find` is `fd` there). The scripts are beside the rows in `~/vm-proof/p7/` and hold the runbook's lines. They are not in the repository, so that `main` stays a Markdown-only step from `stable` (decision 9). Whether Task 5 types the lines or runs `move.zsh` is the owner's call in that session: decision 15 says by hand, and the scripts add no command to the product.
 
 ## Global Constraints
 
