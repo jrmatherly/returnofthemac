@@ -828,6 +828,7 @@ if command -v mise > /dev/null; then
   ! grep -q 'unknown field' <<< "$out" || fail "mise warns about an unknown key: $out"
   mise bootstrap files status | grep '/etc/pam.d/sudo_local' | grep -q 'owner root group wheel' || fail "sudo_local not declared with its owner"
   mise bootstrap user status | grep -q '^/opt/homebrew/bin/zsh' || fail "login shell not declared"
+  [ "$(mise settings get minimum_release_age 2> /dev/null)" = 48h ] || fail "config.toml does not hold new tool releases for 48 hours"
   # The same config with both modules off, in a copy, so the repo's own miserc.local.toml is untouched
   cp -R "$repo/tilde/.config/mise" "$tmp/mise-off"
   echo 'ignored_config_paths = ["conf.d/60-rotm-touchid.toml", "conf.d/60-rotm-loginshell.toml"]' > "$tmp/mise-off/miserc.local.toml"

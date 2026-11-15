@@ -23,7 +23,7 @@
 # CLI (`rea`) that drives Ghidra (the security module) and Hopper (the apps
 # module); setup/misc.sh registers `rea mcp` with Claude Code. It ships several
 # releases a day, so
-# mise's default 24 h release-age cutoff would hold `latest` a version or two
+# the 48 h release-age cutoff in config.toml would hold `latest` several versions
 # behind; shortened to 6 h for this tool. The cutoff also screens the tool's
 # transitive dependencies (mise passes it to its embedded npm client), which
 # is why it is not 0: a few hours still catches a pulled release. npm's own

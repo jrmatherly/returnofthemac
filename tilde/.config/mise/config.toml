@@ -28,6 +28,9 @@ python = ["3.14", "3.11", "3.12", "3.13", "3.15"]
 # relies on it, as does `bin/nnn`.
 # https://mise.jdx.dev/configuration/settings.html
 idiomatic_version_file_enable_tools = ["node", "python"]
+# Install a tool release only once it is 48 hours old, the owner's choice and
+# longer than mise's 24 h default. npm:rea-agents keeps its own 6 h.
+minimum_release_age = "48h"
 
 [settings.github]
 # gh keeps its token in the macOS Keychain, where mise's own reader (gh's
