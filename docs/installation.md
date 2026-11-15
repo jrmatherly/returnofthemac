@@ -74,13 +74,14 @@ The repo can live anywhere: the scripts resolve their own location, and `~/.zshe
 
 ## Run setup
 
-To automate the setup of your dotfiles on a new machine, use the [setup](../setup.sh) script.
+Both installs end in the same [setup](../setup.sh) script. On an installed copy the install line starts it, and `rotm install` runs it again. In a clone you run it yourself.
 
 > [!CAUTION]  
 > Use at your own risk!
 
 ```shell
-~/dev/dotfiles/setup.sh # after cloning as in step 2 above
+rotm install            # an installed copy, after the install line's first run
+~/dev/dotfiles/setup.sh # a clone, after cloning as in step 2 above
 ```
 
 `setup.sh` is a thin wrapper around [`mise bootstrap`](https://mise.jdx.dev/bootstrap.html). In order, it:
@@ -97,13 +98,13 @@ To automate the setup of your dotfiles on a new machine, use the [setup](../setu
 1. installs the VS Code extensions
 1. runs [`setup/dotfiles-extras.sh`](../setup/README.md#dotfiles-extrassh)
 
-A package or tool that fails to install only warns, and the run goes on. At the end, setup lists the run's warnings again (a missing GitHub login, a step of the bootstrap task that could not finish), so they do not scroll away, and also when a step stops the run early. The last thing on screen is then a list of what failed, with mise's reason when it printed one, and `setup.sh` exits 2 instead of 0. A tool's reason can be cut short: `mise install <tool>` from `~` shows the whole error. Anything else that fails, such as a part of `mise bootstrap` or the task, stops the run with mise's exit status and the earlier steps stay applied: fix what it reported and run `./setup.sh` again. Every step is safe to repeat, and rerunning `./setup.sh` is also how you apply later changes. Use it rather than a bare `mise bootstrap`, which also applies the macOS preferences and restarts Finder and the Dock. Setup never applies those: [`set-defaults`](#set-macos-defaults) does.
+A package or tool that fails to install only warns, and the run goes on. At the end, setup lists the run's warnings again (a missing GitHub login, a step of the bootstrap task that could not finish), so they do not scroll away, and also when a step stops the run early. The last thing on screen is then a list of what failed, with mise's reason when it printed one, and `setup.sh` exits 2 instead of 0. A tool's reason can be cut short: `mise install <tool>` from `~` shows the whole error. Anything else that fails, such as a part of `mise bootstrap` or the task, stops the run with mise's exit status and the earlier steps stay applied: fix what it reported and run setup again (`rotm install`, or `./setup.sh` in a clone). Every step is safe to repeat, and running setup again is also how you apply later changes. Use it rather than a bare `mise bootstrap`, which also applies the macOS preferences and restarts Finder and the Dock. Setup never applies those: [`set-defaults`](#set-macos-defaults) does.
 
 It exports telemetry opt-outs (.NET, PowerShell, Azure CLI, Azure MCP server, Azure Functions Core Tools, Aspire, CodeGraph, rtk, Claude Code error reports) before any of those tools is installed.
 
-Everything is then configured by editing files in the clone. For a diagram of what it runs, what it downloads and what needs `sudo`, see [setup/README.md](../setup/README.md#setupsh-wrapper).
+A clone is then configured by editing its files. An installed copy is configured through `rotm settings` and the files setup seeded for you, which [Make it yours](forking.md) lists. For a diagram of what it runs, what it downloads and what needs `sudo`, see [setup/README.md](../setup/README.md#setupsh-wrapper).
 
-Options:
+Options, which `rotm install` takes too:
 
 | Flag | Effect |
 | --- | --- |
@@ -114,17 +115,25 @@ Options:
 | `-h`, `--help` | Print usage and exit |
 | `-- <args>` | Pass the rest to `mise bootstrap`. `./setup.sh -- --skip packages` leaves the packages alone, `-- --upgrade` also upgrades the packages and tools, `-- --dry-run` previews. A `--skip` list is merged with the `macos-defaults` setup always skips. `--only` is refused: run `mise bootstrap --only <parts>` from `~` instead |
 
-Along the way it prompts for your git identity and commit signing (`~/.gitconfig.local`), and asks for your password once more when mise changes the login shell (`chsh` does not use sudo). A real file or folder where a link belongs stops the run: `mise dotfiles apply` names every such path and writes nothing. Move it aside, or adopt it with `mise dotfiles add <path>` (your file then replaces the tracked one, so check `git diff`), and run again. There is no prompt. `mise dotfiles apply --force` replaces the file with no backup. A link that points somewhere else is repointed without asking.
+Along the way it prompts for your git identity and commit signing (`~/.gitconfig.local`), and asks for your password once more when mise changes the login shell (`chsh` does not use sudo). A real file or folder where a link belongs stops the run: `mise dotfiles apply` names every such path and writes nothing. Move it aside and run setup again. In a clone you can adopt it instead with `mise dotfiles add <path>` (your file then replaces the tracked one, so check `git diff`). There is no prompt. `mise dotfiles apply --force` replaces the file with no backup. A link that points somewhere else is repointed without asking.
 
 The `touchid` module declares `/etc/pam.d/sudo_local`, which enables Touch ID for `sudo` (content, mode, owner `root:wheel`), and mise rewrites it when any of them differs.
 
-Tap formulae resolve through GitHub's API. mise asks `gh` for a token itself. When `gh` isn't signed in and `MISE_GITHUB_TOKEN` is unset, `setup.sh` installs `gh` on its own first, warns that without a login GitHub allows 60 API calls an hour, and asks whether to sign in now, before the packages and the tools spend the limit. Enter signs in with `gh auth login`; only `n` skips it. With `-y`, without a terminal or after an `n`, it only warns. The anonymous limit is 60 calls an hour: one run fits, a second within the hour may not (two runs and a `mise bootstrap packages status` used all 60 on a new Mac). If packages fail to resolve, run `gh auth login` and rerun `./setup.sh`.
+Tap formulae resolve through GitHub's API. mise asks `gh` for a token itself. When `gh` isn't signed in and `MISE_GITHUB_TOKEN` is unset, `setup.sh` installs `gh` on its own first, warns that without a login GitHub allows 60 API calls an hour, and asks whether to sign in now, before the packages and the tools spend the limit. Enter signs in with `gh auth login`; only `n` skips it. With `-y`, without a terminal or after an `n`, it only warns. The anonymous limit is 60 calls an hour: one run fits, a second within the hour may not (two runs and a `mise bootstrap packages status` used all 60 on a new Mac). If packages fail to resolve, run `gh auth login` and run setup again (`rotm install`, or `./setup.sh` in a clone).
 
 On your next Mac, once `gh` is signed in, setup looks for the private `rotm-settings` repository that `rotm settings sync on` made in your account. When it finds one, it asks whether to load your saved settings before it installs anything, and Enter loads them. Your `rotm settings` changes and the groups you switched off arrive first, so a group that is off there is not installed here, and `--without` on this run turns groups off on top of them. The tool settings, such as the Claude Code model, are applied at the end of the run, once the tools exist. Saved macOS preferences arrive too and, as on the first Mac, only `set-defaults` writes them. With `-y` or without a terminal setup does not ask: it prints that `rotm settings sync on` loads them later. When the saved settings conflict with this Mac's, nothing is overwritten: setup warns and carries on without them, and `rotm settings sync status` shows what differs. A Mac already connected to a settings repository is not asked again. [Settings sync](settings-sync.md) covers what is saved, the commands and how to decide a conflict.
 
 ## Preview
 
-To see what a run would do on a Mac that has mise but not the `~/.config/mise` link:
+Before an install without a clone, add `--dry-run` after `bootstrap` in the install line and leave `setup.sh` off:
+
+```shell
+~/.local/bin/mise -E rotm-installed bootstrap --dry-run --from 'https://github.com/jrmatherly/returnofthemac.git?ref=stable' --config-dir tilde/.config/mise --save-env --only final-hook
+```
+
+It prints the `git clone` and the checkout mise would run, and fetches and links nothing. It does not show what setup installs. For that, read the [package lists](../tilde/.config/mise/conf.d/).
+
+From a clone, to see what a run would do on a Mac that has mise but not the `~/.config/mise` link:
 
 ```shell
 cd ~ && MISE_CONFIG_DIR=~/dev/dotfiles/tilde/.config/mise mise bootstrap --dry-run --skip macos-defaults
@@ -137,7 +146,7 @@ It changes nothing. `./setup.sh -- --dry-run` previews through the wrapper inste
 Setup leaves these to you:
 
 1. Open a new terminal, so the shell picks up the new config and `$DOTFILES/bin` is on PATH.
-1. Set up GitHub SSH through 1Password: add your key's public half to GitHub, save it as [`~/.ssh/github_personal.pub`](local-customizations.md#sshgithub_personalpub), check with `ssh -T git@github.com`, and optionally switch the clone to SSH: `git remote set-url origin git@github.com:jrmatherly/returnofthemac.git`.
+1. Set up GitHub SSH through 1Password: add your key's public half to GitHub, save it as [`~/.ssh/github_personal.pub`](local-customizations.md#sshgithub_personalpub), and check with `ssh -T git@github.com`. In a clone you can then switch it to SSH with `git remote set-url origin git@github.com:jrmatherly/returnofthemac.git`.
 1. Apply the macOS defaults: [`set-defaults`](#set-macos-defaults).
 1. In VS Code, run **SpaceBox Enable UI Enhancer** from the Command Palette, then quit and reopen VS Code. The blur settings do nothing until then, and the step is needed again after each VS Code update (see [vscode](../vscode/README.md#spacebox-ui-enhancer)).
 1. Install the Obsidian vault settings: [`obsidian-vault install`](#set-up-the-obsidian-vault).
@@ -163,14 +172,16 @@ Refer to the [icons documentation](../icons/README.md) for available icon varian
 install-color-themes
 ```
 
-The [Squirrelsong](../colors/) theme files are owned by this repo. Nothing is downloaded. bat, btop and Ghostty (and cmux) read theirs straight from the repo; the script rebuilds bat's theme cache, prints where to import the Nimble Commander, Syntax Highlight and CotEditor themes, and copies the Obsidian theme into your vault (`$OBSIDIAN_VAULT`) if it exists. To change a theme, edit the file in the repo and commit it.
+The [Squirrelsong](../colors/) theme files are owned by this repo. Nothing is downloaded. bat, btop and Ghostty (and cmux) read theirs straight from the repo; the script rebuilds bat's theme cache, prints where to import the Nimble Commander, Syntax Highlight and CotEditor themes, and copies the Obsidian theme into your vault (`$OBSIDIAN_VAULT`) if it exists. To change a theme in a clone, edit the file in the repo and commit it.
 
 ### Set up the Obsidian vault
 
 ```shell
 obsidian-vault install # repo → iCloud Drive/Notes (quit Obsidian first)
-obsidian-vault capture # bring settings/templates changed in Obsidian back to the repo
+obsidian-vault capture # a clone only: bring settings/templates changed in Obsidian back to the repo
 ```
+
+`capture` writes into the repo, so it is for a clone. On an installed copy it would change the copy, and `rotm update` then stops until the change is undone.
 
 See [obsidian](../obsidian/README.md) for the vault layout and the first-time walkthrough.
 
