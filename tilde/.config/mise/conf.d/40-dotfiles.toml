@@ -42,14 +42,15 @@
 "~/.claude/rules" = { source = "~/dotfiles/tilde/.claude/rules", mode = "symlink-each", exclude = [".DS_Store", "rtk.md", "hindsight.md", "catalog.md"] }
 "~/.claude/statusline-command.sh" = { source = "~/dotfiles/tilde/.claude/statusline-command.sh", mode = "symlink" }
 
-# One link per ~/.config child: apps write their own state into these folders
+# One entry per ~/.config child: apps write their own state into these folders
 # (gh's hosts.yml, mise's override files), and ~/.config holds other apps too.
 # A new tilde/.config/<app> needs a line here (bin/lib/test-dotfiles checks).
+# fastfetch is linked file by file, so an installed copy can seed config.jsonc.
 "~/.config/amp" = { source = "~/dotfiles/tilde/.config/amp", mode = "symlink" }
 "~/.config/bat" = { source = "~/dotfiles/tilde/.config/bat", mode = "symlink" }
 "~/.config/btop" = { source = "~/dotfiles/tilde/.config/btop", mode = "symlink" }
 "~/.config/cmux" = { source = "~/dotfiles/tilde/.config/cmux", mode = "symlink" }
-"~/.config/fastfetch" = { source = "~/dotfiles/tilde/.config/fastfetch", mode = "symlink" }
+"~/.config/fastfetch" = { source = "~/dotfiles/tilde/.config/fastfetch", mode = "symlink-each", exclude = [".DS_Store"] }
 "~/.config/gh" = { source = "~/dotfiles/tilde/.config/gh", mode = "symlink" }
 "~/.config/ghostty" = { source = "~/dotfiles/tilde/.config/ghostty", mode = "symlink" }
 "~/.config/hunk" = { source = "~/dotfiles/tilde/.config/hunk", mode = "symlink" }

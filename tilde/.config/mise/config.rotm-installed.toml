@@ -33,3 +33,9 @@
 # rotm settings writes the jstack roles here; every other rule stays a link
 "~/.claude/rules" = { source = "~/dotfiles/tilde/.claude/rules", mode = "symlink-each", exclude = [".DS_Store", "rtk.md", "hindsight.md", "catalog.md", "jstack-models.md"] }
 "~/.claude/rules/jstack-models.md" = { source = "~/dotfiles/tilde/.claude/rules/jstack-models.md", mode = "copy", create_if_missing = true }
+
+# fastfetch's config names the owner's site and city, so the user edits their
+# own. depends: on a home that had the old folder link, the copy must wait for
+# the folder to become real, or one apply leaves no config.jsonc
+"~/.config/fastfetch" = { source = "~/dotfiles/tilde/.config/fastfetch", mode = "symlink-each", exclude = [".DS_Store", "config.jsonc"] }
+"~/.config/fastfetch/config.jsonc" = { source = "~/dotfiles/tilde/.config/fastfetch/config.jsonc", mode = "copy", create_if_missing = true, depends = ["~/.config/fastfetch"] }

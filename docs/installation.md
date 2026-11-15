@@ -35,7 +35,7 @@ Later:
 - `rotm settings` opens the settings (`rotm settings list` prints them). A macOS preference you change there is saved in your `config.override.toml`, not in the copy.
 - The [menu bar app](menu-bar.md), Return of the Mac, is in `/Applications`, and setup opens it once at the end of the first run. It runs these same commands from its menu and a settings window. `--without menubar` leaves it out.
 
-The copy is not for editing: `rotm update` replaces its files. `~/.gitconfig`, `~/.zshrc`, `gh`'s `config.yml` and VS Code's keybindings, tasks and snippets are yours: they are written once and then left alone. With `MISE_DATA_DIR` set, the copy is at `$MISE_DATA_DIR/bootstrap-repo`, and the second path in the install line changes with it.
+The copy is not for editing: `rotm update` replaces its files. `~/.gitconfig`, `~/.zshrc`, `gh`'s `config.yml`, fastfetch's `config.jsonc` and VS Code's keybindings, tasks and snippets are yours: they are written once and then left alone. With `MISE_DATA_DIR` set, the copy is at `$MISE_DATA_DIR/bootstrap-repo`, and the second path in the install line changes with it.
 
 ### What must not be in the way
 
