@@ -28,8 +28,8 @@
       "enabled": false
     },
     {
-      "description": "The Hindsight daemon moves with its hook package, behind a database backup: docs/superpowers/specs/completed/2026-11-13-hindsight-daemon-environment-and-uv-cache.md",
-      "matchPackageNames": ["hindsight-embed", "hindsight-api"],
+      "description": "The Hindsight daemon moves with its hook package, behind a database backup: docs/superpowers/specs/completed/2026-11-13-hindsight-daemon-environment-and-uv-cache.md. The requires-python range is the lock's, so a bump is `uv lock --directory hindsight` in a reviewed commit",
+      "matchFileNames": ["hindsight/pyproject.toml"],
       "enabled": false
     }
   ]
