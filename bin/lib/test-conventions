@@ -20,7 +20,7 @@
 # rule is also retired, that rtk's hook rewrites no command with a Bash ask rule,
 # that every setup/*.sh is executable, that nothing calls brew or names the old setup method,
 # that the tracked gitconfig holds no credential or user section,
-# and that the instruction files stay under their caps.
+# that bin/lib/check runs every self-check, and that the instruction files stay under their caps.
 #
 # License: MIT
 
@@ -185,6 +185,12 @@ if command -v rtk > /dev/null; then
 else
   echo "test-conventions: rtk not found, skipping the rewrite check" >&2
 fi
+
+# A self-check the gate never calls passes silently; these globs are where self-checks live
+for f in bin/lib/test-* setup/tests/* .claude/hooks/test-*.sh settings/tests/test_*.py agents/catalog/test_*.py vscode/test-*.sh; do
+  [ -f "$f" ] || continue
+  grep -qF "$f" bin/lib/check || fail "self-check not run by bin/lib/check: $f"
+done
 
 # Instruction files load into agent context, and each change used to append to
 # them (bin/CLAUDE.md grew 8.6 KB in four days). A long catch-all line is what
