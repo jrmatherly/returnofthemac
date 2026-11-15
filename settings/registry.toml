@@ -67,7 +67,7 @@ access = "rw"
 id = "apps.obsidian_vault"
 section = "Apps"
 label = "Obsidian vault folder"
-help = "Used by obsidian-vault and install-color-themes."
+help = "Used by obsidian-vault and install-color-themes. Kept on this Mac."
 kind = "env"
 key = "OBSIDIAN_VAULT"
 type = "path"
@@ -75,6 +75,7 @@ true_value = ""
 choices = []
 default = "~/Library/Mobile Documents/com~apple~CloudDocs/Notes"
 access = "rw"
+scope = "machine"
 
 [[setting]]
 id = "apps.vscode_font_preset"

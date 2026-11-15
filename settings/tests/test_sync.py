@@ -589,6 +589,12 @@ def test_the_guards_cover_a_profiles_files():
         assert "unset --override" not in message and "mise dot save" not in calls(), message
 
 
+def test_a_vault_path_left_in_the_shared_file_names_the_set_that_moves_it():
+    fresh()
+    (sync.user_dir() / "config.override.toml").write_text('[env]\nOBSIDIAN_VAULT = "/Users/a/Notes"\n')
+    assert "rotm settings set apps.obsidian_vault" in raises(sync.now) and "mise dot save" not in calls()
+
+
 def test_apply_compares_the_files_in_effect():
     fresh()
     sync.apply()

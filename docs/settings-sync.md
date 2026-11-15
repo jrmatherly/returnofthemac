@@ -16,7 +16,7 @@ Each [profile](#profiles) adds up to three files of its own beside them, named a
 
 ## What is never saved
 
-- The three settings that describe one Mac: the computer name (`macos.computer_name`), the local hostname (`macos.local_hostname`) and the Hindsight opt-in paths (`hindsight.paths`).
+- The four settings that describe one Mac: the computer name (`macos.computer_name`), the local hostname (`macos.local_hostname`), the Hindsight opt-in paths (`hindsight.paths`) and the Obsidian vault folder (`apps.obsidian_vault`).
 - Every `*.local.toml` file in mise's config dir, `config.local.toml` and `miserc.local.toml` among them. mise never syncs a file with that ending.
 - `~/.zsh.local`, `~/.gitconfig.local` and `~/.ssh`, the [per-Mac files](local-customizations.md).
 - A change that another program made to a tool's file. `tools.toml` records a setting when `rotm settings` sets or resets it. A role that `/jstack:setup-jstack` wrote, or an edit you made to `~/.claude/settings.json` by hand, stays on that Mac.

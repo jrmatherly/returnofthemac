@@ -54,7 +54,7 @@ assert by_id["apps.vscode_font_preset"].choices == ("iosevka", "warp", "warp-ter
 assert all(s.access == "ro" for s in settings if s.section == "Privacy")
 assert sum(s.section == "Privacy" for s in settings) == 22
 # settings that describe one Mac never sync
-machine = {"macos.computer_name", "macos.local_hostname", "hindsight.paths"}
+machine = {"macos.computer_name", "macos.local_hostname", "hindsight.paths", "apps.obsidian_vault"}
 assert {s.id for s in settings if s.scope == "machine"} == machine
 assert all(s.scope == "user" for s in settings if s.id not in machine)
 
