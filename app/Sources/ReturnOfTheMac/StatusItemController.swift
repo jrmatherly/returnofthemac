@@ -172,7 +172,9 @@ final class StatusItemController: NSObject, NSMenuDelegate {
   // A plain process, not the console: a console command dies with the app, and this one replaces it.
   private func upgradeApp() {
     guard let version = state.appUpdate, !state.blocked,
-      confirm("Update Return of the Mac to \(version)?", "mise \(AppUpdate.upgradeArguments.joined(separator: " "))", "Update"),
+      confirm(
+        AppState.upgradeQuestion(version: version, stagedEdits: settingsWindow?.model.staged.count ?? 0),
+        "mise \(AppUpdate.upgradeArguments.joined(separator: " "))", "Update"),
       !state.blocked
     else { return }
     let home = FileManager.default.homeDirectoryForCurrentUser
@@ -180,7 +182,9 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     let app = Bundle.main.bundleURL
     Task {
       switch await state.upgradeApp(mise: mise, app: app, expected: version) {
-      case .relaunch: Self.relaunch(app)
+      case .relaunch:
+        state.relaunching = true
+        Self.relaunch(app)
       case .unchanged(let text), .failed(let text):
         let alert = NSAlert()
         alert.messageText = "Return of the Mac was not updated"

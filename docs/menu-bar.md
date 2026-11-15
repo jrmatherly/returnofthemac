@@ -79,13 +79,13 @@ The app updates through mise, which installed it. It has no updater of its own, 
 
 Once a day the app reads its cask file in the tap (`Casks/returnofthemac-app.rb` in `jrmatherly/homebrew-tap`, fetched from `raw.githubusercontent.com`) and compares the version there with its own. When the tap has a newer one, the app asks mise (`mise bootstrap packages status --json`) whether mise installed its cask, and offers the update only then, so a copy opened from the DMG is offered none. When mise did install it, the icon gains its dot and the menu's first line reads **Update Return of the Mac to 0.2.0…**. A check that fails, as with no network, says nothing and is tried again later.
 
-Choosing that line asks first, then runs this command from your home folder:
+Choosing that line asks first, and the question names any changes staged in the settings window, which the update discards. It then runs this command from your home folder:
 
 ```shell
 mise bootstrap packages upgrade --yes brew-cask:jrmatherly/tap/returnofthemac-app
 ```
 
-The command does not run in the console, because a console command stops when the app quits and this one replaces the app. **Quit** is refused until it ends. The app then reads the version of the copy on disk. When that is the new version, the app quits and opens again. When it is not, the app stays open, shows what mise printed, and gives the command to run in Terminal (the same one without `--yes`, so mise asks before it upgrades).
+The command does not run in the console, because a console command stops when the app quits and this one replaces the app. **Quit** is refused until it ends. The app then reads the version of the copy on disk. When that is the new version, the app quits and opens again without asking a second time. When it is not, the app stays open, shows what mise printed, and gives the command to run in Terminal (the same one without `--yes`, so mise asks before it upgrades).
 
 `sysup` upgrades the app with the other casks. `rotm update` updates your setup and leaves the app's version alone.
 

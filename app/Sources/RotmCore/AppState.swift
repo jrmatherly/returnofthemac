@@ -12,6 +12,9 @@ import Observation
   public var sessionRunning = false
   /// True while mise replaces the app; Quit is refused, because this is the one command that outlives a console.
   public private(set) var upgrading = false
+  /// Set once the new version is on disk: the update's question already covered the staged edits,
+  /// and a cancelled quit would leave the old binary running beside the relaunch waiter.
+  public var relaunching = false
   public var blocked: Bool { busy != nil || sessionRunning || upgrading }
   public private(set) var lastOutput: String?
   public private(set) var lastError: String?
@@ -122,6 +125,14 @@ import Observation
     }
   }
 
+  public static func upgradeQuestion(version: String, stagedEdits: Int) -> String {
+    switch stagedEdits {
+    case 0: return "Update Return of the Mac to \(version)?"
+    case 1: return "Update Return of the Mac to \(version) and discard 1 change?"
+    default: return "Update Return of the Mac to \(version) and discard \(stagedEdits) changes?"
+    }
+  }
+
   public static func outcome(expected: String, diskVersion: String?) -> UpdateOutcome {
     guard let disk = diskVersion else {
       return .failed(
@@ -180,6 +191,7 @@ import Observation
 
   /// What Quit does now. `sessionTitle` names the console's running command.
   public func quitDecision(sessionTitle: String?, stagedEdits: Int) -> QuitDecision {
+    if relaunching { return .allow }
     if upgrading { return .refuse }
     if let sessionTitle { return .ask(message: "Stop \(sessionTitle) and quit?", detail: "Quitting stops the command.") }
     if let busy { return .ask(message: "Quit while a command is running?", detail: busy) }

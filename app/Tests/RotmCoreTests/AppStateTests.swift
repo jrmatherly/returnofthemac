@@ -312,6 +312,21 @@ struct AppStateTests {
     #expect(state.quitDecision(sessionTitle: nil, stagedEdits: 0) == .allow)
   }
 
+  @Test func theRelaunchQuitsWithoutAsking() {
+    let state = makeState(FakeRunner())
+    #expect(
+      state.quitDecision(sessionTitle: nil, stagedEdits: 2)
+        == .ask(message: "Quit and discard 2 changes?", detail: "The settings window has changes you have not applied."))
+    state.relaunching = true
+    #expect(state.quitDecision(sessionTitle: nil, stagedEdits: 2) == .allow)
+  }
+
+  @Test func theUpdateQuestionNamesTheStagedEdits() {
+    #expect(AppState.upgradeQuestion(version: "0.2.0", stagedEdits: 0) == "Update Return of the Mac to 0.2.0?")
+    #expect(AppState.upgradeQuestion(version: "0.2.0", stagedEdits: 1) == "Update Return of the Mac to 0.2.0 and discard 1 change?")
+    #expect(AppState.upgradeQuestion(version: "0.2.0", stagedEdits: 3) == "Update Return of the Mac to 0.2.0 and discard 3 changes?")
+  }
+
   @Test func needsAttention() async {
     let clean = FakeRunner()
     stubClean(clean, check: #"{"mode":"installed","branch":"stable","behind":0}"#)
