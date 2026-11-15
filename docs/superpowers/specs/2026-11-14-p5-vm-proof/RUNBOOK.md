@@ -283,7 +283,7 @@ How it works:
 
 Two fixes in 0.1.3 can only be seen while the app that runs is 0.1.3 and the tap holds something newer (audit app plan, Tasks 2 and 9). So this run takes two releases: 0.1.3 carries the fixes, and 0.1.4 is a version bump that gives 0.1.3 an update to offer. Rows `3a` to `3d` record into `~/vm-proof/p5/g3/`.
 
-38. Step 37 shut the last guest down and discarded it, so start the guest with **Run without saving changes** and do steps 4 to 6. No GitHub sign-in is needed, so answer `n` to setup's GitHub login. Finish this before the session pushes the 0.1.4 cask in step 41, so the guest never installs 0.1.4 directly.
+38. Step 37 shut the last guest down and discarded it, so start the guest with **Run without saving changes** and do steps 4 to 6. Answer `y` to setup's GitHub login, as in step 5: without it the install spends GitHub's anonymous limit of 60 API calls an hour (`setup.sh`, `github_login`). Signed in, setup then offers to load the saved settings from `rotm-settings`: answer `n`, so the guest keeps the shipped defaults and the repository is not read. Finish this before the session pushes the 0.1.4 cask in step 41, so the guest never installs 0.1.4 directly.
 39. The 0.1.3 release follows step 23, with `0.1.3` in place of `0.1.2`. On 2026-11-15 the tap held 0.1.3 before the guest was started, so the install in step 38 gave the guest 0.1.3 and no update from 0.1.2 ran. Row 1f3 proved that update path on 2026-11-14.
 40. Record the state after the install:
 
