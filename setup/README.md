@@ -62,7 +62,7 @@ To preview a run without changing anything, once `~/.config/mise` is the link: `
 1. Has mise fetch the branch into its `bootstrap-repo` and link `~/.config/mise` into it, with `--only final-hook`, which applies nothing. An existing mise is not checked against the floor here: `setup.sh` does that next, and a mise too old to know the flags fails with a hint to run `mise self-update`.
 1. Runs the copy's `setup.sh` with the terminal as its input, passing every flag that is not `--ref`, `--dry-run` or `--help`, and everything after a `--`.
 
-`--dry-run` stops after mise's preview. [`tests/install.sh`](tests/install.sh) runs it against stubs. The Command Line Tools step cannot run on a hosted runner, which has Xcode: a disposable VM without the tools is its proof.
+`--dry-run` stops after mise's preview. [`tests/install.sh`](tests/install.sh) runs it against stubs. The Command Line Tools step cannot run on a hosted runner, which has Xcode. It ran in the disposable VM on 2026-11-15 with the tools removed first, and installed them with no window.
 
 ## Installed copies
 

@@ -89,10 +89,10 @@ How it works:
 7. Use the apps that write into their config once, so row `a5` shows whether any of them writes into the copy. Open VS Code from the Dock or Applications, wait for its window, and quit it (⌘Q). Then:
 
    ```shell
-   lazygit
+   lazygit -p ~/.local/share/mise/bootstrap-repo
    ```
 
-   Press `q` to leave it. Then:
+   Press Enter at its welcome, then `q` to leave it. It needs a repository: a bare `lazygit` in the home folder only offers to create one. Then:
 
    ```shell
    fastfetch
@@ -122,6 +122,10 @@ How it works:
 10. **Tell the session** that the rows are recorded. When it says they passed, or asks for nothing more, shut the guest down from the Apple menu. Nothing it did is kept.
 
 The rows' commands were checked before the candidate existed. On a scratch copy of `9e79b81`, the candidate's grandparent, on 2026-11-15, rows `a1` to `a5` and `a7` passed through the same `r`, with `DOTFILES` set to the copy because no setup had run: `a1` printed the hash, `a2` `installed`, `a3` `"mode": "installed"`, `"branch": "main"`, `"commit": "9e79b81"`, `a4` `2026.11.8 macos-arm64 (2026-11-13)`, `a5` only `exit 0`, and `a7` `Up to date.`
+
+### Result (2026-11-15)
+
+Passed on candidate `2e0dbe990461727e82e0958f1c75c3ee063eb005` with mise 2026.11.8. The guest had the Command Line Tools and no mise, the tools were removed in step 2, and `install.sh` installed both with one password prompt and no installer window. Setup ended with `All done!`. Every row met its "Passes when". The run corrected step 7, which first ran a bare `lazygit`. The rows are in the spec's "Verified facts".
 
 ## Guest B
 
