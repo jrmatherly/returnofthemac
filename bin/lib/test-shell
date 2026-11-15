@@ -182,4 +182,12 @@ case ${p#"$tmp/empty-home/.local/share/mise/shims:"} in "$tmp/empty-home/.local/
 [ "$(wc -l <<< "$out" | tr -d ' ')" = 3 ] || fail "tilde/.zprofile printed something on a bare Mac: $out"
 ! grep -nE '(^|[^[:alnum:]_.-])brew[[:space:]]' "$repo/tilde/.zprofile" "$repo"/zsh/*.zsh | grep -v '^[^:]*:[0-9]*:[[:space:]]*#' || fail "shell startup still calls brew"
 
+# zsh/env.zsh: lazygit reads the tracked config, then the user's own when there is one
+lg_file() { env -i HOME="$tmp/lg-home" DOTFILES="$repo" PATH=/usr/bin:/bin /bin/zsh -fc 'source "$DOTFILES/zsh/env.zsh"; print -r -- $LG_CONFIG_FILE' 2> /dev/null; }
+mkdir -p "$tmp/lg-home"
+[ "$(lg_file)" = "$repo/lazygit/config.yml" ] || fail "LG_CONFIG_FILE without a user file: $(lg_file)"
+lg_own="$tmp/lg-home/Library/Application Support/lazygit/config.yml"
+mkdir -p "$(dirname "$lg_own")" && : > "$lg_own"
+[ "$(lg_file)" = "$repo/lazygit/config.yml,$lg_own" ] || fail "LG_CONFIG_FILE with a user file: $(lg_file)"
+
 echo "shell: all checks passed"

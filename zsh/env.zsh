@@ -183,6 +183,8 @@ export CLAUDE_CODE_CERT_STORE="bundled,system"
 # lazygit reads this repo's config from any shell (state.yml stays in its own
 # config dir, ~/Library/Application Support/lazygit)
 export LG_CONFIG_FILE="$DOTFILES/lazygit/config.yml"
+# then the user's own file, which is theirs to write, so an installed copy stays clean
+[[ -f "$HOME/Library/Application Support/lazygit/config.yml" ]] && LG_CONFIG_FILE+=",$HOME/Library/Application Support/lazygit/config.yml"
 
 # No exported GitHub token: every child process (agents included) would inherit a
 # repo + workflow token. Pass it per command: GIGET_AUTH=$(gh auth token) giget …
