@@ -81,6 +81,8 @@ job quiet "${python[@]}" agents/catalog/test_stack.py
 for t in "${settings_tests[@]}"; do job quiet "${python[@]}" "$t"; done
 # conf.d/20-macos.toml parses clean under mise and no declared type contradicts the live one (drift only warns)
 job quiet "${python[@]}" setup/tests/macos-defaults.py
+# Every relative link and #anchor in the tracked pages resolves, and no docs/ page is named after a bin/ script
+job quiet "${python[@]}" setup/tests/doc-links.py
 # The dotfiles-settings UI tests need Textual, so they run in the package's locked uv env
 if command -v uv > /dev/null; then
   job quiet uv run --quiet --locked --project settings python settings/tests/test_tui.py
