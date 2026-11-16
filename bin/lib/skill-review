@@ -1,0 +1,103 @@
+#!/bin/bash
+#
+# Find tracked skills whose untrusted GitHub source moved past its reviewed value, and move one row to the new value.
+#
+# - Print the name of each such skill, one per line:
+#
+# `skill-review --list`
+#
+# - Rewrite that skill's reviewed value in `agents/claude-skills.txt` and print a pull request body for the change:
+#
+# `skill-review {{name}}`
+#
+# ---
+# The skill-review workflow runs both and opens the pull request, whose merge
+# is the review. Only a row with a folder (the sixth field `claude-config save`
+# writes) is compared, so a trusted row and a well-known row are skipped.
+# Exits 1 when a source cannot be read.
+#
+# License: MIT
+
+set -euo pipefail
+
+DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "$0")/../.." && pwd -P)}"
+list="$DOTFILES_DIR/agents/claude-skills.txt"
+trusted_list="$DOTFILES_DIR/agents/claude-skills-trusted.txt"
+cache=$(mktemp -d)
+trap 'rm -rf "$cache" "$list.tmp"' EXIT
+
+# head_tree <repo>: the file holding the repository's recursive tree, fetched once
+head_tree() {
+  local tree="$cache/${1//\//_}"
+  [ -s "$tree" ] || gh api "repos/$1/git/trees/HEAD?recursive=1" > "$tree" 2> /dev/null || {
+    rm -f "$tree"
+    echo "skill-review: cannot read $1" >&2
+    return 1
+  }
+  echo "$tree"
+}
+
+# folder_sha <repo> <folder>: the folder's git tree SHA at HEAD
+folder_sha() {
+  local tree sha
+  tree=$(head_tree "$1") || return 1
+  sha=$(jq -r --arg d "$2" 'if $d == "." then .sha else (.tree[] | select(.path == $d and .type == "tree") | .sha) end' "$tree")
+  [ -n "$sha" ] || {
+    echo "skill-review: cannot read $1" >&2
+    return 1
+  }
+  echo "$sha"
+}
+
+case "${1:-}" in
+  --list)
+    rc=0
+    while read -r _ name source _ reviewed folder; do
+      [ -n "$folder" ] || continue
+      ! grep -qxF -- "$source" "$trusted_list" 2> /dev/null || continue
+      sha=$(folder_sha "$source" "$folder") || {
+        rc=1
+        continue
+      }
+      [ "$sha" = "$reviewed" ] || echo "$name"
+    done < <(grep '^skill ' "$list")
+    exit "$rc"
+    ;;
+  "" | -*)
+    echo "Usage: skill-review --list | <name>" >&2
+    exit 2
+    ;;
+esac
+
+name=$1
+read -r _ _ source _ reviewed folder < <(awk -v n="$name" '$1 == "skill" && $2 == n' "$list") || true
+if [ -z "${folder:-}" ]; then
+  echo "skill-review: $name has no folder to compare" >&2
+  exit 1
+fi
+if [ "$("$(dirname "$0")/rotm-mode" "$DOTFILES_DIR")" = installed ]; then
+  echo "skill-review: it writes agents/ in the repository, and this is an installed copy. Run it from a clone." >&2
+  exit 1
+fi
+sha=$(folder_sha "$source" "$folder")
+awk -v n="$name" -v v="$sha" '$1 == "skill" && $2 == n { $5 = v } { print }' "$list" > "$list.tmp" && mv "$list.tmp" "$list"
+
+echo "The \`$name\` skill from [$source](https://github.com/$source) changed upstream. Merging this pull request is the review: the next \`sysup\` after promotion installs it."
+echo
+echo "- Folder: \`$folder\` ([history](https://github.com/$source/commits/HEAD/$folder))"
+echo "- Reviewed value: \`$reviewed\`"
+echo "- Upstream now: \`$sha\`"
+echo
+# The reviewed value is the old folder's tree SHA, so GitHub can list it while it is still reachable
+if gh api "repos/$source/git/trees/$reviewed?recursive=1" > "$cache/old" 2> /dev/null; then
+  jq -rn --arg d "$folder" --slurpfile old "$cache/old" --slurpfile new "$(head_tree "$source")" '
+    ($old[0].tree | map(select(.type == "blob") | {key: .path, value: .sha}) | from_entries) as $o
+    | (if $d == "." then "" else $d + "/" end) as $p
+    | ($new[0].tree | map(select(.type == "blob" and (.path | startswith($p))) | {key: .path[($p | length):], value: .sha}) | from_entries) as $n
+    | def files(f): if length == 0 then empty else "\(f): " + (map("`\(.)`") | join(", ")) end;
+      ([$n | keys[] | select($o[.] == null)] | files("Added")),
+      ([$o | keys[] | select($n[.] == null)] | files("Removed")),
+      ([$n | keys[] | select($o[.] != null and $o[.] != $n[.])] | files("Changed"))'
+else
+  echo "The reviewed tree is no longer on GitHub, so the changed files are not listed."
+fi

@@ -57,6 +57,8 @@ It doesn't re-apply the dotfiles. When a pull brings new symlinks, tools or conf
 
 The repo's own pins get update PRs from [Renovate](https://docs.renovatebot.com/) (config in [`renovate.json`](../renovate.json)): `package.json` and its `packageManager` pnpm, the single-version tools in the global mise config, and the action pins and `setup-python` version in `.github/workflows/`. It waits 48 hours after a release, like `pnpm-workspace.yaml`'s `minimumReleaseAge`, opens or refreshes the daily `@ampcode/plugin` snapshots only early on Monday (New York time), and keeps mise's `npm:typescript` below 7 and `azure-functions-core-tools` below 5. It skips mise's `node` and `python`: its mise manager reads only the first entry of a version list, so it would rewrite the default and leave the rest. Those, like `.nvmrc`'s `lts/*`, stay manual. The `check` workflow ([`.github/workflows/check.yml`](../.github/workflows/check.yml)) runs `pnpm check` on macOS for every PR, its PRs included, and every push to `main`. Its Dependency Dashboard issue lists held and pending updates; tick a PR's rebase box there to re-run the check on a PR opened before a workflow change. The packages in `30-packages.toml` and mise's `latest` entries stay with `sysup`; VS Code updates its own extensions.
 
+A tracked agent skill from a source that is not in `agents/claude-skills-trusted.txt` gets a pull request too, named "Review skill <name>", from the `skill-review` workflow ([claude-config](claude-config.md#a-skill-from-a-source-that-is-not-trusted)).
+
 ## After a VS Code update
 
 An update of VS Code replaces the files the SpaceBox UI Enhancer patched, so run **SpaceBox Enable UI Enhancer** again afterwards (see [vscode](../vscode/README.md#spacebox-ui-enhancer)).

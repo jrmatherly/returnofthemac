@@ -32,6 +32,10 @@
 
 Agents map to folders: `claude-code` is `~/.claude/skills`, `codex` is `~/.agents/skills`.
 
+## A skill from a source that is not trusted
+
+Add it with `npx skills add`, then run `claude-config save` in a clone and record the result in git: the row holds the reviewed value and the skill's folder. From then on the `skill-review` workflow checks the source daily, and a change upstream arrives as a pull request named "Review skill <name>" that moves the row's reviewed value and lists the files added, removed and changed. Merging it is the review. `check` does not start on it by itself, because the workflow's token opened it, so close and reopen the pull request first. The next `sysup` after the merge is promoted installs the skill. A well-known source is not covered: `sysup` reports its change and `claude-config restore skills --accept <name>` takes it.
+
 ## On a fresh Mac
 
 `setup/misc.sh` runs `claude-config restore` after Claude Code, npm config and PowerShell are in place, then `claude-catalog`. Both steps warn on failure and never abort setup.

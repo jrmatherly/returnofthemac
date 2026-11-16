@@ -141,6 +141,8 @@ job quiet bash setup/tests/dash.sh
 job quiet bash bin/lib/test-hindsight-memory
 # bin/claude-config save against fixture dirs, under each bash (never the real ~/.claude or agents/)
 job quiet bash bin/lib/test-claude-config
+# bin/lib/skill-review against a fixture repository with gh stubbed
+job quiet bash bin/lib/test-skill-review
 # bin/sysup's report against stubbed tools (nothing is upgraded)
 job quiet bash bin/lib/test-sysup
 # setup.sh in a fixture clone against stubbed mise, sudo, gh and curl, then a dry-run of the tracked bootstrap config in a scratch HOME

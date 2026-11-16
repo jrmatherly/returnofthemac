@@ -1,0 +1,90 @@
+#!/bin/bash
+#
+# Self-check for skill-review against a fixture repository, with gh stubbed.
+#
+# - Run it (pnpm check does too); exits 1 when an assertion fails:
+#
+# `test-skill-review`
+#
+# ---
+# Never touches agents/ or GitHub: DOTFILES_DIR is a temp dir and gh is a stub.
+#
+# License: MIT
+
+set -u
+
+script="$(cd "$(dirname "$0")" && pwd -P)/skill-review"
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+# mise's shims stay off PATH: under a fake MISE_DATA_DIR one starts cold and prints warnings
+PATH=$(tr ':' '\n' <<< "$PATH" | grep -v '/mise/shims$' | paste -sd: -)
+export DOTFILES_DIR="$tmp/repo" MISE_DATA_DIR="$tmp/data"
+mkdir -p "$DOTFILES_DIR/agents" "$tmp/bin" "$MISE_DATA_DIR"
+list="$DOTFILES_DIR/agents/claude-skills.txt"
+fails=0
+
+check() {
+  if eval "$2"; then echo "ok   $1"; else
+    echo "FAIL $1"
+    fails=$((fails + 1))
+  fi
+}
+sr() { PATH="$tmp/bin:$PATH" bash "$script" "$@"; }
+
+# u/r holds two folders named x: the row's folder picks skills/x. The reviewed
+# tree xold held one file, and HEAD changed it and added another
+cat > "$tmp/bin/gh" << 'STUB'
+#!/bin/bash
+[ -z "${GH_FAIL:-}" ] || exit 1
+echo "$*" >> "$GH_LOG"
+case "$*" in
+  *u/r/git/trees/HEAD*) echo '{"sha":"rootsha","tree":[
+    {"path":"other/x","type":"tree","sha":"zzz"},
+    {"path":"skills/x","type":"tree","sha":"xnew"},
+    {"path":"skills/x/SKILL.md","type":"blob","sha":"s2"},
+    {"path":"skills/x/added.md","type":"blob","sha":"n1"},
+    {"path":"skills/y","type":"tree","sha":"yyy"}]}' ;;
+  *u/r/git/trees/xold*) echo '{"sha":"xold","tree":[{"path":"SKILL.md","type":"blob","sha":"s1"}]}' ;;
+  *) exit 1 ;;
+esac
+STUB
+chmod +x "$tmp/bin/gh"
+export GH_LOG="$tmp/gh.log"
+
+printf 't/r\n' > "$DOTFILES_DIR/agents/claude-skills-trusted.txt"
+printf '# header\nskill t t/r claude-code\n' > "$list"
+cp "$list" "$tmp/before"
+sr --list > "$tmp/out" 2>&1
+check "every source trusted: nothing listed, nothing changed" "[ \$? = 0 ] && [ ! -s '$tmp/out' ] && cmp -s '$list' '$tmp/before' && [ ! -e '$GH_LOG' ]"
+
+printf '# header\nskill t t/r claude-code\nskill w https://w.example claude-code sha256:ww\nskill x u/r claude-code xold skills/x\nskill y u/r claude-code,codex yyy skills/y\n' > "$list"
+cp "$list" "$tmp/before"
+sr --list > "$tmp/out" 2>&1
+check "--list names the skill past its review, and only it" "[ \$? = 0 ] && [ \"\$(cat '$tmp/out')\" = x ]"
+check "one tree listing per repository" "[ \"\$(grep -c 'trees/HEAD' '$GH_LOG')\" = 1 ]"
+check "--list changes nothing" "cmp -s '$list' '$tmp/before'"
+
+sr w > "$tmp/out" 2>&1
+check "a row with no folder is refused" "[ \$? = 1 ] && grep -qx 'skill-review: w has no folder to compare' '$tmp/out' && cmp -s '$list' '$tmp/before'"
+
+GH_FAIL=1 sr x > "$tmp/out" 2>&1
+check "gh failing names the source and changes nothing" "[ \$? = 1 ] && grep -qx 'skill-review: cannot read u/r' '$tmp/out' && cmp -s '$list' '$tmp/before'"
+GH_FAIL=1 sr --list > "$tmp/out" 2>&1
+check "--list fails when a source cannot be read" "[ \$? = 1 ] && grep -qx 'skill-review: cannot read u/r' '$tmp/out'"
+
+ln -s "$DOTFILES_DIR" "$MISE_DATA_DIR/bootstrap-repo"
+sr x > "$tmp/out" 2>&1
+check "an installed copy is not written" "[ \$? = 1 ] && grep -q 'installed copy' '$tmp/out' && cmp -s '$list' '$tmp/before'"
+rm "$MISE_DATA_DIR/bootstrap-repo"
+
+sr x > "$tmp/body" 2> "$tmp/err"
+check "the row takes the folder's new value" "[ \$? = 0 ] && grep -qx 'skill x u/r claude-code xnew skills/x' '$list'"
+check "every other row is byte-identical" "diff <(grep -v '^skill x ' '$list') <(grep -v '^skill x ' '$tmp/before') > /dev/null"
+check "the body names the changed and the added file" "grep -q 'Changed.*SKILL.md' '$tmp/body' && grep -q 'Added.*added.md' '$tmp/body' && grep -q 'xold' '$tmp/body' && grep -q 'https://github.com/u/r/commits/HEAD/skills/x' '$tmp/body'"
+sr --list > "$tmp/out" 2>&1
+check "a reviewed skill is no longer listed" "[ ! -s '$tmp/out' ]"
+
+[ "$fails" -eq 0 ] || {
+  echo "$fails failed" >&2
+  exit 1
+}

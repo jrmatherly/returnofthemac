@@ -1,0 +1,47 @@
+name: skill-review
+
+# Opens a pull request when a tracked skill from a source that is not in
+# agents/claude-skills-trusted.txt changed upstream. Merging it is the review
+
+on:
+  schedule:
+    - cron: '17 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      # Credentials are kept, unlike check.yml: this job pushes its branches
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Open or refresh a pull request per changed skill
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch -q origin main
+          # Read first: a source that cannot be read fails the step before any branch moves
+          names=$(bin/lib/skill-review --list)
+          for name in $names; do
+            branch="skill-review/$name"
+            git checkout -q -f -B "$branch" origin/main
+            bin/lib/skill-review "$name" > "$RUNNER_TEMP/body.md"
+            # The same row on the open branch: upstream has not moved since that pull request
+            if git fetch -q origin "$branch" 2> /dev/null \
+              && [ "$(git show FETCH_HEAD:agents/claude-skills.txt | grep "^skill $name ")" = "$(grep "^skill $name " agents/claude-skills.txt)" ]; then
+              continue
+            fi
+            git commit -q -m "Review $name: its source changed upstream" agents/claude-skills.txt
+            git push -q --force origin "$branch"
+            if [ -n "$(gh pr list --head "$branch" --state open --json number -q '.[0].number')" ]; then
+              gh pr edit "$branch" --body-file "$RUNNER_TEMP/body.md"
+            else
+              gh pr create --head "$branch" --base main --title "Review skill $name" --body-file "$RUNNER_TEMP/body.md"
+            fi
+          done
