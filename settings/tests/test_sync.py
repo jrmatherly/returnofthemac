@@ -166,6 +166,21 @@ def test_replay_retries_a_failed_reset():
     assert tools(sync.applied_path()) == {"a.one": "1"}
 
 
+def test_replay_keeps_the_applied_value_when_a_write_fails():
+    clean()
+    sync.record(setting("a.one"), "old")
+    sync.tools_path().write_text('[tools]\n"a.one" = "new"\n')
+    fake = Fake({"a.one": "old"}, fail={"a.one"})
+    sync.replay([setting("a.one")], {"fake": fake})
+    assert tools(sync.applied_path()) == {"a.one": "old"}
+    sync.tools_path().write_text("[tools]\n")  # another Mac reset it
+    fake.fail.clear()
+    fake.calls.clear()
+    sync.replay([setting("a.one")], {"fake": fake})
+    assert fake.calls == [("reset", "a.one")]
+    assert tools(sync.applied_path()) == {}
+
+
 def test_a_broken_tools_file_is_a_settings_error():
     clean()
     sync.user_dir().mkdir(parents=True, exist_ok=True)

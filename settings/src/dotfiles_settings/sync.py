@@ -127,6 +127,8 @@ def _replay(settings: list[Setting], adapters: dict[str, Adapter]) -> list[str]:
                 lines.append(f"Set {id} to your saved value.")
             done[id] = value
         except SettingsError as e:
+            if id in applied:
+                done[id] = applied[id]  # the tool still holds the old value, so a later reset must still reach it
             lines.append(f"Could not apply {id}: {e}")
     for id in sorted(applied.keys() - wanted.keys()):
         if id not in by_id:
