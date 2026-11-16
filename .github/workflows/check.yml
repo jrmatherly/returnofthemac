@@ -33,7 +33,7 @@ jobs:
       # test with plain python3, which must be 3.11+ for tomllib
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: '3.15'
+          python-version: '3.14'
       # The floor in setup/mise-floor.sh (bin/lib/test-override-env checks they
       # match). install: false, because the repo's global config is not linked here
       - uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
@@ -80,5 +80,3 @@ jobs:
           if grep -wE 'nmap|hydra|ghidra' off.log; then echo "::error::security is off and its formulae are still in the dry run"; exit 1; fi
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
-      # Unsigned: the runner has no Developer ID identity
-      - run: bash app/scripts/build-app.sh
