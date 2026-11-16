@@ -86,8 +86,13 @@ def _read_hindsight(name: str, s: Setting) -> Value:
     elif name == "survey":
         value = "true" if config.get("codebaseSurvey") is True else ""
     else:
-        value = "\n".join(config.get("optInPaths") or [])
+        value = "\n".join(_opt_in_paths(config))
     return Value(s.id, value, Source.SEED if value == s.default else Source.OVERRIDE, s.default, False)
+
+
+def _opt_in_paths(config: dict) -> list[str]:
+    paths = config.get("optInPaths")
+    return paths if isinstance(paths, list) and all(isinstance(p, str) for p in paths) else []
 
 
 def _write_hindsight(name: str, s: Setting, value: str) -> None:
@@ -97,7 +102,7 @@ def _write_hindsight(name: str, s: Setting, value: str) -> None:
     elif name == "survey":
         _check(run(["hindsight-memory", "survey", on]))
     elif name == "paths":
-        stored = (_load_hindsight() or {}).get("optInPaths") or []
+        stored = _opt_in_paths(_load_hindsight() or {})
         wanted = [line.strip() for line in value.splitlines() if line.strip()]
         for p in (p for p in wanted if p not in stored):
             _check(run(["hindsight-memory", "paths", "add", p]))
@@ -124,7 +129,8 @@ def _json_model(path: Path | None) -> str | None:
         data = json.loads(path.read_text()) if path else None
     except (OSError, ValueError):
         return None
-    return data.get("model") if isinstance(data, dict) else None
+    model = data.get("model") if isinstance(data, dict) else None
+    return model if isinstance(model, str) else None
 
 
 def _read_claude(name: str, s: Setting) -> Value:

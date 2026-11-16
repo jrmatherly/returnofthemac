@@ -193,6 +193,19 @@ def test_a_broken_tools_file_is_a_settings_error():
         raise AssertionError("no error")
 
 
+def test_a_wrong_shape_tools_file_is_a_settings_error():
+    for text in ('tools = "x"\n', '[tools]\n"a.one" = 1\n'):
+        clean()
+        sync.user_dir().mkdir(parents=True, exist_ok=True)
+        sync.tools_path().write_text(text)
+        try:
+            sync.replay([setting("a.one")], {"fake": Fake({})})
+        except SettingsError as e:
+            assert str(sync.tools_path()) in str(e)
+        else:
+            raise AssertionError(f"no error for {text!r}")
+
+
 URL = "https://github.com/octo/rotm-settings.git"
 CONNECTED = f"{URL} (branch main) declared in ~/.config/mise/config.local.toml; mode manual\n"
 CONFLICT = "Conflict: ~/.config/rotm/config.override.toml (unsaved edits: save or discard them first)\n"

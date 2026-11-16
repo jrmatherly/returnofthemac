@@ -25,9 +25,12 @@ def applied_path() -> Path:
 
 def _parse(text: str, path: Path) -> Tools:
     try:
-        return tomllib.loads(text).get("tools", {})
+        tools = tomllib.loads(text).get("tools", {})
     except tomllib.TOMLDecodeError as e:
         raise SettingsError(f"{path} is not valid TOML: {e}") from None
+    if not isinstance(tools, dict) or not all(isinstance(v, str) for v in tools.values()):
+        raise SettingsError(f"{path}: [tools] must be a table of text values")
+    return tools
 
 
 def _load(path: Path) -> Tools:

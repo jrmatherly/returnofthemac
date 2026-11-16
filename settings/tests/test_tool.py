@@ -150,6 +150,12 @@ def test_hindsight_paths_add_then_remove():
     assert A.read(by_id("hindsight.paths")).value == "~/dev\n/opt/src"
 
 
+def test_hindsight_paths_ignore_a_wrong_shape():
+    for bad in ('"~/dev"', "[1]"):
+        cfg.write_text('{"optInPaths": %s}' % bad)
+        assert A.read(by_id("hindsight.paths")).value == ""
+
+
 def test_hindsight_without_config():
     cfg.unlink()
     v = A.read(by_id("hindsight.enabled"))
@@ -191,6 +197,12 @@ def test_claude_model_seed_and_drift():
     tracked_settings.write_text('{"model": "fable"}')
     v = A.read(by_id("claude.model"))
     assert (v.source, v.drift) == (Source.SEED, False)
+
+
+def test_claude_model_ignores_a_value_that_is_not_text():
+    live.write_text('{"model": 3}'); tracked_settings.write_text('{"model": "opus"}')
+    v = A.read(by_id("claude.model"))
+    assert (v.value, v.source, v.seed) == (None, Source.UNSET, "opus")
 
 
 def test_claude_model_write_changes_only_the_live_model():
