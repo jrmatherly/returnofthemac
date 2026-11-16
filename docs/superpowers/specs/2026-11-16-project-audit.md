@@ -20,11 +20,16 @@ State at the start: `pnpm check` exits 0 in 1 minute 58 seconds on this Mac, CI 
 
 ## Owner's decisions
 
-The section "E. Decisions the owner must make" lists six. Decisions 1 to 5 are not answered yet. Record each answer here with its date when it is given. A plan task that waits on one names it.
+The section "E. Decisions the owner must make" lists six. All six are answered. Decisions 1, 4 and 5 have no task yet and wait for a plan. A plan task that waits on one names it.
 
 - **2026-11-16, decision 6: yes.** Seed Mole's two whitelists on an installed copy. Task 8 of the plan ran. On the owner's Mac `whitelist` already links to its own `whitelist.local`, so only `whitelist_optimize` needs the hand step.
 - **2026-11-16, Task 5: yes to all four steps.** The ruleset on `stable`, required SHA pins, vulnerability alerts and one `fresh-install` run. Rows A5, D3 and D8 record each result.
 - **2026-11-16, promotion without the VM pass.** The owner skipped Guest A for this promotion. `stable` moved from `f56b558` to `d68d3ac` by a fast-forward push, with `check` green on `d68d3ac`. `fresh-install` had passed on `1a9bb95` only, so the owner's own `rotm update` is the first install of the later commits.
+- **2026-11-16, decision 1: a 48 hour hold everywhere.** A tracked global `~/.config/uv/uv.toml` with `exclude-newer = "48 hours"`, and pnpm (`pnpm-workspace.yaml`), bun (`tilde/.bunfig.toml`), npm (`setup/misc.sh`, in whole days, so 2) and Renovate (`renovate.json`) all move from 7 days to 48 hours, matching mise. Tested the same day: uv 0.13.8 reads `exclude-newer = "7 days"` from a config file named by `UV_CONFIG_FILE`. Not tested: the same file with `uv tool install`.
+- **2026-11-16, decision 2: leave as is.** Skills are not pinned to a commit. The reviewed folder hash in `agents/claude-skills.txt` stays the only check.
+- **2026-11-16, decision 3: leave as is.** No mise lockfile. Thirteen tools are `latest` (counted the same day), held 48 hours by `minimum_release_age`.
+- **2026-11-16, decision 4: a module for Claude Multipass only.** The tap, `claude-multipass` and `claude-multipass-app` move from `30-packages.toml` to a module that is on by default. `brew:ruby` stays in the base, since the `menubar` module's cask needs it too. `gnupg` and `pinentry-mac` stay in the base. The whole base list was read: nothing else in it is the owner's alone.
+- **2026-11-16, decision 5: the hook stays on by default and is switched off per project.** Measured the same day over every project's transcripts: 3,841 firings in 24 projects injected about 5.7 million tokens (about 2,300 a prompt in the full-source form), and a file the hook named was read, edited or cited later in the same turn in 13% of them (career-ops 13%, this repository 11%, serviceradar 4%, focused code worktrees 30 to 43%). The measure counts later file use, not an answer given straight from the injected context. CodeGraph 1.6.2 is the latest release and its README does not describe the hook. Its code has a kill switch, `CODEGRAPH_NO_PROMPT_HOOK=1` (or `CODEGRAPH_PROMPT_HOOK=0`), tested: the same prompt gave 9,251 characters without it and none with it. Nothing limits the size, and the hook is already silent on a prompt with no structural keyword or indexed symbol. To be verified before the first project is switched: that an `env` value in a project's Claude settings reaches hook commands. First projects: this repository and serviceradar.
 
 ## A. Fix first
 
