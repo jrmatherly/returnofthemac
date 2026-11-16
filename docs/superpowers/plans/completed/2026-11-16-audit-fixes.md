@@ -1029,4 +1029,4 @@ Run on 2026-11-16, natively, one commit per task on `main`. Each check was seen 
 | 22 | `92bb458` | 0 failures in 20 runs. Alone 2.06 to 2.10 seconds, in the full suite 2.62 to 9.50. The row stays open |
 | 23 | This commit | `CLAUDE.md` is 11,951 bytes |
 
-Hand steps left for the owner's Mac, after the next `rotm update`: Task 8 (`whitelist_optimize`), Task 13 (the last two lines of `~/.gitconfig`) and Task 14 (the allowed signers file).
+The hand steps on the owner's Mac were done the same day. Task 13 (the second include in `~/.gitconfig`) and Task 14 (the allowed signers file, after which `git log -1 --format=%G?` printed `G`) ran before the promotion. `stable` then moved to `d68d3ac` without the VM pass, at the owner's word. `rotm update` fast-forwarded the copy and ended "All done" with the copy clean, and Task 8's step left `whitelist_optimize` a seeded real file.
