@@ -12,13 +12,13 @@
 
 ## Outcome (2026-11-15)
 
-Finished. A new session in this repository starts at 60.2k tokens, down from 66.7k, and nothing outside the project changed.
+Finished. A new session in this repository starts at 60.2k tokens, down from 66.7k, and no configuration outside the project changed. Six stray headless sessions took part in the run, and five left a turn in Hindsight's memory: the spec's "What went wrong while it ran" has the account.
 
 | Task | Commit or record | Difference from the plan |
 | --- | --- | --- |
 | 1. Record the starting state | `private/context-trim/` | The session read `/context` itself |
 | 2. Turn the 14 plugins off | `.claude/settings.local.json`: 35 `false` | None |
-| 3. Turn the 14 skills off | The same file: 14 `skillOverrides` | A stray session made the write. It was checked, not redone |
+| 3. Turn the 14 skills off | The same file: 14 `skillOverrides` | A stray session made the write. It was checked against a true before copy, not redone |
 | 4. Quote the add-tool description | `eedcb12` | A stray session made the edit. It was checked, not redone |
 | 5. Three MCP servers | Skipped on the owner's word | `agent-browser`, `jean` and `astro-docs` stay on here. Their tools are deferred |
 | 6. Measure, record and file | `8ce25cc`, and this commit | The Skills line of `/context` did not move |
@@ -37,8 +37,9 @@ Finished. A new session in this repository starts at 60.2k tokens, down from 66.
 Differences from the plan as written:
 
 - **`/context` was read by the session,** with `claude -p '/context' --model haiku --no-session-persistence`, not by the owner. It prints the same table, and the "before" figure would have been lost once Task 2 ran.
-- **Two stray sessions ran Task 3 Step 1 and Task 4 Step 2.** `listed.sh` started them with the prompt `ok` and every tool, and they read the handoff note. The spec's "Result" has the account. Their writes were checked against the plan, not redone, and `listed.sh` now starts a session with no tools and kills it once read.
-- **The Skills line of `/context` did not move.** The listing is capped, so the 14 skills freed room and saved no tokens. The saving is the agents and `browser-use`'s instructions, about 6,500 tokens.
+- **Six stray sessions ran Task 3 Step 1 and Task 4 Step 2, ran `claude-stack apply`, and overwrote Task 1's saved files.** `listed.sh` started two with the prompt `ok` and every tool, they read the handoff note, and they started four more. The spec's "Result" has the account. Their writes were checked against the plan and a true before copy, not redone. `listed.sh` now starts a session with no tools and no MCP servers and kills it once read.
+- **Task 4 Step 3 could not print `same`.** The old text was saved after a stray session's edit, so the comparison was made against the committed file: `git show aac34dc:.claude/skills/add-tool/SKILL.md`.
+- **The Skills line of `/context` did not move.** The listing is capped, so the 14 skills freed room and saved no tokens. The saving is the agents and `browser-use`'s instructions, about 6,100 tokens.
 
 ## Global Constraints
 
@@ -51,7 +52,7 @@ Differences from the plan as written:
 - This Mac is an installed copy. Run the clone's scripts by path: `~/dev/dotfiles/bin/claude-stack`. On 2026-11-15 the clone's `bin/claude-stack`, `agents/catalog/stack.py` and `curated.toml` were byte-identical to the copy's.
 - Tasks 1 to 3 and 5 commit nothing: their files are git-ignored. Tasks 4 and 6 commit Markdown only.
 - A session that is already open keeps its old list. Every check starts a new one.
-- `$L` in the steps is `docs/superpowers/specs/completed/2026-11-15-claude-code-context-audit/listed.sh`. It starts an unsaved session with no tools, kills it once its start-up list is read, and prints `name=present` or `name=absent` from that session's agents, skills and slash commands. Start no other `claude -p` here with tools: such a session reads the handoff note and may act on it. `$NAMES` is the 16 names Task 1 Step 2 sets.
+- `$L` in the steps is `docs/superpowers/specs/completed/2026-11-15-claude-code-context-audit/listed.sh`. It starts an unsaved session with no built-in tools and no MCP servers, kills it once its start-up list is read, and prints `name=present` or `name=absent` from that session's agents, skills and slash commands. Start no other `claude -p` here: such a session reads the handoff note and may act on it, and `--tools ""` alone leaves it every MCP tool. `$NAMES` is the 16 names Task 1 Step 2 sets.
 
 ## Measured for this plan (2026-11-15)
 
@@ -280,7 +281,7 @@ t=$(mktemp) && jq 'del(.skillOverrides) | .enabledPlugins |= with_entries(select
 ~/dev/dotfiles/bin/claude-stack apply --keep voltagent-lang@voltagent-subagents
 ```
 
-That leaves `.claude/skill-stack.json` recording `voltagent-lang` as kept by hand, where it began as kept by a path signal. The two behave the same. For the exact start state, copy `skill-stack.json` and `skill-stack.md` back from `private/context-trim/before/` as well.
+That leaves `.claude/skill-stack.json` recording `voltagent-lang` as kept by hand, where it began as kept by a path signal. The two behave the same. There is no copy of that file from before the plan: the one Task 1 made was overwritten during the run. `private/context-trim/before/settings.local.json` is a true copy of the settings file from before.
 
 To bring back one plugin or skill, delete its key from `enabledPlugins` or `skillOverrides`. For an MCP server, `/mcp enable <name>`. Task 4 is a `git revert`.
 

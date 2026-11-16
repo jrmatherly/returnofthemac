@@ -130,9 +130,9 @@ Read with `claude -p '/context' --model haiku --no-session-persistence` in this 
 | Skills | 9.9k | 9.9k |
 | Memory files | 9.7k | 9.7k |
 
-About 6,500 tokens a session, against the 5,900 predicted. The agents fell by 4,600, which is the two voltagent packs and the smaller plugins' agents. The 1,500 off the server instructions is `browser-use`, which the audit had not counted. **The Skills line did not move.** Claude Code caps the skill listing, so turning off 14 skills and the plugins' skills freed room in it for other descriptions and saved no tokens. The audit's 1,200 for the skills was wrong as a saving.
+The total fell by 6,500. About 6,100 of that is the change: the agents fell by 4,600, which is the two voltagent packs and the smaller plugins' agents, and the 1,500 off the server instructions is `browser-use`, which the audit had not counted. The rest is the Messages line, which moves by a few hundred between two readings of the same state. The prediction was 5,900. **The Skills line did not move.** The session's skill count fell from 226 to 203 with no change in tokens, which fits a capped listing: turning off 14 skills and the plugins' skills freed room in it for other descriptions and saved no tokens. The cap was not tested by itself. The audit's 1,200 for the skills was wrong as a saving.
 
-`claude plugin list --json` reported 27 plugins off before and 41 after. `listed.sh` reported all 16 names present before. After, the five plugin names and three skill names read `absent`, and the eight that must stay read `present`.
+`claude plugin list --json` reported 27 plugins off before and 41 after. `listed.sh` reported all 16 names present before (the session's own Task 1 output: the file was later emptied). After, the five plugin names and three skill names read `absent`, and the eight that must stay read `present`.
 
 ### What is off in this repository, and how to bring it back
 
@@ -145,11 +145,22 @@ To bring one back, delete its key from that file and start a new session. `volta
 
 ### What went wrong while it ran
 
-The first `listed.sh` started its session with the prompt `ok` and every tool, and read only the first line the session printed. The session kept running. Its start hooks gave it the handoff note, which said to execute this plan on the owner's go, and it took `ok` as that go. Two such sessions wrote Task 3's `skillOverrides` key and made Task 4's edit before they were noticed and killed, three minutes after the first started. It was noticed because Task 4's "see it fail" step did not fail.
+The first `listed.sh` started its session with the prompt `ok` and every tool, and read only the first line the session printed. The session kept running. Its start hooks gave it the handoff note, which said to execute this plan on the owner's go, and it took `ok` as that go. Six such sessions took part between 21:06 and 21:12: two that the script started, and four more that those started by running the same script again. Four ended by themselves and the last two were killed. It was noticed because Task 4's "see it fail" step did not fail.
 
-What they wrote was what the plan specifies, and each write was checked afterwards: the 14 skill names, 35 plugins off, nothing added to or removed from `permissions`, and a description that parses to the committed text. They made no commit and no push. A search by modification time over the clone, the copy, `~/.claude` and `~/.config` found no file changed outside the plan's set.
+What they did, none of it by the executing session:
 
-`listed.sh` now gives its session no built-in tools, plan mode and a prompt that asks for one word, and kills it as soon as the start-up list is read. It runs in about three seconds. The lesson for this repository: **a headless `claude -p` here is a full agent that has read the handoff note.** Give it no tools, or do not start it.
+- Wrote Task 3's `skillOverrides` key and made Task 4's edit.
+- Ran `claude-stack apply`.
+- Overwrote the saved "before" evidence in `private/context-trim/`: the three copied stack files were copied again after Task 2, `plugins-off.before` was rewritten with 41, and `listed.before` was emptied. They also wrote `listed.after-plugins` and `listed.after-skills`.
+- Left five one-turn sessions in Hindsight's memory of this repository (`retain_ok` in `~/.hindsight/coding-agents-logs/diag.jsonl`, ids beginning `0c859e4f`, `09f90111`, `a87aad01`, `f84787ca`, `91a5f36e`). A "Correction" document was ingested the same evening, saying that the `ok` in them is not the owner's word. Whether a knowledge page absorbed them before that was not checked.
+
+The executing session first recorded this as two sessions and two writes. An independent review found the rest from Hindsight's log and the files' change times.
+
+What holds, checked by that review and again afterwards: `.claude/settings.local.json` differs from a true copy made before the plan by exactly the 14 plugin keys and the 14 skill names, with `permissions` identical. Nothing was committed or pushed, and there is no stash, branch, worktree, memory file or scheduled task from them. The global settings, the bootstrap lists and the installed copy are unchanged. The one true "before" copy of the settings file was a test copy the session had made at 20:36, and it is now in `private/context-trim/before/`. There is no true copy of `skill-stack.json` from before. `private/context-trim/NOTES.txt` says which files there can be trusted.
+
+`listed.sh` now starts its session with no built-in tools (`--tools ""`), no MCP servers (`--strict-mcp-config`), plan mode and a prompt that asks for one word, and kills it as soon as the start-up list is read or the script is interrupted. Its start-up event then lists 0 tools and 0 servers, and the 16 answers are the same. `--tools ""` alone was not enough: the session still had 480 MCP tools, some of them allowed to write files by the global settings. The session's start hooks still run.
+
+The lesson for this repository: **a headless `claude -p` here is a full agent that has read the handoff note, and can start more of itself.** Start one only through `listed.sh`.
 
 ## Plans
 
