@@ -20,10 +20,6 @@ branches() {
   git for-each-ref --merged HEAD --format='%(refname:short)' refs/heads | grep -vxE 'main|master'
 }
 
-# Remove unreachable objects (commits, trees, blobs, etc.) from the Git object database
-header "Deleting unreachable objects…"
-git prune
-
 # Delete all stale remote-tracking branches, these branches have already been
 # removed from the remote repository, but are still locally available in "remotes/".
 header "Deleting stale remote-tracking branches…"

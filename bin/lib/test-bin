@@ -61,10 +61,12 @@ check "git-find nested" "(cd '$tmp/repo' && '$root/bin/git-find' inner.txt | gre
 # A bare set -u crash also exits non-zero, so require the usage line too
 check "git-find usage" "! '$root/bin/git-find' > /dev/null 2> '$tmp/err' && grep -q '^usage: git-find' '$tmp/err'"
 
+dropped=$(cd "$tmp/repo" && echo e >> top.txt && git stash -q && git rev-parse 'stash@{0}' && git stash drop -q)
 (cd "$tmp/repo" && "$root/bin/git-tidy" > /dev/null 2>&1)
 check "merged domain-fix deleted" "! git -C '$tmp/repo' show-ref --verify -q refs/heads/domain-fix"
 check "unmerged wip kept" "git -C '$tmp/repo' show-ref --verify -q refs/heads/wip"
 check "main kept" "git -C '$tmp/repo' show-ref --verify -q refs/heads/main"
+check "a dropped stash is still recoverable" "git -C '$tmp/repo' cat-file -e '$dropped'"
 
 [ "$fails" -eq 0 ] || {
   echo "$fails failed" >&2
