@@ -10,6 +10,23 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-15-claude-code-context-audit.md`. Read its Goal and "Decisions the owner made" in full before Task 1. Findings F2, F3, F4 and F6 are this plan. F1, F5 and F7 are out of scope by decision.
 
+## Progress (2026-11-15)
+
+| Task | State | Record |
+| --- | --- | --- |
+| 1. Record the starting state | Done | `private/context-trim/` |
+| 2. Turn the 14 plugins off | Done | 35 `false`, 22 owned, 27 to 41 plugins off, five names `absent` |
+| 3. Turn the 14 skills off | Done | 14 entries, three names `absent`, the kept eight `present` |
+| 4. Quote the add-tool description | Done | `eedcb12` |
+| 5. Three MCP servers | Not done. The owner's `/mcp disable` | |
+| 6. Measure, record and file | Measured and recorded in the spec's "Result". Filing waits on Task 5 | |
+
+Differences from the plan as written:
+
+- **`/context` was read by the session,** with `claude -p '/context' --model haiku --no-session-persistence`, not by the owner. It prints the same table, and the "before" figure would have been lost once Task 2 ran.
+- **Two stray sessions ran Task 3 Step 1 and Task 4 Step 2.** `listed.sh` started them with the prompt `ok` and every tool, and they read the handoff note. The spec's "Result" has the account. Their writes were checked against the plan, not redone, and `listed.sh` now starts a session with no tools and kills it once read.
+- **The Skills line of `/context` did not move.** The listing is capped, so the 14 skills freed room and saved no tokens. The saving is the agents and `browser-use`'s instructions, about 6,500 tokens.
+
 ## Global Constraints
 
 - Decision 1: a change affects this project only. Do not edit `agents/claude-plugins.txt`, `agents/claude-skills.txt`, `agents/catalog/curated.toml`, anything under `setup/` or `tilde/`, `~/.claude/settings.json`, `~/.claude/rules/` or `~/.claude/skills/`.
@@ -21,7 +38,7 @@
 - This Mac is an installed copy. Run the clone's scripts by path: `~/dev/dotfiles/bin/claude-stack`. On 2026-11-15 the clone's `bin/claude-stack`, `agents/catalog/stack.py` and `curated.toml` were byte-identical to the copy's.
 - Tasks 1 to 3 and 5 commit nothing: their files are git-ignored. Tasks 4 and 6 commit Markdown only.
 - A session that is already open keeps its old list. Every check starts a new one.
-- `$L` in the steps is `docs/superpowers/specs/2026-11-15-claude-code-context-audit/listed.sh`. It starts an unsaved session and prints `name=present` or `name=absent` from that session's agents, skills and slash commands. `$NAMES` is the 16 names Task 1 Step 2 sets.
+- `$L` in the steps is `docs/superpowers/specs/2026-11-15-claude-code-context-audit/listed.sh`. It starts an unsaved session with no tools, kills it once its start-up list is read, and prints `name=present` or `name=absent` from that session's agents, skills and slash commands. Start no other `claude -p` here with tools: such a session reads the handoff note and may act on it. `$NAMES` is the 16 names Task 1 Step 2 sets.
 
 ## Measured for this plan (2026-11-15)
 

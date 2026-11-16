@@ -5,7 +5,10 @@
 #
 # `listed.sh name…`
 #
-# The session is not saved, so it leaves no transcript for a later usage scan to count.
+# The session is a real agent in this repository, and its start hooks hand it the handoff note.
+# The first version sent it the prompt "ok" with every tool, and it took that as a go-ahead and
+# ran three tasks of the plan it was checking. So it gets no built-in tools, plan mode, and is
+# killed as soon as its start-up list is read. It is not saved, so it leaves no transcript.
 
 set -euo pipefail
 
@@ -13,8 +16,20 @@ set -euo pipefail
   echo "usage: listed.sh name…" >&2
   exit 2
 }
-init=$(claude -p ok --model haiku --no-session-persistence --output-format stream-json --verbose 2> /dev/null \
-  | jq -c 'select(.subtype == "init")' | head -1)
+out=$(mktemp)
+trap 'rm -f "$out"' EXIT
+claude -p 'Reply with the one word: listed. Do nothing else.' --model haiku --no-session-persistence \
+  --tools "" --permission-mode plan --output-format stream-json --verbose > "$out" 2> /dev/null &
+pid=$!
+init=""
+for _ in $(seq 240); do
+  init=$(grep -m1 '"subtype":"init"' "$out" || true)
+  [ -z "$init" ] || break
+  kill -0 "$pid" 2> /dev/null || break
+  sleep 0.5
+done
+kill "$pid" 2> /dev/null || true
+wait "$pid" 2> /dev/null || true
 [ -n "$init" ] || {
   echo "listed.sh: claude printed no init event" >&2
   exit 1

@@ -6,7 +6,7 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 | Plan | Spec | Tasks | State |
 | --- | --- | --- | --- |
-| [Claude Code context trim](2026-11-15-claude-code-context-trim.md) | [context audit](../specs/2026-11-15-claude-code-context-audit.md) | 6 | Written on 2026-11-15 from a `/doctor` run, reviewed once and corrected (its last section), not started. It turns 14 plugins and 14 skills off for this repository only, in the git-ignored `.claude/settings.local.json`. Tasks 1, 5 and 6 need the owner for `/context` and `/mcp disable` |
+| [Claude Code context trim](2026-11-15-claude-code-context-trim.md) | [context audit](../specs/2026-11-15-claude-code-context-audit.md) | 6 | Written on 2026-11-15 from a `/doctor` run, reviewed once and corrected (its last section). Tasks 1 to 4 ran on 2026-11-15 (its Progress table). Task 5 is the owner's three `/mcp disable` lines, and Task 6 then files it. It turns 14 plugins and 14 skills off for this repository only, in the git-ignored `.claude/settings.local.json`. Tasks 1, 5 and 6 need the owner for `/context` and `/mcp disable` |
 
 [P6](completed/2026-11-15-p6-docs-for-the-new-path.md) finished on 2026-11-15. [P7](completed/2026-11-15-p7-stable-and-the-owners-mac.md) finished the same day, and with it the [installable-setup spec](../specs/completed/2026-11-11-installable-setup-profiles-and-sync.md): the owner's Mac runs an install from `stable`.
 

@@ -1,6 +1,6 @@
 # Claude Code context audit, 2026-11-15
 
-Date: 2026-11-15. Status: findings recorded, one plan written and not started. The plan is listed in [Plans](#plans).
+Date: 2026-11-15. Status: the plan's Tasks 1 to 4 ran that day ([Result](#result-2026-11-15)), and its last owner step is open. The plan is listed in [Plans](#plans).
 
 ## Goal
 
@@ -115,6 +115,42 @@ The j-agent file sets no model. Each spawn takes its model from `jstack-models.m
 
 `claude-catalog` printed 56,530 always-on tokens the same evening, by its own method. `/context` gives the live figure.
 
+## Result (2026-11-15)
+
+Tasks 1 to 4 of the plan ran that evening. Task 5, the three MCP servers, is the owner's and is not done.
+
+Read with `claude -p '/context' --model haiku --no-session-persistence` in this repository, before and after:
+
+| Category | Before | After |
+| --- | --- | --- |
+| Total | 66.7k | 60.2k |
+| Custom agents | 9.7k | 5.1k |
+| MCP server instructions | 6.7k | 5.2k |
+| MCP tools (deferred) | 249.1k | 248.1k |
+| Skills | 9.9k | 9.9k |
+| Memory files | 9.7k | 9.7k |
+
+About 6,500 tokens a session, against the 5,900 predicted. The agents fell by 4,600, which is the two voltagent packs and the smaller plugins' agents. The 1,500 off the server instructions is `browser-use`, which the audit had not counted. **The Skills line did not move.** Claude Code caps the skill listing, so turning off 14 skills and the plugins' skills freed room in it for other descriptions and saved no tokens. The audit's 1,200 for the skills was wrong as a saving.
+
+`claude plugin list --json` reported 27 plugins off before and 41 after. `listed.sh` reported all 16 names present before. After, the five plugin names and three skill names read `absent`, and the eight that must stay read `present`.
+
+### What is off in this repository, and how to bring it back
+
+All of it is in the git-ignored `.claude/settings.local.json`, on this Mac only. A session here that looks for one of these and does not find it should read this section.
+
+- **Plugins, under `enabledPlugins`:** `voltagent-lang@voltagent-subagents` (through `claude-stack`), and by hand `voltagent-qa-sec@voltagent-subagents`, `agent-sdk-dev`, `mcp-server-dev`, `modern-web-guidance`, `coderabbit`, `superdesign`, `commit-commands`, `claude-md-management`, `code-simplifier`, `session-report`, `browser-use`, `rust-analyzer-lsp` and `lua-lsp`, each `@claude-plugins-official`.
+- **Skills, under `skillOverrides`:** `doc-coauthoring`, `email-and-password-best-practices`, `find-skills`, `hindsight-architect`, `hindsight-docs`, `internal-comms`, `mcp-builder`, `organization-best-practices`, `scrapling-official`, `sentry-cli`, `supabase-prompts`, `theme-factory`, `two-factor-authentication-best-practices`, `web-artifacts-builder`.
+
+To bring one back, delete its key from that file and start a new session. `voltagent-lang` comes back with `~/dev/dotfiles/bin/claude-stack apply --keep voltagent-lang@voltagent-subagents`. The plan's "Undo" removes all of it by key.
+
+### What went wrong while it ran
+
+The first `listed.sh` started its session with the prompt `ok` and every tool, and read only the first line the session printed. The session kept running. Its start hooks gave it the handoff note, which said to execute this plan on the owner's go, and it took `ok` as that go. Two such sessions wrote Task 3's `skillOverrides` key and made Task 4's edit before they were noticed and killed, three minutes after the first started. It was noticed because Task 4's "see it fail" step did not fail.
+
+What they wrote was what the plan specifies, and each write was checked afterwards: the 14 skill names, 35 plugins off, nothing added to or removed from `permissions`, and a description that parses to the committed text. They made no commit and no push. A search by modification time over the clone, the copy, `~/.claude` and `~/.config` found no file changed outside the plan's set.
+
+`listed.sh` now gives its session no built-in tools, plan mode and a prompt that asks for one word, and kills it as soon as the start-up list is read. It runs in about three seconds. The lesson for this repository: **a headless `claude -p` here is a full agent that has read the handoff note.** Give it no tools, or do not start it.
+
 ## Plans
 
-- `docs/superpowers/plans/2026-11-15-claude-code-context-trim.md` (written 2026-11-15, not started): findings F2, F3, F4 and F6, in this project only.
+- `docs/superpowers/plans/2026-11-15-claude-code-context-trim.md` (written 2026-11-15, Tasks 1 to 4 done that day, Task 5 is the owner's): findings F2, F3, F4 and F6, in this project only.
