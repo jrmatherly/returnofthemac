@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Self-check for small bin/ scripts (serve, git-find, git-tidy, obsidian-vault, push, pull) in a scratch HOME and git repo.
+# Self-check for small bin/ scripts (serve, git-find, git-tidy, obsidian-vault, push, pull, node-modules-clean) in a scratch HOME and git repo.
 #
 # - Run it (pnpm check does too); exits 1 when an assertion fails:
 #
@@ -112,6 +112,12 @@ check "pull on a conflict: the stash is restored" "[ -z \"\$(git -C '$tmp/repo' 
 rm -f "$tmp/repo/untracked.txt"
 (cd "$tmp/repo" && "$root/bin/pull") > "$tmp/pull.out" 2>&1
 check "pull on a conflict with nothing stashed: no rebase, no stash pop" "[ ! -d '$tmp/repo/.git/rebase-merge' ] && ! grep -q 'Restoring tree' '$tmp/pull.out'"
+
+mkdir -p "$tmp/nm/a/node_modules/x/node_modules" "$tmp/nm/b"
+: > "$tmp/nm/b/node_modules"
+(cd "$tmp/nm" && "$root/bin/node-modules-clean")
+check "node-modules-clean removes the folder" "[ ! -e '$tmp/nm/a/node_modules' ]"
+check "node-modules-clean keeps a plain file of that name" "[ -f '$tmp/nm/b/node_modules' ]"
 
 [ "$fails" -eq 0 ] || {
   echo "$fails failed" >&2
