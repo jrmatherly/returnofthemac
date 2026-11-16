@@ -8,7 +8,7 @@
 
 **Tech Stack:** bash 3.2 (`#!/bin/bash`), mise 2026.11.5 or newer, git, `/usr/bin/jq`.
 
-**Spec:** `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md`. Read "Not verified, and the check that settles each" first: each probe here answers one row of that table.
+**Spec:** `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md`. Read "Not verified, and the check that settles each" first: each probe here answers one row of that table.
 
 ## Global Constraints
 
@@ -44,9 +44,9 @@
 - `bin/claude-config`: `save_settings` keeps the tracked `model`.
 - `bin/lib/test-claude-config`: four new checks.
 - `docs/claude-config.md`, `settings/registry.toml`, `agents/README.md`, `.claude/rules/claude-config.md`: say that `save` does not record the model.
-- `docs/superpowers/specs/2026-11-11-installable-probe/probe.sh`: the harness and the ten probes. It lives beside the spec, like `specs/completed/2026-10-09-mods-probe/`, because it is evidence for the spec and not part of the product.
-- `docs/superpowers/specs/2026-11-11-installable-probe/results.txt`: the `PROBE` lines from the run, committed.
-- `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md`: its "Not verified" table becomes "Verified facts".
+- `docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh`: the harness and the ten probes. It lives beside the spec, like `specs/completed/2026-10-09-mods-probe/`, because it is evidence for the spec and not part of the product.
+- `docs/superpowers/specs/completed/2026-11-11-installable-probe/results.txt`: the `PROBE` lines from the run, committed.
+- `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md`: its "Not verified" table becomes "Verified facts".
 
 ---
 
@@ -128,7 +128,7 @@ git push
 
 **Files:**
 
-- Create: `docs/superpowers/specs/2026-11-11-installable-probe/probe.sh` (mode 0755)
+- Create: `docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh` (mode 0755)
 
 **Interfaces:**
 
@@ -173,13 +173,13 @@ and the five files under `files/`, each holding its own name. Write `probe_1` to
 
 - [ ] **Step 2: Check the three harness guards**
 
-Run: `bash docs/superpowers/specs/2026-11-11-installable-probe/probe.sh`
+Run: `bash docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh`
 Expected: ten lines, `PROBE 1 not-written` to `PROBE 10 not-written`, and exit 0.
 
-Run: `PROBE_KEEP=1 bash docs/superpowers/specs/2026-11-11-installable-probe/probe.sh 1; ls "$TMPDIR" | grep -c dotfiles-probe`
+Run: `PROBE_KEEP=1 bash docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh 1; ls "$TMPDIR" | grep -c dotfiles-probe`
 Expected: the kept folder exists. Run it again without `PROBE_KEEP`: it builds a new folder and does not reuse the kept one. Remove the kept folder afterwards.
 
-Run, from the repository root: `bash docs/superpowers/specs/2026-11-11-installable-probe/probe.sh 1`
+Run, from the repository root: `bash docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh 1`
 Expected: exit 0 and no "outside the scratch folder" message. Then temporarily make `m` skip its change of directory and run it again from the repository root.
 Expected: exit 4 with "probe: mise sees config outside the scratch folder", and no `PROBE` line. Restore it. This is the check that the measured hole in Global Constraints is closed, so do not write Task 3 until it behaves this way.
 
@@ -188,11 +188,11 @@ Expected: `PROBE 2 ERROR 1`, then `PROBE 3 ERROR 3` with "probe: scratch home no
 
 - [ ] **Step 3: Commit**
 
-Run: `bash -n docs/superpowers/specs/2026-11-11-installable-probe/probe.sh && shellcheck --severity=warning docs/superpowers/specs/2026-11-11-installable-probe/probe.sh`
+Run: `bash -n docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh && shellcheck --severity=warning docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh`
 Expected: no output.
 
 ```bash
-git add docs/superpowers/specs/2026-11-11-installable-probe/probe.sh
+git add docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh
 git commit -m "Add the probe harness for the installable-setup spec"
 ```
 
@@ -202,7 +202,7 @@ git commit -m "Add the probe harness for the installable-setup spec"
 
 **Files:**
 
-- Modify: `docs/superpowers/specs/2026-11-11-installable-probe/probe.sh`
+- Modify: `docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh`
 
 **Interfaces:**
 
@@ -224,11 +224,11 @@ Add `.miserc.toml` with `env = ["extras"]` to this probe's project and commit (t
 
 - [ ] **Step 4: Run and commit**
 
-Run: `bash docs/superpowers/specs/2026-11-11-installable-probe/probe.sh 1 2 3`
+Run: `bash docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh 1 2 3`
 Expected: three `PROBE` lines, none `not-written`. An `ERROR` line is a valid result: keep it.
 
 ```bash
-git add docs/superpowers/specs/2026-11-11-installable-probe/probe.sh
+git add docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh
 git commit -m "Probe installing from a repository, relative sources and modules"
 ```
 
@@ -238,7 +238,7 @@ git commit -m "Probe installing from a repository, relative sources and modules"
 
 **Files:**
 
-- Modify: `docs/superpowers/specs/2026-11-11-installable-probe/probe.sh`
+- Modify: `docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh`
 
 **Interfaces:**
 
@@ -260,11 +260,11 @@ For each change, `updates` means the checkout's `HEAD` equals `$project`'s `HEAD
 
 - [ ] **Step 3: Run and commit**
 
-Run: `bash docs/superpowers/specs/2026-11-11-installable-probe/probe.sh 4 5`
+Run: `bash docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh 4 5`
 Expected: two `PROBE` lines, none `not-written`.
 
 ```bash
-git add docs/superpowers/specs/2026-11-11-installable-probe/probe.sh
+git add docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh
 git commit -m "Probe the user layer and updates over a dirty checkout"
 ```
 
@@ -274,7 +274,7 @@ git commit -m "Probe the user layer and updates over a dirty checkout"
 
 **Files:**
 
-- Modify: `docs/superpowers/specs/2026-11-11-installable-probe/probe.sh`
+- Modify: `docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh`
 
 **Interfaces:**
 
@@ -302,11 +302,11 @@ git commit -m "Probe the user layer and updates over a dirty checkout"
 
 - [ ] **Step 6: Run and commit**
 
-Run: `bash docs/superpowers/specs/2026-11-11-installable-probe/probe.sh 6 7 8 9 10`
+Run: `bash docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh 6 7 8 9 10`
 Expected: five `PROBE` lines, none `not-written`.
 
 ```bash
-git add docs/superpowers/specs/2026-11-11-installable-probe/probe.sh
+git add docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh
 git commit -m "Probe sync, saved profiles, module removal, the config-dir shape and a dev clone"
 ```
 
@@ -316,8 +316,8 @@ git commit -m "Probe sync, saved profiles, module removal, the config-dir shape 
 
 **Files:**
 
-- Create: `docs/superpowers/specs/2026-11-11-installable-probe/results.txt`
-- Modify: `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md`
+- Create: `docs/superpowers/specs/completed/2026-11-11-installable-probe/results.txt`
+- Modify: `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md`
 
 **Interfaces:**
 
@@ -325,7 +325,7 @@ git commit -m "Probe sync, saved profiles, module removal, the config-dir shape 
 
 - [ ] **Step 1: Run everything once and keep the output**
 
-In the guest, from the folder `probe.sh` was copied to, run: `bash probe.sh 2> probe.err | grep '^PROBE ' > results.txt; cat results.txt`. Copy `results.txt` (and `probe.err` if any line says `ERROR`) to the shared folder, then on the host save it as `docs/superpowers/specs/2026-11-11-installable-probe/results.txt`.
+In the guest, from the folder `probe.sh` was copied to, run: `bash probe.sh 2> probe.err | grep '^PROBE ' > results.txt; cat results.txt`. Copy `results.txt` (and `probe.err` if any line says `ERROR`) to the shared folder, then on the host save it as `docs/superpowers/specs/completed/2026-11-11-installable-probe/results.txt`.
 Expected: exactly ten lines, each starting `PROBE`. The first names the mise version. Only the answer lines are committed: mise's own output holds temp paths that differ on every run.
 
 - [ ] **Step 2: Rewrite the spec's table**
@@ -364,7 +364,7 @@ Rename "Not verified, and the check that settles each" to "Verified facts" and r
 - [ ] **Step 4: Commit and stop for review**
 
 ```bash
-git add docs/superpowers/specs/2026-11-11-installable-probe/results.txt docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md
+git add docs/superpowers/specs/completed/2026-11-11-installable-probe/results.txt docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md
 git commit -m "Record the probe results in the installable-setup spec"
 git push
 ```

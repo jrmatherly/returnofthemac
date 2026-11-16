@@ -11,7 +11,7 @@
 # `/bin/bash "/Volumes/My Shared Files/vm-proof/p5/p5-probe.sh" {{2}}`
 #
 # ---
-# Evidence for ../../plans/completed/2026-11-13-p5-menu-bar-app.md (Task 0), not part of the product.
+# Evidence for ../../../plans/completed/2026-11-13-p5-menu-bar-app.md (Task 0), not part of the product.
 # The guest runs the copy at ~/vm-proof/p5/p5-probe.sh. Unlike the P4 probe this one
 # changes the guest for real: rows 1 and 2 run `rotm update -y`, row 4 upgrades a cask
 # and row 5 turns sync on. Run it only in the disposable guest, on an installed copy.

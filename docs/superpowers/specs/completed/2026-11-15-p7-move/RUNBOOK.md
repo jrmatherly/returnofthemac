@@ -2,7 +2,7 @@
 
 Candidate: the commit on `main` that adds `install.sh`, once its `check.yml` run has passed. The session gives you its full hash when it hands this runbook over, and row `a1` must print it. mise for this run: 2026.11.8, the newest release on 2026-11-15 (`gh api repos/jdx/mise/releases/latest`).
 
-This run proves a fresh install from `main` at the candidate in the disposable UTM guest. It is the gate for moving `stable` (decision 9 of `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md`), run on the mise release current that day (decision 10). It is P7 plan Task 1 (`docs/superpowers/plans/2026-11-15-p7-stable-and-the-owners-mac.md`).
+This run proves a fresh install from `main` at the candidate in the disposable UTM guest. It is the gate for moving `stable` (decision 9 of `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md`), run on the mise release current that day (decision 10). It is P7 plan Task 1 (`docs/superpowers/plans/completed/2026-11-15-p7-stable-and-the-owners-mac.md`).
 
 How it works:
 

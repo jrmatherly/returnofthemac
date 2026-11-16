@@ -6,9 +6,9 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 | Plan | Spec | Tasks | State |
 | --- | --- | --- | --- |
-| [P7 stable and the owner's Mac](2026-11-15-p7-stable-and-the-owners-mac.md) | [installable setup](../specs/2026-11-11-installable-setup-profiles-and-sync.md), the P7 brief | 6 | Written and reviewed on 2026-11-15 (its last section lists what the review changed). Tasks 1 to 3 done that day (its Progress table): `stable` promoted to `73300a5`, `install.sh` added, `MOVE.md` written. Next is the owner's guest B run. Tasks 1, 4 and 5 need the owner at the guest or the Mac, and Task 2 is the owner's push. Run its tasks in order |
+| None | | | |
 
-[P6](completed/2026-11-15-p6-docs-for-the-new-path.md) finished on 2026-11-15.
+[P6](completed/2026-11-15-p6-docs-for-the-new-path.md) finished on 2026-11-15. [P7](completed/2026-11-15-p7-stable-and-the-owners-mac.md) finished the same day, and with it the [installable-setup spec](../specs/completed/2026-11-11-installable-setup-profiles-and-sync.md): the owner's Mac runs an install from `stable`.
 
 The four audit plans were each checked line by line against the code on 2026-11-14 and corrected. All four are finished and filed in `completed/`: [install and opt-outs](completed/2026-11-14-audit-install-and-opt-outs.md), [settings tool](completed/2026-11-14-audit-settings-tool.md), [gate, CI and docs](completed/2026-11-14-audit-gate-ci-and-docs.md) and [menu bar app](completed/2026-11-14-audit-menu-bar-app.md). Each opens with an "Outcome" table of its commits. Stages 2 to 5 below ran on 2026-11-14, one commit per task, each with its failing check seen first. Stage 1 is done.
 
@@ -20,6 +20,9 @@ Found while running them, and not in any plan:
 - Install 9 as planned still installed a changed or unchecked skill for an agent that lacked it. `5e75b83` holds it until `claude-config restore skills --accept <name>`.
 - Not fixed, found while reviewing the P6 plan on 2026-11-15: `obsidian-vault capture` has no installed-copy guard, so on an installed copy it writes into the checkout and `rotm update` then refuses.
 - Not fixed, found by the P6 docs audit on 2026-11-15: on an installed copy Mole's two whitelists are links into the checkout, so `mo clean --whitelist` and `mo optimize --whitelist` write into it and `rotm update` then refuses. `docs/mole.md` says to keep a list outside the copy.
+- Not fixed, found by the P7 move on 2026-11-15: `rotm settings sync on` fails when the settings repository was deleted and made again under the same name, because mise's history remembers the old one. The spec's "Verified facts" has the three cases and the hand fix.
+- Not checked, found the same day: on an installed copy `mise exec` sets `MISE_ENV=rotm-installed`, which the settings code reads in place of the saved profile. Four tests now clear it. Whether a profile in use is hidden by it outside the tests has not been looked at.
+- Not fixed, found the same day: setup's "Load your saved settings" question defaults to yes on a Mac whose folder already holds settings, where the load cannot succeed and the Mac is left connected.
 - Not fixed: `--accept` installs whatever the source holds at that moment, and a first install on a new Mac is unpinned. The `skills` CLI takes `owner/repo#<sha>`, but the lock records a folder hash and no commit, so `claude-config save` would have to record one.
 
 Stage 6 ran on 2026-11-14 and 2026-11-15 with the owner's answers: decision 1 declined, decisions 2, 4, 5 and 6 as recommended, decision 3 for the docs only, decision 7 at 48 hours, and Settings 9 approved.
@@ -89,7 +92,7 @@ Decision 8 (owner values in linked files, finding I22) is not planned here. It b
 1. **Gate 9, then Gate 10.** The `ci.md`, forking table and macOS doc corrections. Gate 9 comes after Install 4 and Install 7, because two of its forking rows describe what those tasks ship. Done on 2026-11-15 (`61b074a`, `8ff381a`).
 2. **The owner runs `fresh-install` again**, since the install plan changes the setup path. Done on 2026-11-15: both legs passed at `cbd63b0` (run 43720059101).
 3. **P5 Task 12** (retire `rotm settings serve`). Done on 2026-11-15, on the owner's word. The P5 plan is in `completed/`.
-4. Move each finished plan to `completed/`, and each spec to `specs/completed/` when every plan built on it is there. Done on 2026-11-15: the audit spec and its four plans, and the P5 plan. The installable-setup spec stays open for P6 and P7.
+4. Move each finished plan to `completed/`, and each spec to `specs/completed/` when every plan built on it is there. Done on 2026-11-15: the audit spec and its four plans, and the P5 plan. The installable-setup spec, its probe folders and the P7 plan followed on 2026-11-15.
 
 ## Tasks that touch the same files
 

@@ -8,7 +8,7 @@
 
 **Tech Stack:** Swift 5.9 tools, macOS 14+, AppKit and SwiftUI, Observation, Swift Testing, no third-party Swift dependency. Python 3.11+ standard library (`settings/`), bash 3.2 (`bin/`), mise 2026.11.8, GitHub Actions on `macos-26`.
 
-**Spec:** `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md`. Read its Goal and "Decisions the owner made" in full before Task 1, decisions 16 to 20 included. This plan implements the P5 brief and the spec's "Menu bar app" section.
+**Spec:** `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md`. Read its Goal and "Decisions the owner made" in full before Task 1, decisions 16 to 20 included. This plan implements the P5 brief and the spec's "Menu bar app" section.
 
 **Reference:** `~/dev/claude-multipass` at tag `v0.14.0` is the app this one is modelled on. Where a task says "as the reference does", read the named file there. Copy scaffolding, never its account, Keychain, Sparkle or brew code.
 
@@ -81,9 +81,9 @@ From mise's cask page (`mise.jdx.dev/bootstrap/packages/brew-cask.html`, read 20
 This task changes no file in the repository except its results. It gates Task 5's prompt handling and Task 10's upgrade call, and nothing else: Tasks 1 to 4 and 6 start without it.
 
 **Files:**
-- Create: `docs/superpowers/specs/2026-11-13-p5-probe/` (the results, one text file per row, and `probe.sh`)
+- Create: `docs/superpowers/specs/completed/2026-11-13-p5-probe/` (the results, one text file per row, and `probe.sh`)
 
-- [ ] **Step 1: Write `probe.sh`** from the rows below, modelled on `docs/superpowers/specs/2026-11-13-p4-probe/probe.sh`, and write the owner a numbered runbook for the UTM guest (start from a snapshot taken after a clean install, share `~/vm-proof/p5/`, run under `/bin/bash`). The guest has no SSH and no `utmctl exec`, so every row is something the owner types or a file the probe leaves behind.
+- [ ] **Step 1: Write `probe.sh`** from the rows below, modelled on `docs/superpowers/specs/completed/2026-11-13-p4-probe/probe.sh`, and write the owner a numbered runbook for the UTM guest (start from a snapshot taken after a clean install, share `~/vm-proof/p5/`, run under `/bin/bash`). The guest has no SSH and no `utmctl exec`, so every row is something the owner types or a file the probe leaves behind.
 - [ ] **Step 2: The owner runs it.** Rows:
 
 | Row | Command, on an installed guest | Records |

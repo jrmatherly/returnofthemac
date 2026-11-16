@@ -8,7 +8,22 @@
 
 **Tech Stack:** mise 2026.11.8 or newer (the release current on the day of each guest run), UTM guest `macOS` (macOS 27.2.1, disposable runs), bash and zsh, Markdown.
 
-**Spec:** `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md`. Read its Goal and "Decisions the owner made" in full before Task 1. Decisions 7, 9, 10 and 15 and the P7 brief bind this plan.
+**Spec:** `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md`. Read its Goal and "Decisions the owner made" in full before Task 1. Decisions 7, 9, 10 and 15 and the P7 brief bind this plan.
+
+## Outcome (2026-11-15)
+
+Every task is done. `stable` is at `c953c798d155d9e5e96dba0d7f0042c844867303`, and the owner's Mac runs it.
+
+| Task | Commit or record | Difference from the plan |
+| --- | --- | --- |
+| 1. Promotion runbook and guest A | `b80ff2f`, `2e0dbe9`, `73300a5`; rows `a1` to `a8` in `~/vm-proof/p7/` | `install.sh` was added first on the owner's request, so the candidate was `2e0dbe9` and guest A ran the one-line installer |
+| 2. Promote `stable` | `f3f18f1`: `d09f025` to `73300a5` | None |
+| 3. Move runbook | `5d76cfa`, `2e16095` | The scratch run changed six things, listed at the end of `MOVE.md` |
+| 4. Guest B | `9ed4da0`, `02be67d`, `6681ac7`, `206a54e`; rows `b0` to `b8` and `m1` to `m13` | The typed lines failed in the owner's shell, where `find` is `fd`, so the guest ran them from scripts. `stable` moved to `02be67d`. An independent review then corrected the opening line and the scripts |
+| 5. Move the owner's Mac | `c953c79`, `77cb7b5`, `4a7bf31`; `~/vm-proof/p7/mac/` | Run from `move.zsh`, not typed. Setup's saved-settings question was answered with Enter, so the owner deleted the P5 guests' settings repository and sync was turned on again with a new one. `pnpm check` needed four tests to clear `MISE_ENV` on an installed copy. `stable` moved to `c953c79` |
+| 6. Close P7 and the spec | This commit | The audit also found `bin/CLAUDE.md` and four rules, beside the two `CLAUDE.md` statements the plan named |
+
+Found and not fixed, carried to the plan index: `rotm settings sync on` fails when a settings repository is deleted and made again under the same name, `MISE_ENV=rotm-installed` may hide an active profile outside the tests, and setup's saved-settings question defaults to loading on a Mac that already has settings.
 
 ## Progress (2026-11-15)
 
@@ -19,7 +34,7 @@
 | 3. Move runbook | Done | `5d76cfa`, corrected by a review in `2e16095`. `MOVE.md` ends with what the scratch run changed from this plan |
 | 4. Guest B | Done | `9ed4da0`, `02be67d`. Guest B passed on 2026-11-15 (rows `b0` to `b8` and `m1` to `m13` in `~/vm-proof/p7/`, `RUNBOOK.md` "Result", the spec's "Verified facts"). `stable` moved from `73300a5` to `02be67d` in step 7 |
 | 5. Move the owner's Mac | Done on 2026-11-15 (`c953c79`, promoted to `stable` and brought here by `rotm update`) | `~/vm-proof/p7/mac/` (`move.log`, `m1` to `m13`), `MOVE.md` "What the move on the owner's Mac changed", the spec's "Verified facts" |
-| 6. Close P7 and the spec | Not started | |
+| 6. Close P7 and the spec | Done on 2026-11-15 | The docs audit's eight findings, each checked against the code: `CLAUDE.md`, `bin/CLAUDE.md` and four rules |
 
 Differences from the plan as written:
 
@@ -75,7 +90,7 @@ Not measured: a full `setup.sh` run on a clone-shaped home that was moved (Task 
 - **Two guest runs, not three.** Guest A is a fresh install from `main` at the candidate, which is decision 9's gate. Guest B rehearses the move and uses the README's own line with `ref=stable`, so the stable line and a `rotm update` across a promotion are proven there. The README's line from a fresh home on `stable` is not run as its own guest: it differs from guest A's in the ref only.
 - **The Mole list moves out of the checkout.** `~/.config/mole/whitelist.local`, with the `config.local.toml` entry pointed at it, as `docs/mole.md` now tells an installed user. Not into `~/.config/rotm`, where sync refuses a file it does not know.
 - **VS Code's state is moved, not copied.** It is 4.7 GB. `mv` within one volume is instant, and the rollback moves it back.
-- **The two runbooks live beside the spec**, in `docs/superpowers/specs/2026-11-15-p7-move/`, as the P5 proof's do. Records go to `~/vm-proof/p7/` on the host through the shared folder.
+- **The two runbooks live beside the spec**, in `docs/superpowers/specs/completed/2026-11-15-p7-move/`, as the P5 proof's do. Records go to `~/vm-proof/p7/` on the host through the shared folder.
 - **No new proof script.** The rows are few, so each records plain command output with one shell function the runbook defines.
 - **The carried files move, they are not copied.** A copy left behind in the clone made the rollback stop: `rotm-user-layer ensure` exits 1 when the clone's config dir and `~/.config/rotm` hold different copies of one file (the reviewer's scratch run). After a rollback the clone reads `~/.config/rotm` through a link, which is the layout a clone has had since P3.
 - **Guest B is reshaped before the rehearsal,** to this Mac's shape, since a fresh clone install does not have it (see "Measured").
@@ -95,8 +110,8 @@ Not measured: a full `setup.sh` run on a clone-shaped home that was moved (Task 
 ### Task 1: Write the promotion runbook and prove the candidate (guest A)
 
 **Files:**
-- Create: `docs/superpowers/specs/2026-11-15-p7-move/RUNBOOK.md`
-- Modify: `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md` ("Verified facts")
+- Create: `docs/superpowers/specs/completed/2026-11-15-p7-move/RUNBOOK.md`
+- Modify: `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md` ("Verified facts")
 
 **Interfaces:**
 - Produces: the candidate, a full commit hash on `main` that Task 2 promotes, written in the runbook's first line. The runbook's record function, which `MOVE.md` and guest B reuse. `P7` is the record folder: the shared folder in a guest, `~/vm-proof/p7/mac` on the owner's Mac. Both lines are typed again in every new Terminal window:
@@ -107,7 +122,7 @@ Not measured: a full `setup.sh` run on a clone-shaped home that was moved (Task 
   ```
 
 - [ ] **Step 1: Fix the candidate.** `git rev-parse origin/main`, with `main` clean and `check.yml` green on it (`gh run list --workflow check.yml --limit 1`). Record the mise release current that day (`gh api repos/jdx/mise/releases/latest --jq .tag_name`).
-- [ ] **Step 2: Write `RUNBOOK.md`, section "Guest A".** Numbered steps in the form of the P5 runbook (`docs/superpowers/specs/2026-11-14-p5-vm-proof/RUNBOOK.md`, steps 3 to 7): start the guest disposable, check the two tools, `mkdir -p` the record folder, run the install line with `?ref=main`, answer setup, reopen Terminal, define `r`. Then these rows:
+- [ ] **Step 2: Write `RUNBOOK.md`, section "Guest A".** Numbered steps in the form of the P5 runbook (`docs/superpowers/specs/completed/2026-11-14-p5-vm-proof/RUNBOOK.md`, steps 3 to 7): start the guest disposable, check the two tools, `mkdir -p` the record folder, run the install line with `?ref=main`, answer setup, reopen Terminal, define `r`. Then these rows:
 
   | Row | Command | Passes when |
   | --- | --- | --- |
@@ -149,7 +164,7 @@ Not measured: a full `setup.sh` run on a clone-shaped home that was moved (Task 
 ### Task 3: Write the move runbook
 
 **Files:**
-- Create: `docs/superpowers/specs/2026-11-15-p7-move/MOVE.md`
+- Create: `docs/superpowers/specs/completed/2026-11-15-p7-move/MOVE.md`
 
 **Interfaces:**
 - Consumes: `r` from Task 1.
@@ -252,8 +267,8 @@ The runbook's content, decided here. Each numbered item is one step with its com
 ### Task 4: Rehearse the move in the guest (guest B)
 
 **Files:**
-- Modify: `docs/superpowers/specs/2026-11-15-p7-move/RUNBOOK.md` (section "Guest B")
-- Modify: `docs/superpowers/specs/2026-11-15-p7-move/MOVE.md` (what the rehearsal corrects)
+- Modify: `docs/superpowers/specs/completed/2026-11-15-p7-move/RUNBOOK.md` (section "Guest B")
+- Modify: `docs/superpowers/specs/completed/2026-11-15-p7-move/MOVE.md` (what the rehearsal corrects)
 - Modify: the spec ("Verified facts")
 
 **Interfaces:**
@@ -271,7 +286,7 @@ The runbook's content, decided here. Each numbered item is one step with its com
 ### Task 5: Move the owner's Mac
 
 **Files:**
-- Modify: `docs/superpowers/specs/2026-11-15-p7-move/MOVE.md` (the link count, and what the real run corrects)
+- Modify: `docs/superpowers/specs/completed/2026-11-15-p7-move/MOVE.md` (the link count, and what the real run corrects)
 
 **Interfaces:**
 - Consumes: `MOVE.md` as corrected by Task 4, and `stable` at the commit Task 4 promoted.

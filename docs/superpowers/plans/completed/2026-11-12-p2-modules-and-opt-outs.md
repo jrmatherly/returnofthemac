@@ -10,7 +10,7 @@
 
 **Tech Stack:** bash 3.2 (`#!/bin/bash`), mise 2026.11.5 or newer, Python 3.11+ with `tomllib` (the settings package and the self-checks), GitHub Actions, Renovate.
 
-**Spec:** `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md`. Read "Opt-outs", "Verified facts" and the P2 brief first. The owner split the brief on 2026-11-12: this plan is modules and opt-outs, and the owner's layer (the 13 values in `docs/forking.md`) is brief P2b, its own later plan.
+**Spec:** `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md`. Read "Opt-outs", "Verified facts" and the P2 brief first. The owner split the brief on 2026-11-12: this plan is modules and opt-outs, and the owner's layer (the 13 values in `docs/forking.md`) is brief P2b, its own later plan.
 
 ## Global Constraints
 
@@ -153,7 +153,7 @@ The base keeps: the "Dotfiles framework requirements" section plus the five form
 **Files:**
 
 - Modify: `bin/lib/test-packages` (one block, after the existing `cfg2` block)
-- Modify: `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md`
+- Modify: `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md`
 
 **Interfaces:**
 
@@ -779,7 +779,7 @@ git commit -m "Add a switch per module to the settings, and document opting out"
 
 **Files:**
 
-- Create: `docs/superpowers/specs/2026-11-11-installable-probe/p2-evidence.sh` (the shape of `p1-evidence.sh`, which refuses to run on the host)
+- Create: `docs/superpowers/specs/completed/2026-11-11-installable-probe/p2-evidence.sh` (the shape of `p1-evidence.sh`, which refuses to run on the host)
 - Modify: this plan (`#### Results`)
 
 **Interfaces:**

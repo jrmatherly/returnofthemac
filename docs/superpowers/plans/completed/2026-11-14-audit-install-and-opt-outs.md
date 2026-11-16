@@ -204,7 +204,7 @@ Match exec "test -S %d/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agen
 - [ ] **Step 4: Warn about the key only on a Mac that has the agent.** In `setup/dotfiles-extras.sh:194`, the warning also requires `[ -e "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock" ]`. In `setup/tests/dotfiles-extras.sh`, replace the case at `:75` with two: `"no 1Password agent: no warning about the public key"` (`! grep -q github_personal.pub "$tmp/out"`) for `h1`, and `"1Password agent without the public key: warned"` for a home where that path exists as a plain file.
 - [ ] **Step 5: Run both.** `bash bin/lib/test-dotfiles && bash setup/tests/dotfiles-extras.sh`. Expected: exit 0. Then `ssh -G github.com | grep -iE '^(identitiesonly|identityagent)'` on this Mac. Expected: `identitiesonly yes` and the 1Password socket, as before the change.
 - [ ] **Step 6: Update the two docs.** Both say SSH works only once 1Password is set up. Say instead that the pin and the agent apply when their file exists, and that any other key setup works untouched.
-- [ ] **Step 7: Not run on the host.** `ssh -T git@github.com` with a plain `~/.ssh/id_ed25519` and no 1Password is a clean-Mac check. Add it as a row to the next guest run of the P5 VM proof (`docs/superpowers/specs/2026-11-14-p5-vm-proof/RUNBOOK.md`).
+- [ ] **Step 7: Not run on the host.** `ssh -T git@github.com` with a plain `~/.ssh/id_ed25519` and no 1Password is a clean-Mac check. Add it as a row to the next guest run of the P5 VM proof (`docs/superpowers/specs/completed/2026-11-14-p5-vm-proof/RUNBOOK.md`).
 - [ ] **Step 8: Commit** "Apply the 1Password SSH settings only when their files exist".
 
 ---

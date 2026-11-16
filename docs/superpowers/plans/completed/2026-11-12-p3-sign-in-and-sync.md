@@ -8,9 +8,9 @@
 
 **Tech Stack:** bash 3.2 (`#!/bin/bash`), mise 2026.11.5 or newer (`mise dot`, `mise bootstrap --adopt`, `mise set --override`, `mise set --file`), Python 3.11+ standard library (the settings package), `gh`, git.
 
-**Spec:** `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md`. Read the Goal and "Decisions the owner made" in full first, then "Sync and sign-in", the last rows of "Verified facts" and the P3 brief. Decisions 2, 3, 8, 13, 14 and 15 bind every task here.
+**Spec:** `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md`. Read the Goal and "Decisions the owner made" in full first, then "Sync and sign-in", the last rows of "Verified facts" and the P3 brief. Decisions 2, 3, 8, 13, 14 and 15 bind every task here.
 
-**Reviewed 2026-11-12,** before any task started, by the author against the code and by an independent reviewer on another model. Eighteen findings were raised and each was checked against the code or measured: sixteen changed a task, one was replaced by a simpler fix found while checking it (no Git credential configuration at all), and one needed only a measurement; "Measured while writing this plan" holds the measurements they needed. The probe scripts are in `docs/superpowers/specs/2026-11-11-installable-probe/p3/`.
+**Reviewed 2026-11-12,** before any task started, by the author against the code and by an independent reviewer on another model. Eighteen findings were raised and each was checked against the code or measured: sixteen changed a task, one was replaced by a simpler fix found while checking it (no Git credential configuration at all), and one needed only a measurement; "Measured while writing this plan" holds the measurements they needed. The probe scripts are in `docs/superpowers/specs/completed/2026-11-11-installable-probe/p3/`.
 
 **Executed 2026-11-12 to 13.** Tasks 1 to 8 are on `main`, one commit each, and one more commit came from a security review after Task 6:
 

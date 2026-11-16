@@ -8,7 +8,7 @@
 
 **Tech Stack:** bash 3.2, uv 0.13.7, actionlint 1.7.12, Renovate (Mend app), Python 3.11+ standard library, GitHub Actions on `macos-26`.
 
-**Spec:** `docs/superpowers/specs/completed/2026-11-14-project-audit.md`, section "G. Gate, CI and docs". Read it before Task 1. Tasks 2 and 11 also read `docs/superpowers/specs/2026-11-14-p5-vm-proof/RUNBOOK.md` and Task 11 of `docs/superpowers/plans/completed/2026-11-13-p5-menu-bar-app.md`.
+**Spec:** `docs/superpowers/specs/completed/2026-11-14-project-audit.md`, section "G. Gate, CI and docs". Read it before Task 1. Tasks 2 and 11 also read `docs/superpowers/specs/completed/2026-11-14-p5-vm-proof/RUNBOOK.md` and Task 11 of `docs/superpowers/plans/completed/2026-11-13-p5-menu-bar-app.md`.
 
 ## Outcome
 
@@ -122,13 +122,13 @@ Expected: `check: failed: uv lock --check --quiet --directory hindsight`, `exit 
 This task is time-bound, so run it before Task 1 while Guest 2 is still up. Guest 2 is running (`utmctl list` says `started`). The step must be in the runbook, and the row in the shared copy of the script, before the owner records 2b and shuts the guest down.
 
 **Files:**
-- Modify: `docs/superpowers/specs/2026-11-14-p5-vm-proof/RUNBOOK.md` (a new step 36 after line 262; today's step 36 becomes 37)
-- Modify: `docs/superpowers/specs/2026-11-14-p5-vm-proof/proof.sh:140` (`rows`) and `:179-182` (the `case`)
+- Modify: `docs/superpowers/specs/completed/2026-11-14-p5-vm-proof/RUNBOOK.md` (a new step 36 after line 262; today's step 36 becomes 37)
+- Modify: `docs/superpowers/specs/completed/2026-11-14-p5-vm-proof/proof.sh:140` (`rows`) and `:179-182` (the `case`)
 
 **Interfaces:**
 - Produces: row `2c`, recorded into `~/vm-proof/p5/g2/2c/` and compared with `2b`. Task 11 reads it.
 
-- [ ] **Step 1: See the script refuse the row.** `/bin/bash docs/superpowers/specs/2026-11-14-p5-vm-proof/proof.sh 2c`. Expected: `proof: usage: proof.sh <row> | diff <record> <record>. Rows: …` and exit 1.
+- [ ] **Step 1: See the script refuse the row.** `/bin/bash docs/superpowers/specs/completed/2026-11-14-p5-vm-proof/proof.sh 2c`. Expected: `proof: usage: proof.sh <row> | diff <record> <record>. Rows: …` and exit 1.
 
 - [ ] **Step 2: Add the row.** Append `2c` to `rows`. Add `2c) against=2b ;;` after the `2a | 2b)` branch. Nothing else changes, because `record` already captures `list.json` and `~/.config/rotm/tools.toml`.
 
@@ -148,7 +148,7 @@ This task is time-bound, so run it before Task 1 while Guest 2 is still up. Gues
 
 - [ ] **Step 5:** `pnpm check`, commit: "Add a jstack Reset row to the Guest 2 proof".
 
-- [ ] **Step 6: Copy the script to the shared folder**, as the runbook's step 1 does, and tell the owner the new step exists. The command is `cp docs/superpowers/specs/2026-11-14-p5-vm-proof/proof.sh ~/vm-proof/p5/proof.sh`. The two files are identical today (`diff -q`). **Not run on the host:** the row itself. Guest 2's `p 2c` proves it.
+- [ ] **Step 6: Copy the script to the shared folder**, as the runbook's step 1 does, and tell the owner the new step exists. The command is `cp docs/superpowers/specs/completed/2026-11-14-p5-vm-proof/proof.sh ~/vm-proof/p5/proof.sh`. The two files are identical today (`diff -q`). **Not run on the host:** the row itself. Guest 2's `p 2c` proves it.
 
 ---
 
@@ -283,7 +283,7 @@ This fix lives in `docs/superpowers/plans/completed/2026-11-14-audit-menu-bar-ap
 **Files:**
 - Modify: `.claude/rules/ci.md:13,17`
 - Modify: `docs/forking.md` (four rows before the `LICENSE` row at line 22)
-- Modify: `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md:41`
+- Modify: `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md:41`
 
 These edits have no test, because they are statements about files. Each step names the line that proves the new text.
 
@@ -331,9 +331,9 @@ If the install plan's I1 or I9 task has landed first, write the last two rows to
 Do not start this task until `~/vm-proof/p5/g2/2a/state.json` and `~/vm-proof/p5/g2/2b/state.json` exist. It is part of Task 11 Step 3 of `docs/superpowers/plans/completed/2026-11-13-p5-menu-bar-app.md`, which writes the run's results into the spec once. Splitting the spec edit in two would leave the sync row half-rewritten.
 
 **Files:**
-- Modify: `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md:211-321` ("Verified facts" and "Still not verified")
-- Modify: `docs/superpowers/specs/2026-11-14-p5-vm-proof/RUNBOOK.md:158,189-218,246`
-- Modify: `docs/superpowers/specs/2026-11-14-p5-vm-proof/proof.sh:42-43` (the comment only)
+- Modify: `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md:211-321` ("Verified facts" and "Still not verified")
+- Modify: `docs/superpowers/specs/completed/2026-11-14-p5-vm-proof/RUNBOOK.md:158,189-218,246`
+- Modify: `docs/superpowers/specs/completed/2026-11-14-p5-vm-proof/proof.sh:42-43` (the comment only)
 
 **Interfaces:**
 - Consumes: rows `2a`, `2b` and Task 2's `2c` in `~/vm-proof/p5/g2/`.

@@ -27,7 +27,7 @@ private let multipassCask = """
   end
   """
 
-// docs/superpowers/specs/2026-11-13-p5-probe/guest-2026.11.8/row4-5-upgrade-no-terminal.txt,
+// docs/superpowers/specs/completed/2026-11-13-p5-probe/guest-2026.11.8/row4-5-upgrade-no-terminal.txt,
 // run while the app was running: exit 0, and the old process lived on.
 private let upgradedWhileRunning = """
   mise brew: all formulae already poured

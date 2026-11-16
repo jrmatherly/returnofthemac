@@ -9,10 +9,10 @@
 #
 # - Run it on a Mac, where it also only touches scratch homes:
 #
-# `/bin/bash docs/superpowers/specs/2026-11-13-p4-probe/probe.sh`
+# `/bin/bash docs/superpowers/specs/completed/2026-11-13-p4-probe/probe.sh`
 #
 # ---
-# Evidence for ../../plans/completed/2026-11-13-p4-profiles.md, not part of the product.
+# Evidence for ../../../plans/completed/2026-11-13-p4-profiles.md, not part of the product.
 # The guest runs the copy at ~/vm-proof/p4/p4-probe.sh. Run it under /bin/bash:
 # under Homebrew's bash 5 the self-check section crashed. Needs the Command
 # Line Tools (git) and mise. Everything

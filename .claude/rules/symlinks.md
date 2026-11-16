@@ -8,7 +8,7 @@ paths:
 
 # Symlinks
 
-`conf.d/40-dotfiles.toml` has one `[dotfiles]` entry per top-level file of `tilde/` and per child of `tilde/.config/`. A new one needs an entry, and `bin/lib/test-dotfiles` fails without it. Sources are written `~/dotfiles/…`: `source` is not a template, and a relative source resolves from `~/.config/mise/conf.d`, not from the clone.
+`conf.d/40-dotfiles.toml` has one `[dotfiles]` entry per top-level file of `tilde/` and per child of `tilde/.config/`. A new one needs an entry, and `bin/lib/test-dotfiles` fails without it. Sources are written `~/dotfiles/…`: `source` is not a template, and a relative source resolves from `~/.config/mise/conf.d`, not from the checkout.
 
 - `~/.claude/rules` and `~/.config/fastfetch` are the `symlink-each` entries: a real directory with a link per tracked file, so a new rule needs no entry, and an installed copy seeds its own `config.jsonc` for fastfetch. The exceptions are `rtk.md` and `hindsight.md`, linked by `60-rotm-agents.toml`, and `catalog.md`, linked by `60-rotm-claude.toml`: the base excludes them, so they load only with their module. Their `depends = ["~/.claude/rules"]` is load-bearing: without it, one apply on a home linked before the exclude prunes the three and recreates none. Each skill folder and `statusline-command.sh` has its own entry. Never add a `"~"` walk entry: before its first apply mise searches all of `$HOME`.
 - `~/.ssh` and `~/.gnupg` are permissions-only entries (`0700`) beside the linked file. `~/.codex/config.toml` is a `merge = "missing"` edit: created at `0600` when missing, then only keys the live file lacks are added. Setup's `codex mcp add`, Hindsight and Codex write that file, so it is never linked.

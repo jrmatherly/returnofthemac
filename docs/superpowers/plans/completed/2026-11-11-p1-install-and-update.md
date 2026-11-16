@@ -8,7 +8,7 @@
 
 **Tech Stack:** bash 3.2 (`#!/bin/bash`), mise 2026.11.5 or newer, git, `/usr/bin/jq`, GitHub Actions.
 
-**Spec:** `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md`. Read "Verified facts", the Distribution section and the P1 brief first.
+**Spec:** `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md`. Read "Verified facts", the Distribution section and the P1 brief first.
 
 ## Global Constraints
 
@@ -54,8 +54,8 @@
 - `tilde/.gitconfig.installed`, `tilde/.zshrc.installed`: the two wrapper files.
 - `setup.sh`, `bin/sysup`, `bin/dotfiles`, `bin/vscode-settings`: one installed-mode branch each.
 - `bin/lib/test-bootstrap`, `bin/lib/test-sysup`, `bin/lib/test-dotfiles`, `vscode/test-vscode-settings.sh`: one new block each.
-- `docs/superpowers/specs/2026-11-11-installable-probe/probe.sh`, `results.txt`: probes 11 to 14.
-- `docs/superpowers/specs/2026-11-11-installable-probe/p1-evidence.sh`: writes the VM proof rows to the shared folder.
+- `docs/superpowers/specs/completed/2026-11-11-installable-probe/probe.sh`, `results.txt`: probes 11 to 14.
+- `docs/superpowers/specs/completed/2026-11-11-installable-probe/p1-evidence.sh`: writes the VM proof rows to the shared folder.
 - `.github/workflows/fresh-install.yml`: a matrix over the two install paths.
 - `README.md`, `docs/installation.md`, `setup/README.md`, `docs/README.md`, the spec.
 
@@ -65,7 +65,7 @@
 
 **Files:**
 
-- Modify: `docs/superpowers/specs/2026-11-11-installable-probe/results.txt`
+- Modify: `docs/superpowers/specs/completed/2026-11-11-installable-probe/results.txt`
 
 Probes 11 to 13 are written and were run on 2026-11-11 (mise 2026.11.6, the disposable guest). Their lines are in `results.txt`:
 
@@ -410,7 +410,7 @@ Run: `bash bin/lib/test-dotfiles`
 Expected: exit 0.
 
 ```bash
-git add tilde/.config/mise/config.installed.toml tilde/.gitconfig.installed tilde/.zshrc.installed tilde/.config/mise/conf.d/40-dotfiles.toml bin/lib/test-dotfiles .prettierignore docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md
+git add tilde/.config/mise/config.installed.toml tilde/.gitconfig.installed tilde/.zshrc.installed tilde/.config/mise/conf.d/40-dotfiles.toml bin/lib/test-dotfiles .prettierignore docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md
 git commit -m "Declare how each dotfile deploys on an installed copy"
 git push
 ```
@@ -421,7 +421,7 @@ git push
 
 **Files:**
 
-- Create: `docs/superpowers/specs/2026-11-11-installable-probe/p1-evidence.sh` (mode 0755)
+- Create: `docs/superpowers/specs/completed/2026-11-11-installable-probe/p1-evidence.sh` (mode 0755)
 - Modify: `tilde/.config/mise/config.installed.toml` and the spec's table (the measured entries)
 - Modify: this plan (a `#### Results` section)
 
@@ -491,7 +491,7 @@ What the proof adds to Task 7's docs: a Mac that is not signed in to GitHub runs
 - [ ] **Step 4: Commit**
 
 ```bash
-git add docs/superpowers/specs/2026-11-11-installable-probe/p1-evidence.sh tilde/.config/mise/config.installed.toml docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md docs/superpowers/plans/2026-11-11-p1-install-and-update.md
+git add docs/superpowers/specs/completed/2026-11-11-installable-probe/p1-evidence.sh tilde/.config/mise/config.installed.toml docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md docs/superpowers/plans/2026-11-11-p1-install-and-update.md
 git commit -m "Record the VM proof of the installed path"
 git push
 ```
@@ -600,7 +600,7 @@ Run on 2026-11-12 on `7f837d6` (run 43244545330): both paths passed, `installed`
 
 **Files:**
 
-- Modify: `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md`
+- Modify: `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md`
 - Modify: `CLAUDE.md`, `.claude/rules/setup.md`, `.claude/rules/symlinks.md` where a stated fact became false
 
 - [ ] **Step 1: Update the spec**

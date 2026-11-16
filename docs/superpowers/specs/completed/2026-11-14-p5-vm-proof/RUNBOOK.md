@@ -14,7 +14,7 @@ How it works:
 1. **The session** copies the script to the shared folder, from the repository's root, when the run starts, so the guest runs the reviewed copy. **Not run yet.**
 
    ```shell
-   mkdir -p ~/vm-proof/p5 && cp docs/superpowers/specs/2026-11-14-p5-vm-proof/proof.sh ~/vm-proof/p5/proof.sh
+   mkdir -p ~/vm-proof/p5 && cp docs/superpowers/specs/completed/2026-11-14-p5-vm-proof/proof.sh ~/vm-proof/p5/proof.sh
    ```
 
 2. **You decide** what happens to `jrmatherly/rotm-settings`. P5's probe row 5 created it on 2026-11-14 and it holds saved settings. If guest 1 signs in to that account, Turn On Sync loads those settings instead of creating the repository, and the settings changed in steps 16 and 19 then stop it with a conflict. Delete the repository on GitHub (its Settings, then Danger Zone), or use another account at every sign-in (steps 5, 21 and 32). **Not run on the host:** the deletion.

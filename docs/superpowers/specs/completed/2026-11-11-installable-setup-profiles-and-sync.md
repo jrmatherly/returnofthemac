@@ -1,6 +1,6 @@
 # Installable setup, opt-outs, profiles and sync
 
-Date: 2026-11-11. Status: draft for the owner's review. Plans built on this spec are listed in [Plans](#plans).
+Date: 2026-11-11. Status: closed on 2026-11-15. Every phase shipped, the owner's Mac runs an install from `stable`, and the eight plans built on it are in `docs/superpowers/plans/completed/`, listed in [Plans](#plans).
 
 ## Goal
 
@@ -361,7 +361,7 @@ Also measured that day: with `HOME` and every `MISE_*_DIR` pointed at a scratch 
 - `docs/superpowers/plans/completed/2026-11-13-p4-profiles.md` (done 2026-11-13): a profile as a config environment named `rotm-p-<name>` with its own `config.<env>.override.toml`, a module list and a `tools.toml` per profile, and `rotm settings profile list|use|new` with `--shared` on `set` and `reset`. Its first three tasks fixed the shell cache reading values mise quotes from 2026.11.6, raised the mise floor to 2026.11.8 and moved the macOS preferences to `[bootstrap.settings.macos]`. Its measurements are in `2026-11-13-p4-probe/` beside this file. Its proof in the VM ran on 2026-11-14 inside the P5 run (see "Verified facts").
 - `docs/superpowers/plans/completed/2026-11-13-p5-menu-bar-app.md` (done 2026-11-15): the menu bar app as a Swift package in `app/`, the JSON it needs from `rotm settings`, a console for update, setup and the sign-in, a native settings window, a `menubar` module with a cask in the owner's tap, and an update through mise. Its Task 0 probes ran in the VM and are in "Verified facts". `app-v0.1.0` was released on 2026-11-14. Task 11's docs and spec edits are written. Task 11's proof in the VM ran on 2026-11-14 over two guests (see "Verified facts"). Task 12 removed the browser variant on 2026-11-15, on the owner's word.
 - `docs/superpowers/plans/completed/2026-11-15-p6-docs-for-the-new-path.md` (done 2026-11-15): a link and anchor check in the gate, a way for an installed user to change the fastfetch and lazygit owner values (audit finding I22), and the README, installation, updating and "Make it yours" pages reordered around the installed copy. It found the brief's sync and profiles page already shipped as `docs/settings-sync.md`.
-- `docs/superpowers/plans/2026-11-15-p7-stable-and-the-owners-mac.md` (written 2026-11-15, Tasks 1 and 2 done that day: `stable` promoted from `d09f025` to `73300a5`): a fresh install on the candidate in the guest, the promotion of `stable`, a runbook for the hand move of a clone-based Mac rehearsed in a second guest, and the move itself. It adds no product code. Its "Measured" section holds what a scratch home showed about the move.
+- `docs/superpowers/plans/completed/2026-11-15-p7-stable-and-the-owners-mac.md` (done 2026-11-15): a fresh install on the candidate in the guest, the promotion of `stable`, a runbook for the hand move of a clone-based Mac rehearsed in a second guest, and the move of the owner's Mac. Its Outcome table lists what differed.
 
 ## Phase briefs
 
@@ -440,6 +440,7 @@ How to use these when writing a plan: read the brief, then read "Verified facts"
 - **Promoted.** 2026-11-15: `stable` moved from `d09f025a89193319e5b2b43adbeeba967668739c` to `73300a519691f6d0191063aed01407fca8676433`, a Markdown-only child of the candidate `2e0dbe990461727e82e0958f1c75c3ee063eb005` that passed guest A on mise 2026.11.8. The tree also carries `install.sh`, the one-line installer the README now gives, which the same guest run proved.
 - **Rehearsed.** 2026-11-15: guest B ran `2026-11-15-p7-move/MOVE.md` on a guest reshaped to the owner's Mac, an update across a promotion and the rollback, and every row passed. `stable` moved again in that run, from `73300a5` to `02be67df838bed0974d5e5e187d4eab0b0e847ad`, Markdown-only commits. The run found that the runbook's lines need the owner's shell aliases turned off first, which `MOVE.md` now does. 
 - **Moved.** 2026-11-15: the owner ran `~/vm-proof/p7/mac/move.zsh` and every row but one passed. The one, `m8`, read sync as connected, because setup's saved-settings question was answered with Enter. The owner then deleted the P5 guests' `rotm-settings` repository and sync was turned on again with a new private one that holds this Mac's settings ("Verified facts"). `sysup` ran clean on the copy, and `rotm update` then brought the promoted `c953c79` to it. Every line of "Done when" below holds on this Mac.
+- **Shipped.** `docs/superpowers/plans/completed/2026-11-15-p7-stable-and-the-owners-mac.md` (2026-11-15): `install.sh`, the promotion runbook in `setup/README.md`, `2026-11-15-p7-move/MOVE.md` and `RUNBOOK.md`, `stable` at `c953c79`, and the owner's Mac on it.
 - **Done when.** `bin/lib/rotm-mode` prints `installed` on that Mac, `rotm update` brings a new `stable` commit, and work in the clone at `~/dev/dotfiles` changes nothing in the live config until it is promoted.
 
 ## Open points for the owner

@@ -1,6 +1,6 @@
 # Moving a clone install to an installed copy: runbook (2026-11-15)
 
-This moves one Mac, by hand and once, from a clone install to a copy that follows `stable`. Before it, every link in `$HOME` points into the clone at `~/dev/dotfiles`. After it, they point into mise's checkout at `~/.local/share/mise/bootstrap-repo`, and the clone is for editing only. It is P7 plan Tasks 3 to 5 (`docs/superpowers/plans/2026-11-15-p7-stable-and-the-owners-mac.md`). It is not a path users get: nothing in the product does this (decision 15 of `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md`).
+This moves one Mac, by hand and once, from a clone install to a copy that follows `stable`. Before it, every link in `$HOME` points into the clone at `~/dev/dotfiles`. After it, they point into mise's checkout at `~/.local/share/mise/bootstrap-repo`, and the clone is for editing only. It is P7 plan Tasks 3 to 5 (`docs/superpowers/plans/completed/2026-11-15-p7-stable-and-the-owners-mac.md`). It is not a path users get: nothing in the product does this (decision 15 of `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md`).
 
 How it works:
 

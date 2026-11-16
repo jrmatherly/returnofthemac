@@ -79,7 +79,7 @@ A copy that `mise bootstrap --from` fetched lives in `~/.local/share/mise/bootst
 
 ## Releasing to `stable`
 
-The install line and `rotm update` follow the `stable` branch, so a commit reaches users only when `stable` moves to it. Promote a commit after the install passed on it in the disposable VM (the rows are section "Guest A" of [the P7 runbook](../docs/superpowers/specs/2026-11-15-p7-move/RUNBOOK.md), which runs `install.sh` as well), or a later commit that differs from such a one in Markdown files only:
+The install line and `rotm update` follow the `stable` branch, so a commit reaches users only when `stable` moves to it. Promote a commit after the install passed on it in the disposable VM (the rows are section "Guest A" of [the P7 runbook](../docs/superpowers/specs/completed/2026-11-15-p7-move/RUNBOOK.md), which runs `install.sh` as well), or a later commit that differs from such a one in Markdown files only:
 
 ```shell
 git push origin "$sha:refs/heads/stable"

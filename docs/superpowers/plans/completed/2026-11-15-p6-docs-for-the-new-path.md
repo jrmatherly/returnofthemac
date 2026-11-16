@@ -8,7 +8,7 @@
 
 **Tech Stack:** Markdown (Prettier, `proseWrap: never`), Python 3.11+ standard library for the self-check, bash 3.2 (`bin/lib/test-dotfiles`), zsh (`zsh/env.zsh`), mise 2026.11.8.
 
-**Spec:** `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md`. Read its Goal and "Decisions the owner made" in full before Task 1. This plan implements the P6 brief, and finding I22 of `docs/superpowers/specs/completed/2026-11-14-project-audit.md` (its decision 8).
+**Spec:** `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md`. Read its Goal and "Decisions the owner made" in full before Task 1. This plan implements the P6 brief, and finding I22 of `docs/superpowers/specs/completed/2026-11-14-project-audit.md` (its decision 8).
 
 ## Outcome (2026-11-15)
 
@@ -257,7 +257,7 @@ The two install sections stay. The shared sections below them change so an insta
 
 **Files:**
 - Modify: whichever pages the audit reports
-- Modify: `docs/superpowers/specs/2026-11-11-installable-setup-profiles-and-sync.md` ("Plans", the P6 brief's "Shipped" line, and the "Open points" paragraph that says P6 rewrites `forking.md`)
+- Modify: `docs/superpowers/specs/completed/2026-11-11-installable-setup-profiles-and-sync.md` ("Plans", the P6 brief's "Shipped" line, and the "Open points" paragraph that says P6 rewrites `forking.md`)
 - Modify: `docs/superpowers/plans/README.md`
 - Move: this file to `docs/superpowers/plans/completed/`
 

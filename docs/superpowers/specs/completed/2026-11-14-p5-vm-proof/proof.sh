@@ -11,7 +11,7 @@
 # `/bin/bash "/Volumes/My Shared Files/vm-proof/p5/proof.sh" diff {{1c1}} {{1c2}}`
 #
 # ---
-# Evidence for ../../plans/completed/2026-11-13-p5-menu-bar-app.md (Task 11 Step 3), and the
+# Evidence for ../../../plans/completed/2026-11-13-p5-menu-bar-app.md (Task 11 Step 3), and the
 # VM proofs the P3 plan (Task 9 Step 6) and the P4 plan (Task 11 Step 3) still owe.
 # Not part of the product. RUNBOOK.md beside it says what to click before each row.
 # The guest runs the copy at ~/vm-proof/p5/proof.sh on the host. Run it under
@@ -159,7 +159,7 @@ run_row() {
       ;;
     1b7)
       against=1a
-      pointer p4 "The P4 proof ran inside the P5 run: ../p5/g1/1b1 to 1b7, RUNBOOK.md steps 9 to 15 in docs/superpowers/specs/2026-11-14-p5-vm-proof/."
+      pointer p4 "The P4 proof ran inside the P5 run: ../p5/g1/1b1 to 1b7, RUNBOOK.md steps 9 to 15 in docs/superpowers/specs/completed/2026-11-14-p5-vm-proof/."
       ;;
     1c2)
       undo 1b7 reset_all
@@ -172,14 +172,14 @@ run_row() {
     1d3) against=1d2 ;;
     1d4)
       against=1d3
-      pointer p3 "The first half of the P3 proof ran inside the P5 run: ../p5/g1/1c1 to 1d4. The second half is ../p5/g2/2a and 2b. Steps 16 to 22 and 31 to 35 of RUNBOOK.md in docs/superpowers/specs/2026-11-14-p5-vm-proof/."
+      pointer p3 "The first half of the P3 proof ran inside the P5 run: ../p5/g1/1c1 to 1d4. The second half is ../p5/g2/2a and 2b. Steps 16 to 22 and 31 to 35 of RUNBOOK.md in docs/superpowers/specs/completed/2026-11-14-p5-vm-proof/."
       ;;
     1f2) against=1f1 ;;
     1f3) against=1f2 ;;
     1f4) against=1f3 ;;
     2a | 2b)
       against=1d4
-      [ "$row" = 2a ] || pointer p3 "The P3 proof ran inside the P5 run: guest 1 is ../p5/g1/1c1 to 1d4, guest 2 is ../p5/g2/2a and 2b. Steps 16 to 22 and 31 to 35 of RUNBOOK.md in docs/superpowers/specs/2026-11-14-p5-vm-proof/."
+      [ "$row" = 2a ] || pointer p3 "The P3 proof ran inside the P5 run: guest 1 is ../p5/g1/1c1 to 1d4, guest 2 is ../p5/g2/2a and 2b. Steps 16 to 22 and 31 to 35 of RUNBOOK.md in docs/superpowers/specs/completed/2026-11-14-p5-vm-proof/."
       ;;
     2c) against=2b ;;
     3b) against=3a ;;
