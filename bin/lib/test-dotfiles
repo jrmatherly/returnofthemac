@@ -258,6 +258,9 @@ mi dotfiles apply --yes > "$tmp/out" 2>&1 || fail "installed: apply failed: $(ca
 [ ! -L "$home/.zshrc" ] && cmp -s "$home/.zshrc" "$repo/tilde/.zshrc.installed" || fail "installed: ~/.zshrc is not the seeded wrapper"
 [ "$(HOME="$home" git config --file "$home/.gitconfig" --includes --get core.excludesfile)" = "$(git config --file "$repo/tilde/.gitconfig" --get core.excludesfile)" ] \
   || fail "installed: git does not read the tracked settings through the wrapper"
+printf '[x]\n  y = 1\n' > "$home/.gitconfig.local"
+[ "$(HOME="$home" git config --file "$home/.gitconfig" --includes --get-all x.y | wc -l | tr -d ' ')" = 1 ] \
+  || fail "installed: ~/.gitconfig.local is read more than once"
 [ -d "$home/.config/gh" ] && [ ! -L "$home/.config/gh" ] && [ -f "$home/.config/gh/config.yml" ] && [ ! -L "$home/.config/gh/config.yml" ] \
   || fail "installed: ~/.config/gh is not a real folder with a real config.yml"
 for f in whitelist whitelist_optimize; do

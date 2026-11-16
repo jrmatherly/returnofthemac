@@ -2,5 +2,3 @@
 # come from the first include and update with it.
 [include]
   path = ~/dotfiles/tilde/.gitconfig
-[include]
-  path = ~/.gitconfig.local
