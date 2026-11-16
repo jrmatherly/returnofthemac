@@ -43,7 +43,7 @@ The [Sync section of the settings README](../settings/README.md#sync) lists the 
 
 ### During the first install
 
-After the GitHub login that setup offers, setup looks in your account for a private repository named `rotm-settings` that holds saved settings. When it finds one, it asks whether to load your saved settings before installing. Press Enter to load them.
+After the GitHub login that setup offers, setup looks in your account for a private repository named `rotm-settings` that holds saved settings. When it finds one, it asks whether to load your saved settings before installing. Press Enter to load them. When this Mac already holds settings the question says so, and Enter skips the load.
 
 - The settings load before any package is installed, so a module you switched off on the first Mac is not installed on this one.
 - The agent-tool settings are applied at the end of the run, when the tools exist.

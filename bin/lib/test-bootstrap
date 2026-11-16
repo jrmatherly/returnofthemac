@@ -588,6 +588,7 @@ answers='\ny\n' run
 check_true "saved: a terminal that answers yes exits 0" [ "$rc" -eq 0 ]
 check_true "saved: asks first" asked
 check_true "saved: restores the repository once" restores 1
+check_true "saved: a new Mac is asked the plain question" lacks 'already holds settings'
 check_true "saved: … before the first package list" in_order "$restore" "$apply brew disable="
 check_true "saved: a module switched off on the other Mac is off before the packages" grep -qF '"conf.d/60-rotm-apps.toml"' "$STATE/rc-at-packages"
 check_true "saved: the tool settings apply after the packages and the task" in_order "$apply brew disable=" "$task" "$settings_apply"
@@ -598,6 +599,17 @@ answers='\ny\n' run --without fonts
 check_true "saved --without: the folder held no module list when the restore ran" [ "$(cat "$STATE/modules-at-restore")" = absent ]
 check_true "saved --without: fonts is off on top of what was restored" [ "$(tr '\n' ' ' < "$HOME/.config/rotm/modules-off.local")" = "fonts apps " ]
 check_true "saved --without: … before the packages" grep -qF '"conf.d/60-rotm-fonts.toml", "conf.d/60-rotm-apps.toml"' "$STATE/rc-at-packages"
+
+prepare() {
+  stub gh "$saved"
+  mkdir -p "$HOME/.config/rotm"
+  echo '[tools]' > "$HOME/.config/rotm/tools.toml"
+}
+answers='\n\n' run
+check_true "saved, settings already here: says so" has 'already holds settings'
+check_true "saved, settings already here: Return does not restore" restores 0
+answers='\ny\n' run
+check_true "saved, settings already here: yes still restores" restores 1
 
 prepare() {
   stub gh "$saved"

@@ -523,9 +523,15 @@ load_saved_settings() {
     echo "Your saved settings are in $repo. Run \`rotm settings sync on\` after setup to load them."
     return 0
   fi
-  read -rp "Load your saved settings from $repo before installing? [Y/n] " answer || answer=n
-  case "$answer" in n* | N*) return 0 ;; esac
   folder=$("$DOTFILES_DIR/bin/lib/rotm-user-layer" dir)
+  # Settings already in the folder make the load conflict, so there the default is no
+  if [ -n "$(find "$folder" -maxdepth 1 -type f ! -name modules-off.local ! -name .DS_Store 2> /dev/null | head -1)" ]; then
+    read -rp "This Mac already holds settings in $folder, so loading can conflict. Load your saved settings from $repo anyway? [y/N] " answer || answer=n
+    case "$answer" in y* | Y*) ;; *) return 0 ;; esac
+  else
+    read -rp "Load your saved settings from $repo before installing? [Y/n] " answer || answer=n
+    case "$answer" in n* | N*) return 0 ;; esac
+  fi
   # This run's --without wrote the list already: set aside, it would conflict with the saved one
   if [ -n "$without" ] && [ -e "$folder/modules-off.local" ]; then
     aside=$(mktemp)
