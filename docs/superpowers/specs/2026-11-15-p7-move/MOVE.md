@@ -6,7 +6,7 @@ How it works:
 
 - You type every line, in order, in **one Terminal window**. Step 3 removes `~/.zshrc`, so open no other shell until step 7 says to.
 - A step's block ran as written in a scratch home shaped like this Mac on 2026-11-15, in `zsh`, with only the home folder changed, and ended in the state the step names. The lines that could not run there say **Not run on the host**. The guest rehearsal ran them the same day (`RUNBOOK.md`, "Guest B"), and [what it changed](#what-the-guest-rehearsal-changed) is at the end.
-- The first line of the opening block is not optional. Your own shell reads `find` as `fd` and `rm` as `trash`, and refuses `>>` to a file that does not exist yet (`zsh/aliases.zsh`, `zsh/options.zsh`). Without that line `inclone` finds nothing and says so to no one.
+- The first line of the opening block is not optional. Your own shell reads `find` as `fd`, `rm` as `trash` and `mkdir` as `mkdir -p`, and refuses `>>` to a file that does not exist yet (`zsh/aliases.zsh`, `zsh/options.zsh`). Without that line `inclone` finds nothing and says so to no one.
 - When a line prints something this page does not expect, stop. [Roll back](#8-roll-back) works from any step.
 
 ## Before
@@ -18,7 +18,7 @@ How it works:
 Type this block first. Step 7's new window needs it again:
 
 ```shell
-setopt clobber; unalias cat cp find grep ls man mv ping rm top 2> /dev/null; unfunction git 2> /dev/null
+setopt clobber no_correct no_correct_all; unalias cat cp find grep ls man mkdir mv ping rm top 2> /dev/null; unfunction git 2> /dev/null
 CLONE=~/dev/dotfiles COPY=~/.local/share/mise/bootstrap-repo KEEP=~/rotm-move-keep A="$HOME/Library/Application Support"
 P7=~/vm-proof/p7/mac   # in the guest: "/Volumes/My Shared Files/vm-proof/p7"
 r() { local row=$1; shift; { "$@"; echo "exit $?"; } > "$P7/$row.txt" 2>&1; tail -3 "$P7/$row.txt"; }
@@ -26,7 +26,7 @@ r() { local row=$1; shift; { "$@"; echo "exit $?"; } > "$P7/$row.txt" 2>&1; tail
 inclone() { find ~ ~/.config ~/.claude ~/.claude/rules ~/.claude/skills ~/.codex ~/.ssh ~/.gnupg ~/.config/mole ~/.local/share/mise/plugins "$A/Code" "$A/lazydocker" "$A/rtk" -maxdepth 1 -type l 2> /dev/null | sort -u | while IFS= read -r l; do case "$(realpath "$l" 2> /dev/null)" in "$CLONE" | "$CLONE"/*) echo "$l" ;; esac; done; }
 ```
 
-The first line is the one `zsh/aliases.zsh` runs for an agent's shell, plus `setopt clobber`. It comes before `inclone` because zsh writes an alias into a function when the function is defined. `inclone | wc -l` must print the link count, 46 on this Mac, before step 1: 0 means the line was missed.
+The first line is what `zsh/aliases.zsh` and `zsh/options.zsh` run for an agent's shell, with `mkdir` added: as `mkdir -p`, step 1's `mkdir` would no longer stop at a `$KEEP` that is already there, and a second run would overwrite the rollback's list. It comes before `inclone` because zsh writes an alias into a function when the function is defined. `inclone | wc -l` must print the link count, 46 on this Mac, before step 1: 0 means the line was missed.
 
 `inclone` resolves each link, so it finds a link through `~/dotfiles` as well as an absolute one. Its folders are the ones `40-dotfiles.toml` and the module fragments name a target in, plus mise's plugin folder. A new entry in another folder adds its folder here.
 
@@ -181,7 +181,7 @@ r m13 ls -l ~/.claude/rules
 | `m12` | The value this Mac had, read from `~/.config/rotm` |
 | `m13` | `jstack-models.md` is a regular file, and every other rule is a link into the copy, `rtk.md`, `hindsight.md` and `catalog.md` among them |
 
-Rows `m1`, `m3` to `m6` and `m9` ran in the scratch home, and `m2` there as a new `zsh` reading `~/.zshenv`. **Not run on the host:** `m7`, `m8`, `m10`, `m11` and `m12`, which need setup, a sign-in or Claude Code, and `m13`. This Mac's mise keeps a record of the links it made (`~/.local/state/mise/dotfiles/`), which names those four rules, and the installed copy's config leaves all four out of the folder's entry. The scratch home had no such record, so `m13` is what shows that the apply did not prune a rule it then failed to relink.
+Rows `m1`, `m3` to `m6` and `m9` ran in the scratch home, and `m2` there as a new `zsh` reading `~/.zshenv`. **Not run on the host:** `m7`, `m8`, `m10`, `m11` and `m12`, which need setup, a sign-in or Claude Code, and `m13`. This Mac's mise keeps a record of the links it made (`~/.local/state/mise/dotfiles/`), which names those four rules, and the installed copy's config leaves all four out of the folder's entry. The scratch home had no such record, so `m13` is what shows that the apply did not prune a rule it then failed to relink. On 2026-11-15 this Mac's `mise dotfiles status --missing` exited 1 before any move, with three stale links in `~/.claude/rules`, a state the guest did not have. If `m13` shows a rule missing, say so in the session that reads the rows before doing anything else: a second `mise dotfiles apply --yes` is the likely fix, and it was not rehearsed.
 
 Then open VS Code and see the recent folders, and see "Setup: up to date" in the menu bar app. Check your own files, which the session may not read:
 
@@ -193,7 +193,7 @@ It should print nothing, or each file it names holds a path you mean to keep. A 
 
 ## 8. Roll back
 
-From any step, with VS Code and Claude Code quit, in this order. Each line skips what its step had not yet done. A rollback from the end ran in the scratch home and in the guest. A rollback from a step part way did not.
+From any step, with VS Code and Claude Code quit, in this order. Each line skips what its step had not yet done. A rollback from the end ran in the scratch home and in the guest. A rollback from after step 3 ran in a scratch home only, from the Mac's script, without setup.
 
 1. Take out what the move made. A seeded file that you have changed since is kept aside in `$KEEP`:
 
@@ -210,7 +210,7 @@ From any step, with VS Code and Claude Code quit, in this order. Each line skips
    if [ -d ~/.config/gh ] && [ ! -L ~/.config/gh ]; then mv ~/.config/gh/hosts.yml "$CLONE/tilde/.config/gh/" && mv ~/.config/gh "$KEEP/gh.installed"; fi
    [ ! -f "$KEEP/hosts.yml" ] || mv "$KEEP/hosts.yml" "$CLONE/tilde/.config/gh/"
    for s in "$COPY/tilde/.config/hunk/state.json" "$KEEP/state.json"; do [ ! -f "$s" ] || mv "$s" "$CLONE/tilde/.config/hunk/"; done
-   mv "$KEEP/config.local.toml" "$CLONE/tilde/.config/mise/config.local.toml"
+   [ ! -f "$KEEP/config.local.toml" ] || mv "$KEEP/config.local.toml" "$CLONE/tilde/.config/mise/config.local.toml"
    [ ! -f ~/.config/mole/whitelist.local ] || mv ~/.config/mole/whitelist.local "$CLONE/mole/whitelist.local"
    sed -i '' 's|~/.config/mole/whitelist.local|~/dotfiles/mole/whitelist.local|' "$CLONE/tilde/.config/mise/config.local.toml"
    ```
@@ -282,12 +282,23 @@ The plan's Task 3 text was the specification. Running it found these, each fixed
 
 ## What the guest rehearsal changed
 
-Guest B ran this page on 2026-11-15, on a guest reshaped to this Mac's layout (`RUNBOOK.md`, "Guest B"). Every row met its "Passes when", and no step's lines changed. One thing did:
+Guest B ran this page on 2026-11-15, on a guest reshaped to this Mac's layout (`RUNBOOK.md`, "Guest B"). Every row met its "Passes when", and no step of the move changed. The opening block and one rollback line did:
 
 | Found | Change |
 | --- | --- |
 | In the owner's own shell `inclone` printed nothing, because `find` is an alias for `fd` there and the function's errors go to `/dev/null`. `rm` is `trash`, and `>>` to a new file fails under `no_clobber`. The scratch home ran `zsh -f`, which has none of the three | The opening block's first line, and the `inclone \| wc -l` check under it |
+| A review of this page found `mkdir` aliased to `mkdir -p`, which the first version of that line left on | `mkdir` is in the line's `unalias` list, and the line sets the two `no_correct` options an agent's shell has |
+| The same review found that section 8's `mv "$KEEP/config.local.toml"` printed an error when rolling back from before step 2 | The line skips when the file is not in `$KEEP` |
 
-The guest then ran the steps from four scripts in `~/vm-proof/p7/` on the host, not line by line: `move.zsh` (the start check through step 6), `rows.zsh` (step 7), `update.zsh` and `rollback.zsh` (section 8). They hold this page's lines, stop at the first result the page does not expect, and need no opening block, because `zsh <file>` reads no `~/.zshrc`. `move.zsh` adds one check: step 2 moves nothing unless all four files it moves are there. Their `P7` default is the guest's shared folder.
+The guest then ran the steps from four scripts in `~/vm-proof/p7/` on the host, not line by line: `move.zsh` (the start check through step 6), `rows.zsh` (step 7), `update.zsh` (the promotion's rows and the inert-clone check) and `rollback.zsh` (one setting changed, then section 8 and rows `b5` to `b7`). They hold this page's lines and need no opening block, because `zsh <file>` reads no `~/.zshrc`. `move.zsh` and `rollback.zsh` stop at the first line that fails. `rows.zsh` records every row and stops at none.
+
+**On the owner's Mac the move runs from scripts too** (the owner's choice, 2026-11-15): `~/vm-proof/p7/mac/move.zsh`, `rows.zsh` and `rollback.zsh`. They hold the same lines, and differ from the guest's in what a review asked for:
+
+- `move.zsh` checks everything a later step needs before it changes anything: the 46 links, the files step 2 moves, the nine links step 3 removes, the six names step 5 moves, that `stable` is reachable, and that VS Code, Obsidian and Claude Code are quit. Run alone, `zsh ~/vm-proof/p7/mac/move.zsh start` is that check and nothing else.
+- When a step stops, it prints what to do next, since no session is running: the rollback's command, and the command that goes on once the step is finished by hand.
+- Setup exiting 2, which is "ran to the end, a package or tool failed", does not stop the move.
+- `rollback.zsh` changes no setting and writes no rows, and its steps can be repeated.
+
+The Mac's `move.zsh` and `rollback.zsh` ran in two scratch homes on 2026-11-15, without the fetch and setup, which cannot run on the host. In the first the move ran to the end, with a `git clone` standing where the fetch would, and the rollback's file steps took it back. In the second the rollback ran from after step 3, and after a `mise dotfiles apply`, standing where setup would run, its check printed the one expected line. That is the only run of a rollback from a middle step. `move.zsh start` also ran on this Mac itself, read-only, and printed `clone, 46 links, ready`.
 
 What the rehearsal ran for the first time, all as written: step 4's fetch, step 6's `setup.sh` on a moved home and the REA line its warning printed, rows `m7`, `m8` and `m10` to `m13`, and section 8's `claude mcp` line and setup.
