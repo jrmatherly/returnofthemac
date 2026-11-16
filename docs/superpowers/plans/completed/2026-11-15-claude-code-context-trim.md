@@ -8,7 +8,20 @@
 
 **Tech Stack:** `jq`, `bin/claude-stack`, the `claude` CLI, Ruby's YAML for one parse check.
 
-**Spec:** `docs/superpowers/specs/2026-11-15-claude-code-context-audit.md`. Read its Goal and "Decisions the owner made" in full before Task 1. Findings F2, F3, F4 and F6 are this plan. F1, F5 and F7 are out of scope by decision.
+**Spec:** `docs/superpowers/specs/completed/2026-11-15-claude-code-context-audit.md`. Read its Goal and "Decisions the owner made" in full before Task 1. Findings F2, F3, F4 and F6 are this plan. F1, F5 and F7 are out of scope by decision.
+
+## Outcome (2026-11-15)
+
+Finished. A new session in this repository starts at 60.2k tokens, down from 66.7k, and nothing outside the project changed.
+
+| Task | Commit or record | Difference from the plan |
+| --- | --- | --- |
+| 1. Record the starting state | `private/context-trim/` | The session read `/context` itself |
+| 2. Turn the 14 plugins off | `.claude/settings.local.json`: 35 `false` | None |
+| 3. Turn the 14 skills off | The same file: 14 `skillOverrides` | A stray session made the write. It was checked, not redone |
+| 4. Quote the add-tool description | `eedcb12` | A stray session made the edit. It was checked, not redone |
+| 5. Three MCP servers | Skipped on the owner's word | `agent-browser`, `jean` and `astro-docs` stay on here. Their tools are deferred |
+| 6. Measure, record and file | `8ce25cc`, and this commit | The Skills line of `/context` did not move |
 
 ## Progress (2026-11-15)
 
@@ -18,8 +31,8 @@
 | 2. Turn the 14 plugins off | Done | 35 `false`, 22 owned, 27 to 41 plugins off, five names `absent` |
 | 3. Turn the 14 skills off | Done | 14 entries, three names `absent`, the kept eight `present` |
 | 4. Quote the add-tool description | Done | `eedcb12` |
-| 5. Three MCP servers | Not done. The owner's `/mcp disable` | |
-| 6. Measure, record and file | Measured and recorded in the spec's "Result". Filing waits on Task 5 | |
+| 5. Three MCP servers | Skipped on the owner's word, 2026-11-15 | |
+| 6. Measure, record and file | Done | The spec's "Result" |
 
 Differences from the plan as written:
 
@@ -38,7 +51,7 @@ Differences from the plan as written:
 - This Mac is an installed copy. Run the clone's scripts by path: `~/dev/dotfiles/bin/claude-stack`. On 2026-11-15 the clone's `bin/claude-stack`, `agents/catalog/stack.py` and `curated.toml` were byte-identical to the copy's.
 - Tasks 1 to 3 and 5 commit nothing: their files are git-ignored. Tasks 4 and 6 commit Markdown only.
 - A session that is already open keeps its old list. Every check starts a new one.
-- `$L` in the steps is `docs/superpowers/specs/2026-11-15-claude-code-context-audit/listed.sh`. It starts an unsaved session with no tools, kills it once its start-up list is read, and prints `name=present` or `name=absent` from that session's agents, skills and slash commands. Start no other `claude -p` here with tools: such a session reads the handoff note and may act on it. `$NAMES` is the 16 names Task 1 Step 2 sets.
+- `$L` in the steps is `docs/superpowers/specs/completed/2026-11-15-claude-code-context-audit/listed.sh`. It starts an unsaved session with no tools, kills it once its start-up list is read, and prints `name=present` or `name=absent` from that session's agents, skills and slash commands. Start no other `claude -p` here with tools: such a session reads the handoff note and may act on it. `$NAMES` is the 16 names Task 1 Step 2 sets.
 
 ## Measured for this plan (2026-11-15)
 
@@ -81,7 +94,7 @@ jq -S '.permissions' .claude/settings.local.json > private/context-trim/permissi
 - [ ] **Step 2: Record what Claude Code reports.**
 
 ```shell
-L=docs/superpowers/specs/2026-11-15-claude-code-context-audit/listed.sh
+L=docs/superpowers/specs/completed/2026-11-15-claude-code-context-audit/listed.sh
 NAMES="voltagent-lang:python-pro voltagent-qa-sec:debugger commit-commands:commit coderabbit:code-review modern-web-guidance:modern-web-guidance theme-factory mcp-builder find-skills superpowers:writing-plans pr-review-toolkit:code-reviewer jstack:j-mode remember:remember claude-docs:claude-docs coding-standards hindsight-coding-agent archify"
 claude plugin list --json | jq '[.[] | select(.enabled == false)] | length' | tee private/context-trim/plugins-off.before
 $L $NAMES | tee private/context-trim/listed.before
@@ -245,7 +258,7 @@ Expected: an array holding the three names. Today the project's entry has no suc
 ### Task 6: Measure, record and file
 
 **Files:**
-- Modify: `docs/superpowers/specs/2026-11-15-claude-code-context-audit.md` (a "Result" section, and "Plans")
+- Modify: `docs/superpowers/specs/completed/2026-11-15-claude-code-context-audit.md` (a "Result" section, and "Plans")
 - Modify: `docs/superpowers/plans/README.md`
 - Move: this file to `docs/superpowers/plans/completed/`, and the spec with its folder to `docs/superpowers/specs/completed/`
 

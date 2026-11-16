@@ -1,6 +1,6 @@
 # Claude Code context audit, 2026-11-15
 
-Date: 2026-11-15. Status: the plan's Tasks 1 to 4 ran that day ([Result](#result-2026-11-15)), and its last owner step is open. The plan is listed in [Plans](#plans).
+Date: 2026-11-15. Status: closed the same day. The one plan built on it is finished ([Result](#result-2026-11-15)) and listed in [Plans](#plans). Findings F1, F5 and F7 stay open as out of scope, by the owner's decisions.
 
 ## Goal
 
@@ -117,7 +117,7 @@ The j-agent file sets no model. Each spawn takes its model from `jstack-models.m
 
 ## Result (2026-11-15)
 
-Tasks 1 to 4 of the plan ran that evening. Task 5, the three MCP servers, is the owner's and is not done.
+Tasks 1 to 4 of the plan ran that evening. Task 5, the three MCP servers, was skipped on the owner's word: `agent-browser`, `jean` and `astro-docs` stay on in this repository.
 
 Read with `claude -p '/context' --model haiku --no-session-persistence` in this repository, before and after:
 
@@ -153,4 +153,4 @@ What they wrote was what the plan specifies, and each write was checked afterwar
 
 ## Plans
 
-- `docs/superpowers/plans/2026-11-15-claude-code-context-trim.md` (written 2026-11-15, Tasks 1 to 4 done that day, Task 5 is the owner's): findings F2, F3, F4 and F6, in this project only.
+- `docs/superpowers/plans/completed/2026-11-15-claude-code-context-trim.md` (done 2026-11-15): findings F2, F3 and F4, in this project only. F6 was skipped.

@@ -6,9 +6,9 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 | Plan | Spec | Tasks | State |
 | --- | --- | --- | --- |
-| [Claude Code context trim](2026-11-15-claude-code-context-trim.md) | [context audit](../specs/2026-11-15-claude-code-context-audit.md) | 6 | Written on 2026-11-15 from a `/doctor` run, reviewed once and corrected (its last section). Tasks 1 to 4 ran on 2026-11-15 (its Progress table). Task 5 is the owner's three `/mcp disable` lines, and Task 6 then files it. It turns 14 plugins and 14 skills off for this repository only, in the git-ignored `.claude/settings.local.json`. Tasks 1, 5 and 6 need the owner for `/context` and `/mcp disable` |
+| None | | | |
 
-[P6](completed/2026-11-15-p6-docs-for-the-new-path.md) finished on 2026-11-15. [P7](completed/2026-11-15-p7-stable-and-the-owners-mac.md) finished the same day, and with it the [installable-setup spec](../specs/completed/2026-11-11-installable-setup-profiles-and-sync.md): the owner's Mac runs an install from `stable`.
+[P6](completed/2026-11-15-p6-docs-for-the-new-path.md) finished on 2026-11-15. [P7](completed/2026-11-15-p7-stable-and-the-owners-mac.md) finished the same day, and with it the [installable-setup spec](../specs/completed/2026-11-11-installable-setup-profiles-and-sync.md): the owner's Mac runs an install from `stable`. The [context trim](completed/2026-11-15-claude-code-context-trim.md) and its [audit](../specs/completed/2026-11-15-claude-code-context-audit.md) finished that evening: 14 plugins and 14 skills are off in this repository only. The audit's out-of-scope findings stay open, the CodeGraph prompt hook first, at about 3,000 tokens a prompt in every project.
 
 The four audit plans were each checked line by line against the code on 2026-11-14 and corrected. All four are finished and filed in `completed/`: [install and opt-outs](completed/2026-11-14-audit-install-and-opt-outs.md), [settings tool](completed/2026-11-14-audit-settings-tool.md), [gate, CI and docs](completed/2026-11-14-audit-gate-ci-and-docs.md) and [menu bar app](completed/2026-11-14-audit-menu-bar-app.md). Each opens with an "Outcome" table of its commits. Stages 2 to 5 below ran on 2026-11-14, one commit per task, each with its failing check seen first. Stage 1 is done.
 
