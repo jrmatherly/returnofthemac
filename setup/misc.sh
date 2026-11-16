@@ -450,8 +450,8 @@ if command_exists npm; then
   # npm config set allow-file none
   # Do not allow installing packages from remote dependencies (URLs instead of npm registry)
   # npm config set allow-remote none
-  # Only install package versions published at least 7 days ago
-  npm config set min-release-age 7
+  # Only install package versions published at least 48 hours ago (npm counts whole days)
+  npm config set min-release-age 2
   # (Bun: the same rules live in tilde/.bunfig.toml)
 
   # Global npm CLIs (serverless, @antfu/ni) are `npm:` tools in the mise config,

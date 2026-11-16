@@ -8,7 +8,8 @@
 #
 # ---
 # Checks the telemetry pairing (setup.sh exports a subset of zsh/env.zsh's),
-# that Prettier ignores every zsh file, that every bin/ script's header renders
+# that Prettier ignores every zsh file, that every package manager holds a release for 48 hours,
+# that every bin/ script's header renders
 # through help (a header comment on line 2 without tldr), that help cleans up its
 # temp pages, refuses a directory and keeps docs/gui when run through a symlink,
 # that the VS Code template pins no mise path, and that git keeps
@@ -45,6 +46,14 @@ for file in tilde/.zshenv tilde/.zprofile tilde/.zshrc zsh/*.zsh; do
   node_modules/.bin/prettier --file-info "$file" | jq -e .ignored > /dev/null \
     || fail "zsh prettier-ignored: $file"
 done
+
+# One release-age hold everywhere: 48 hours, as mise's minimum_release_age (the audit spec, decision 1).
+# npm:rea-agents alone is shorter, on purpose (60-rotm-agents.toml)
+grep -qx 'minimum_release_age = "48h"' tilde/.config/mise/config.toml || fail "release hold: mise is not 48h"
+grep -qx 'minimumReleaseAge: 2880' pnpm-workspace.yaml || fail "release hold: pnpm is not 2880 minutes"
+grep -qx 'minimumReleaseAge = 172800' tilde/.bunfig.toml || fail "release hold: bun is not 172800 seconds"
+grep -q '^  npm config set min-release-age 2$' setup/misc.sh || fail "release hold: npm is not 2 days"
+grep -q '"minimumReleaseAge": "2 days"' renovate.json || fail "release hold: Renovate is not 2 days"
 
 # tlrc rejects a page with a wrapped line, so render every header through help;
 # without tldr (the CI runner), only check that a header comment starts on line 2

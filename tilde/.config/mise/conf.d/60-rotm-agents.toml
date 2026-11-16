@@ -27,7 +27,7 @@
 # behind; shortened to 6 h for this tool. The cutoff also screens the tool's
 # transitive dependencies (mise passes it to its embedded npm client), which
 # is why it is not 0: a few hours still catches a pulled release. npm's own
-# `min-release-age=7` from setup/misc.sh never applies to mise installs.
+# `min-release-age=2` from setup/misc.sh never applies to mise installs.
 "npm:rea-agents" = { version = "latest", minimum_release_age = "6h" }
 
 [dotfiles]

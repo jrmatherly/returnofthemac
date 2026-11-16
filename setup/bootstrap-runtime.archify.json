@@ -456,7 +456,7 @@
       "dot": "amber",
       "title": "Supply-chain guards",
       "items": [
-        "npm min-release-age 7 and allow-git none",
+        "npm min-release-age 2 and allow-git none",
         "Iosevka font: ETag check, SHA-256 notice",
         "Telemetry opt-outs in setup.sh and zsh/env.zsh"
       ]

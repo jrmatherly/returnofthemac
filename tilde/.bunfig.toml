@@ -6,6 +6,6 @@
 [install]
 # Write "1.2.3", not "^1.2.3" (npm: save-exact)
 exact = true
-# Only install versions published at least 7 days ago, in seconds
-# (npm: min-release-age 7)
-minimumReleaseAge = 604800
+# Only install versions published at least 48 hours ago, in seconds
+# (npm: min-release-age 2)
+minimumReleaseAge = 172800

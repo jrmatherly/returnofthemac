@@ -1,5 +1,5 @@
-# Wait one week before installing a new version
-minimumReleaseAge: 10080
+# Wait 48 hours before installing a new version, in minutes
+minimumReleaseAge: 2880
 # Prevent exotic transitive dependencies
 blockExoticSubdeps: true
 # Prevent installation of a package if its trust level has decreased compared to previous releases
