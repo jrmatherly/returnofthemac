@@ -33,7 +33,7 @@ jobs:
       # test with plain python3, which must be 3.11+ for tomllib
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: '3.14'
+          python-version: '3.15'
       # The floor in setup/mise-floor.sh (bin/lib/test-override-env checks they
       # match). install: false, because the repo's global config is not linked here
       - uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
