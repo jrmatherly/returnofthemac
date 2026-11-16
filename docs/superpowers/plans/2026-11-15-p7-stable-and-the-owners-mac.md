@@ -18,7 +18,7 @@
 | 2. Promote `stable` | Done | `stable` moved from `d09f025` to `73300a5` (`f3f18f1` records it) |
 | 3. Move runbook | Done | `5d76cfa`, corrected by a review in `2e16095`. `MOVE.md` ends with what the scratch run changed from this plan |
 | 4. Guest B | Done | `9ed4da0`, `02be67d`. Guest B passed on 2026-11-15 (rows `b0` to `b8` and `m1` to `m13` in `~/vm-proof/p7/`, `RUNBOOK.md` "Result", the spec's "Verified facts"). `stable` moved from `73300a5` to `02be67d` in step 7 |
-| 5. Move the owner's Mac | Not started. Needs the owner's word in that session | |
+| 5. Move the owner's Mac | Steps 1 to 3 done on 2026-11-15, and Step 4 but for the update. Still owed: a promotion and `rotm update` on this Mac | `~/vm-proof/p7/mac/` (`move.log`, `m1` to `m13`), `MOVE.md` "What the move on the owner's Mac changed", the spec's "Verified facts" |
 | 6. Close P7 and the spec | Not started | |
 
 Differences from the plan as written:

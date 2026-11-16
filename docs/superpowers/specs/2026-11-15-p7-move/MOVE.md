@@ -302,3 +302,15 @@ The guest then ran the steps from four scripts in `~/vm-proof/p7/` on the host, 
 The Mac's `move.zsh` and `rollback.zsh` ran in two scratch homes on 2026-11-15, without the fetch and setup, which cannot run on the host. In the first the move ran to the end, with a `git clone` standing where the fetch would, and the rollback's file steps took it back. In the second the rollback ran from after step 3, and after a `mise dotfiles apply`, standing where setup would run, its check printed the one expected line. That is the only run of a rollback from a middle step. `move.zsh start` also ran on this Mac itself, read-only, and printed `clone, 46 links, ready`.
 
 What the rehearsal ran for the first time, all as written: step 4's fetch, step 6's `setup.sh` on a moved home and the REA line its warning printed, rows `m7`, `m8` and `m10` to `m13`, and section 8's `claude mcp` line and setup.
+
+## What the move on the owner's Mac changed
+
+The owner ran `~/vm-proof/p7/mac/move.zsh` and then `rows.zsh` on 2026-11-15. The link count was 46, as recorded. Every step ran as written, and every row passed but `m8`:
+
+| Found | Change |
+| --- | --- |
+| Setup's saved-settings question was answered with Enter, not `n`. `move.zsh` printed the answers about forty lines before the question, among the apply's output. Setup connected this Mac to the P5 guests' repository and loaded nothing, because the override file differed | None to this page, which runs once. The owner deleted that repository, and sync was turned on again with a new one (below) |
+| `rotm settings sync on` fails when the repository was deleted and made again under the same name: mise's history remembers the old one | `rotm settings sync off`, move `~/.local/state/mise/history/sync.json` aside, then `rotm settings sync on`. Tried first in a scratch copy of the history. The spec's "Verified facts" has the three cases |
+| `m13` passed on a rules folder with three stale links, the state no guest had | Nothing to change: setup's apply relinked them in a second pass |
+
+`m8` now reads sync as connected to the new `jrmatherly/rotm-settings`, which is what the owner wants, so its "sync not connected" was right only for a Mac that has never synced.
