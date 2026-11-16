@@ -56,8 +56,16 @@ cat > "$HOME/bin/embed" << 'EOF'
 #!/bin/bash
 echo "$*" >> "$HOME/embed.log"
 [ ! -e "$HOME/embed-fails" ] || exit 1
-# a daemon still finishing a job: the first stop gives up, the next finds it gone
-[ ! -e "$HOME/embed-slow" ] || { rm "$HOME/embed-slow"; exit 1; }
+EOF
+# the daemon's process, when a case names one; never the real daemon on this Mac
+cat > "$HOME/bin/pgrep" << 'EOF'
+#!/bin/bash
+cat "$HOME/daemon-pid" 2> /dev/null
+EOF
+# the wait for a daemon that will not exit is 30 sleeps
+cat > "$HOME/bin/sleep" << 'EOF'
+#!/bin/bash
+echo "$*" >> "$HOME/sleep.log"
 EOF
 cat > "$HOME/bin/timeout" << 'EOF'
 #!/bin/bash
@@ -154,14 +162,21 @@ check_true "the stop is bounded" grep -qx -- "30 $HOME/bin/embed -p coding-agent
 echo older > "$HINDSIGHT_DAEMON_ENV/.synced"
 touch "$HOME/embed-fails"
 stuck=$(hm upgrade 2>&1 > /dev/null)
-rm "$HOME/embed-fails"
-check_true "a daemon that did not stop is a warning with the command" grep -q "did not stop and still runs the old environment; stop it with: $HOME/bin/embed -p coding-agent daemon stop" <<< "$stuck"
+check_true "a failed stop with no daemon process found is a warning with the command" grep -q "did not stop and still runs the old environment; stop it with: $HOME/bin/embed -p coding-agent daemon stop" <<< "$stuck"
+echo older > "$HINDSIGHT_DAEMON_ENV/.synced"
+echo $$ > "$HOME/daemon-pid"
+stuck=$(hm upgrade 2>&1 > /dev/null)
+check_true "a daemon still alive after the wait is a warning" grep -q "did not stop and still runs the old environment" <<< "$stuck"
+check "the wait for it is 30 seconds" 30 "$(grep -c . "$HOME/sleep.log")"
 : > "$HOME/embed.log"
 echo older > "$HINDSIGHT_DAEMON_ENV/.synced"
-touch "$HOME/embed-slow"
+true &
+wait $!
+echo $! > "$HOME/daemon-pid"
 slow=$(hm upgrade 2>&1 > /dev/null)
-check "a daemon slow to stop is no warning" "" "$(grep 'did not stop' <<< "$slow" || true)"
-check "a daemon slow to stop is asked again" 2 "$(grep -c -- '-p coding-agent daemon stop' "$HOME/embed.log")"
+rm "$HOME/embed-fails" "$HOME/daemon-pid"
+check "a daemon that exits after the stop gave up is no warning" "" "$(grep 'did not stop' <<< "$slow" || true)"
+check "it is asked to stop once" 1 "$(grep -c -- '-p coding-agent daemon stop' "$HOME/embed.log")"
 : > "$HOME/embed.log"
 echo older > "$HINDSIGHT_DAEMON_ENV/.synced"
 hm upgrade > /dev/null
