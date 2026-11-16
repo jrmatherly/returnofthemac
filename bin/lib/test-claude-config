@@ -189,6 +189,14 @@ for shape in '{"m":{"source":"x"}}' '{"m":"x"}' '{"m":{"source":{"source":"new"}
   check "marketplaces shaped $shape fail and keep the list" "! cc save > /dev/null 2>&1 && cmp -s '$list' '$tmp/list.before'"
 done
 
+# save writes agents/ in the repository, so with no CLAUDE_CONFIG_SAVE_DIR it refuses an installed copy. The fixture stands in for the repository.
+fix="$tmp/fix"
+mkdir -p "$fix" "$tmp/data"
+ln -s "$fix" "$tmp/data/bootstrap-repo"
+(unset CLAUDE_CONFIG_SAVE_DIR && DOTFILES_DIR="$fix" MISE_DATA_DIR="$tmp/data" cc save) > "$tmp/save.out" 2>&1
+check "save refuses an installed copy" "[ $? -ne 0 ] && grep -q 'installed copy' '$tmp/save.out'"
+check "save wrote nothing into it" "[ ! -e '$fix/agents' ]"
+
 [ "$fails" -eq 0 ] || {
   echo "$fails failed" >&2
   exit 1

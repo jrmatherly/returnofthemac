@@ -2,7 +2,7 @@
 #
 # Save or restore Claude Code's plugins, base settings and user skills (tracked in agents/claude-*).
 #
-# - Record this machine's plugins, settings and skills into the repo (review with `git diff`):
+# - Record this machine's plugins, settings and skills into the repo (review with `git diff`; needs a clone, or `CLAUDE_CONFIG_SAVE_DIR` on an installed copy):
 #
 # `claude-config save`
 #
@@ -379,6 +379,10 @@ tildify() {
 
 case "${1:-}" in
   save)
+    if [ -z "${CLAUDE_CONFIG_SAVE_DIR:-}" ] && [ "$("$(dirname "$0")/lib/rotm-mode" "$DOTFILES_DIR")" = installed ]; then
+      echo "claude-config: save writes agents/ in the repository, and this is an installed copy. Run it from a clone, or set CLAUDE_CONFIG_SAVE_DIR." >&2
+      exit 1
+    fi
     mkdir -p "$save_dir"
     save_plugins
     save_settings

@@ -13,7 +13,7 @@
 
 | Command | What it does |
 | --- | --- |
-| `claude-config save` | Write `agents/claude-plugins.txt`, `agents/claude-settings.json` and `agents/claude-skills.txt` from this machine |
+| `claude-config save` | Write `agents/claude-plugins.txt`, `agents/claude-settings.json` and `agents/claude-skills.txt` from this machine. It needs a clone: an installed copy refuses unless `CLAUDE_CONFIG_SAVE_DIR` names another folder |
 | `claude-config restore` | Add missing marketplaces and plugins, merge the base settings, install missing skills |
 | `claude-config restore plugins` / `settings` / `skills` | One part only |
 | `claude-config retire` | Drop retired allow rules from this Mac's settings and change nothing else |
