@@ -23,7 +23,7 @@ There is no build. `pnpm check` (`bin/lib/check`) is the gate: syntax checks, sh
 - `pnpm format`: prettier `--write` over the same globs. YAML is covered only under `.github/`, because app-written configs like `tilde/.config/gh/config.yml` aren't Prettier-clean.
 - `.prettierignore` also lists zsh files (VS Code's format-on-save runs Prettier's shell plugin, which reads zsh as bash and rewrote `${keys[Ctrl+K]}`); add any new zsh file not ending in `.zsh` there. It skips files that tools rewrite themselves: any `CLAUDE.md`, `.serena/`, `.claude/auto-memory/`, `.claude/settings.local.json`, `docs/superpowers/`, `.superpowers/`, `tilde/.claude/rules/jstack-models.md` (rewritten whole by `/jstack:setup-jstack`), plus the git-ignored `private/` and `logs/`. Don't hand-format them.
 - One file: `bash -n <file> && shellcheck --severity=warning <file> && prettier --check <file>`.
-- `./setup.sh`: links the mise config, installs mise and the packages, then runs `mise bootstrap` (never macOS preferences, which are `set-defaults`). It's interactive. Flags: `-y`, `--skip-codegraph`, `--dash`, `-h`, `-- <mise args>`. From a terminal it logs each run to `private/setup-logs/<timestamp>.log` (via `script`), which `/validate-setup after` reads.
+- `./setup.sh`: links the mise config, installs mise and the packages, then runs `mise bootstrap` (never macOS preferences, which are `set-defaults`). It's interactive. Flags: `./setup.sh --help`. From a terminal it logs each run to `private/setup-logs/<timestamp>.log` (via `script`), which `/validate-setup after` reads.
 - `mise dotfiles apply`: re-link only (`mise dotfiles status` shows drift). `./setup/dotfiles-extras.sh`: git identity, Firefox hard links, the `cot` and `code` links.
 - `sysup`: upgrades macOS, mise and its packages, runtimes and the agent tooling, printing one status line per step with full output in the git-ignored `logs/sysup-<timestamp>.log`. `setup.sh` only installs what's missing, unless run with `-- --upgrade`. Details: `.claude/rules/sysup.md`.
 - `help <bin-script>`: renders a script's header. Use it to verify new or edited `bin/` scripts.
@@ -44,7 +44,7 @@ settings/         uv package dotfiles-settings: registry.toml + adapters, CLI, T
 app/              Swift menu bar app over `rotm settings`
 docs/             alias index + docs/gui/<app>.md cheat sheets (rendered by `help`); docs/superpowers/plans/ = open implementation plans (not applied yet); move each to plans/completed/ once fully implemented; docs/superpowers/specs/ = the assessments and designs those plans argue from; a spec moves to specs/completed/ when every plan built on it is completed (a spec with no plan, when its "built" or decision section records the work as shipped)
 vscode/User/      whole dir symlinked to ~/Library/Application Support/Code/User
-.github/          workflows: check.yml = `pnpm check` for PRs and pushes to main; fresh-install.yml = a manual install run
+.github/          workflows: check.yml = `pnpm check` for PRs and pushes to main; fresh-install.yml = a manual install run; app-release.yml = the signed app build on `app-v*` tags
 agents/           instructions.md → Amp/Codex AGENTS.md; catalog/ = generator for `bin/claude-catalog`
 obsidian/ firefox/ mole/ colors/ etc.     app config + repo-owned themes
 icons/                                     vendored binaries, don't edit
@@ -74,7 +74,7 @@ icons/                                     vendored binaries, don't edit
   - `vscode/User/.prettierrc.yaml`: `trailingComma: none` (VS Code writes jsonc). It is not a root override because VS Code opens settings via `~/Library/Application Support/Code/User`, outside the repo, where the Prettier extension finds no root config and adds trailing commas. The nearest config wins, so it also governs `pnpm format`. `python.languageServer` in `settings.json` is pinned because the Python extension writes it back.
   - `firefox/user.js`: `semi: true`
 - Bash scripts start with `#!/bin/bash` and a header comment. Setup scripts use `set -euo pipefail`.
-- Output helpers (`info`, `warn`, `header`, `success`, `fail`) are defined inline per script with `tput` colors. No shared shell library is sourced.
+- Output helpers are defined inline per script. No shared shell library is sourced.
 - Comments explain the non-obvious _why_ (version pins, tool quirks, macOS behavior), and configs keep that comment density (`mise/config.toml`, `.gitignore`, `prettier.config.cjs`).
 - A new `$HOME` config goes under `tilde/` at its home-relative path and gets a `[dotfiles]` entry in `40-dotfiles.toml`. `bin/lib/test-dotfiles` fails without it. Rules under `tilde/.claude/rules/` need none.
 - Commit subjects are short, imperative, sentence case, with no conventional-commit prefix (e.g. "Fix --skip-codegraph deleting CodeGraph's mise shim").

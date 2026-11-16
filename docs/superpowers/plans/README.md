@@ -6,7 +6,9 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 | Plan | Spec | Tasks | State |
 | --- | --- | --- | --- |
-| [Fixes from the 2026-11-16 audit](2026-11-16-audit-fixes.md) | [2026-11-16 project audit](../specs/2026-11-16-project-audit.md) | 23 | Written 2026-11-16 and reviewed the same day, not started. Tasks 1 to 4 first. Task 5 needs the owner's word, Task 8 the answer to the spec's decision 6 |
+| None | | | |
+
+The [fixes from the 2026-11-16 audit](completed/2026-11-16-audit-fixes.md) finished on 2026-11-16, 23 tasks with an outcome table. Its [spec](../specs/2026-11-16-project-audit.md) stays open: section E's decisions 1 to 5 are not answered.
 
 [P6](completed/2026-11-15-p6-docs-for-the-new-path.md) finished on 2026-11-15. [P7](completed/2026-11-15-p7-stable-and-the-owners-mac.md) finished the same day, and with it the [installable-setup spec](../specs/completed/2026-11-11-installable-setup-profiles-and-sync.md): the owner's Mac runs an install from `stable`. The [context trim](completed/2026-11-15-claude-code-context-trim.md) and its [audit](../specs/completed/2026-11-15-claude-code-context-audit.md) finished that evening: 14 plugins and 14 skills are off in this repository only. Its check script started stray headless sessions during the run, and the audit's "What went wrong while it ran" is the account to read before starting any `claude -p` here. The audit's out-of-scope findings stay open, the CodeGraph prompt hook first, at about 3,000 tokens a prompt in every project.
 
@@ -16,13 +18,13 @@ Found while running them, and not in any plan:
 
 - Install 12 as planned removed `rtk.md`, `hindsight.md` and `catalog.md` from `~/.claude/rules` on the first apply of an existing install. The landed commit gives the three module entries `depends = ["~/.claude/rules"]`, and `bin/lib/test-dotfiles` holds the migration case.
 - App 1 as planned let two rechecks waiting on one refresh each start a read. `c597959` fixes it with a test.
-- The "restore it with git checkout" hint at `setup/dash.sh:158` is wrong on an installed copy. Not fixed.
+- ~~The "restore it with git checkout" hint at `setup/dash.sh:158` is wrong on an installed copy.~~ Fixed in `9912f1d`.
 - Install 9 as planned still installed a changed or unchecked skill for an agent that lacked it. `5e75b83` holds it until `claude-config restore skills --accept <name>`.
-- Not fixed, found while reviewing the P6 plan on 2026-11-15: `obsidian-vault capture` has no installed-copy guard, so on an installed copy it writes into the checkout and `rotm update` then refuses.
-- Not fixed, found by the P6 docs audit on 2026-11-15: on an installed copy Mole's two whitelists are links into the checkout, so `mo clean --whitelist` and `mo optimize --whitelist` write into it and `rotm update` then refuses. `docs/mole.md` says to keep a list outside the copy.
+- ~~Found while reviewing the P6 plan on 2026-11-15: `obsidian-vault capture` has no installed-copy guard, so on an installed copy it writes into the checkout and `rotm update` then refuses.~~ Fixed in `3d9008e`: capture refuses an installed copy.
+- ~~Found by the P6 docs audit on 2026-11-15: on an installed copy Mole's two whitelists are links into the checkout, so `mo clean --whitelist` and `mo optimize --whitelist` write into it and `rotm update` then refuses.~~ Fixed in `d991769` for new installs: the two files are seeded copies. A Mac installed earlier deletes its two links by hand (`docs/mole.md`).
 - Not fixed, found by the P7 move on 2026-11-15: `rotm settings sync on` fails when the settings repository was deleted and made again under the same name, because mise's history remembers the old one. The spec's "Verified facts" has the three cases and the hand fix.
-- Not checked, found the same day: on an installed copy `mise exec` sets `MISE_ENV=rotm-installed`, which the settings code reads in place of the saved profile. Four tests now clear it. Whether a profile in use is hidden by it outside the tests has not been looked at.
-- Not fixed, found the same day: setup's "Load your saved settings" question defaults to yes on a Mac whose folder already holds settings, where the load cannot succeed and the Mac is left connected.
+- ~~Found the same day: on an installed copy `mise exec` sets `MISE_ENV=rotm-installed`, which the settings code reads in place of the saved profile. Four tests now clear it.~~ Closed without a fix on 2026-11-16: with both environments set mise 2026.11.8 reads `rotm-installed,rotm-p-work`, and `profile.active()` takes the last `rotm-p-` entry, so the profile is found (the 2026-11-16 audit, section F).
+- ~~Found the same day: setup's "Load your saved settings" question defaults to yes on a Mac whose folder already holds settings, where the load cannot succeed and the Mac is left connected.~~ Fixed in `57662b9`: the question says so there and defaults to no.
 - Not fixed: `--accept` installs whatever the source holds at that moment, and a first install on a new Mac is unpinned. The `skills` CLI takes `owner/repo#<sha>`, but the lock records a folder hash and no commit, so `claude-config save` would have to record one.
 
 Stage 6 ran on 2026-11-14 and 2026-11-15 with the owner's answers: decision 1 declined, decisions 2, 4, 5 and 6 as recommended, decision 3 for the docs only, decision 7 at 48 hours, and Settings 9 approved.

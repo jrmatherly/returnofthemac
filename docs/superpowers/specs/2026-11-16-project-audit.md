@@ -1,6 +1,6 @@
 # Project audit, 2026-11-16
 
-A read-only audit of this repository at `f56b558`, run on 2026-11-16. It records what was found, how each finding was checked, and what to do about it. The plan built on it is [2026-11-16-audit-fixes](../plans/2026-11-16-audit-fixes.md).
+A read-only audit of this repository at `f56b558`, run on 2026-11-16. It records what was found, how each finding was checked, and what to do about it. The plan built on it is [2026-11-16-audit-fixes](../plans/completed/2026-11-16-audit-fixes.md).
 
 ## Goal
 

@@ -8,7 +8,7 @@
 
 **Tech Stack:** bash 3.2 and zsh (`bin/`, `setup/`, `tilde/.zshrc`), Python 3.11+ standard library (`settings/src/dotfiles_settings`), Swift 5 language mode with Swift Testing (`app/`, tools 5.9), mise 2026.11.8, pnpm, Renovate, GitHub Actions.
 
-**Spec:** [`docs/superpowers/specs/2026-11-16-project-audit.md`](../specs/2026-11-16-project-audit.md). Finding ids (A1, C3) are its ids. Read its "Owner's decisions" before starting. Task 5 needs the owner's word, and Task 8 assumes a yes to decision 6.
+**Spec:** [`docs/superpowers/specs/2026-11-16-project-audit.md`](../../specs/2026-11-16-project-audit.md). Finding ids (A1, C3) are its ids. Read its "Owner's decisions" before starting. Task 5 needs the owner's word, and Task 8 assumes a yes to decision 6.
 
 ## Global Constraints
 
@@ -996,3 +996,37 @@ Subject: `Name every setup flag and workflow in CLAUDE.md and close five open it
 - [ ] **Step 5: File the plan**
 
 Add an "Outcome" table to this plan with each task's commit and any difference from the plan. Move this file to `plans/completed/`. Move the spec to `specs/completed/` only once section E's decisions are answered or have a plan of their own. Remove this plan's row from the README's "Open plans" table.
+
+---
+
+## Outcome
+
+Run on 2026-11-16, natively, one commit per task on `main`. Each check was seen to fail before its fix and pass after, except where the row says otherwise. `pnpm check` exited 0 before every commit.
+
+| Task | Commit | Difference from the plan |
+| --- | --- | --- |
+| 1 | `008c56e` | None |
+| 2 | `ccc7647` | None |
+| 3 | `30407cf` | None |
+| 4 | `1a9bb95` | None. `sharp` is 0.35.5 and `pnpm audit` finds nothing |
+| 5 | `fa00983` | The owner approved all four steps. Ruleset 27382636, `sha_pinning_required: true`, alerts answer 204, and run 43892315785 passed on `1a9bb95` |
+| 6 | `3d9008e` | None |
+| 7 | `4e256de` | None |
+| 8 | `d991769` | The owner said yes to decision 6. On the owner's Mac `whitelist` already links to `whitelist.local`, so the hand step there is `whitelist_optimize` alone. A scratch probe confirmed that a `config.local.toml` entry beats the installed entry, and that a seeded file stops the apply when such an entry is added |
+| 9 | `a9d9f62` | None |
+| 10 | `9be1d5c` | None |
+| 11 | `ed451eb` | None |
+| 12 | `f0ddc93` | None |
+| 13 | `fa104aa` | None |
+| 14 | `b8e8f70` | None |
+| 15 | `5bdd22d` | None. Untested, as the plan says |
+| 16 | `57662b9` | The folder check looks at the top level only. Changing the new default back to yes made "Return does not restore" fail, so that check is real |
+| 17 | `f2b2622` | None |
+| 18 | `9912f1d` | None |
+| 19 | `13e823c` | None. The Dependency Dashboard (issue 4) names the dependency `jdx/mise`, as the rule does |
+| 20 | `84ee2a9` | Python 3.14, the newest the `macos-26` image caches. The `setup-python` step took 1 second on run 43903511518 |
+| 21 | `611f973` | None |
+| 22 | `92bb458` | 0 failures in 20 runs. Alone 2.06 to 2.10 seconds, in the full suite 2.62 to 9.50. The row stays open |
+| 23 | This commit | `CLAUDE.md` is 11,951 bytes |
+
+Hand steps left for the owner's Mac, after the next `rotm update`: Task 8 (`whitelist_optimize`), Task 13 (the last two lines of `~/.gitconfig`) and Task 14 (the allowed signers file).
