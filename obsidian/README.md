@@ -38,7 +38,7 @@ Obsidian creates the first time you add one.
 
 ```shell
 obsidian-vault install   # repo → vault (quit Obsidian first)
-obsidian-vault capture   # vault → repo, then review with git
+obsidian-vault capture   # vault → repo, then review with git (clone only)
 ```
 
 Neither command deletes anything. `install` copies the repo's `.obsidian` and

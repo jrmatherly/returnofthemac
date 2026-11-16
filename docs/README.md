@@ -152,7 +152,7 @@ Each replacement only applies when the tool is installed. Run the original comma
 | `dotfiles` | Pull the latest dotfiles in a clone (re-run `setup.sh` afterwards to apply new links). An installed copy uses `rotm update` |
 | `set-defaults` | Apply this repo's macOS defaults |
 | `install-color-themes` | Install the repo's Squirrelsong themes into apps: bat cache, Obsidian vault, import hints (see [colors](../colors/README.md)) |
-| `obsidian-vault install` `obsidian-vault capture` | Install the repo's Obsidian settings/templates into the vault, or bring vault changes back (see [obsidian](../obsidian/README.md)) |
+| `obsidian-vault install` `obsidian-vault capture` | Install the repo's Obsidian settings/templates into the vault, or bring vault changes back. `capture` needs a clone and refuses an installed copy (see [obsidian](../obsidian/README.md)) |
 | `install-iosevka-code` | Install VS Code's Iosevka Code font, or update it when the upstream zip changed (see [fonts](../fonts/README.md)) |
 | `install-snippetslab-skill` | Write SnippetsLab's agent skill (`lab skill show`) to `~/.agents/skills/snippetslab` and link it into `~/.claude/skills`; run by setup and `sysup` |
 | `claude-config save` `claude-config restore` `claude-config restore {{plugins\|settings\|skills}} --dry-run` `claude-config restore skills --update` `claude-config retire` | Save or restore Claude Code's plugins, base settings and user skills (tracked in `agents/claude-*`); `restore` installs what this machine is missing; `retire` drops retired allow rules from this machine's settings |

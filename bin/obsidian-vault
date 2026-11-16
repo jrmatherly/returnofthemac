@@ -9,7 +9,7 @@
 #
 # `obsidian-vault install`
 #
-# - Copy settings/templates you changed in Obsidian back into the repo:
+# - Copy settings/templates you changed in Obsidian back into the repo (needs a clone, an installed copy refuses):
 #
 # `obsidian-vault capture`
 #
@@ -70,6 +70,10 @@ install() {
 }
 
 capture() {
+  if [ "$("$(dirname "$0")/lib/rotm-mode" "$DOTFILES")" = installed ]; then
+    echo "obsidian-vault: capture writes into the repository, and this is an installed copy. Run it from a clone (docs/forking.md)." >&2
+    exit 1
+  fi
   if [ ! -d "$VAULT/.obsidian" ]; then
     echo "No Obsidian vault at $VAULT (set OBSIDIAN_VAULT, or run 'obsidian-vault install' first)." >&2
     exit 1
