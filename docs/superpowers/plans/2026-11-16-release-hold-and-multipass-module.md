@@ -70,6 +70,17 @@ An independent reviewer then read every task against the code and probed uv in s
 - Renovate's lockfile maintenance against a `[tool.uv] exclude-newer` table.
 - pnpm, bun and npm accepting the new values in a real install. Task 5's fresh-install run is the proof.
 
+## Outcome
+
+Tasks 1 to 4 ran on 2026-11-16 on `main`, natively, each red then green with `pnpm check` passing before its commit. Task 5's install run, promotion and filing are open.
+
+| Task | Commit | Difference from the plan |
+| --- | --- | --- |
+| 1 | `2467fce` | None |
+| 2 | `7922dce` | None. Step 4's scratch probe gave a plainly installed ruff `exclude-newer-span = "PT48H"` |
+| 3 | `c17ef8c` | None. Each `uv.lock` gained four lines and no version moved |
+| 4 | `0837da7` | `docs/installation.md` names the module list twice (lines 23 and 121), and both gained `multipass`. `docs/forking.md` also names `--without multipass` |
+
 ## Review Focus
 
 1. **A Mac that already has Serena and Scrapling.** Its receipts hold nothing, and setup skips an installed tool. The next `sysup` must give both the hold without a reinstall. Measured above, and Task 2's Step 4 repeats it.

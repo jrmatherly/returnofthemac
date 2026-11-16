@@ -20,7 +20,7 @@ State at the start: `pnpm check` exits 0 in 1 minute 58 seconds on this Mac, CI 
 
 ## Owner's decisions
 
-The section "E. Decisions the owner must make" lists six. All six are answered. Decisions 1 and 4 are planned in [2026-11-16-release-hold-and-multipass-module](../plans/2026-11-16-release-hold-and-multipass-module.md), and decision 5 is done. A plan task that waits on one names it.
+The section "E. Decisions the owner must make" lists six. All six are answered. Decisions 1 and 4 are built on `main` by [2026-11-16-release-hold-and-multipass-module](../plans/2026-11-16-release-hold-and-multipass-module.md) (decision 1 in `2467fce`, `7922dce` and `c17ef8c`, decision 4 in `0837da7`) and wait for the install run and the promotion to `stable`. Decision 5 is done. A plan task that waits on one names it.
 
 - **2026-11-16, decision 6: yes.** Seed Mole's two whitelists on an installed copy. Task 8 of the plan ran. On the owner's Mac `whitelist` already links to its own `whitelist.local`, so only `whitelist_optimize` needs the hand step.
 - **2026-11-16, Task 5: yes to all four steps.** The ruleset on `stable`, required SHA pins, vulnerability alerts and one `fresh-install` run. Rows A5, D3 and D8 record each result.

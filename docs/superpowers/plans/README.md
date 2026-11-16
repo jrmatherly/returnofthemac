@@ -6,7 +6,7 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 | Plan | Spec | Tasks | State |
 | --- | --- | --- | --- |
-| [A 48 hour release hold and a Claude Multipass module](2026-11-16-release-hold-and-multipass-module.md) | [2026-11-16 project audit](../specs/2026-11-16-project-audit.md), decisions 1 and 4 | 5 | Written 2026-11-16, not started. Tasks 1 to 4 were run red then green in a scratch clone. Task 5 needs the owner's word for the install run and the promotion |
+| [A 48 hour release hold and a Claude Multipass module](2026-11-16-release-hold-and-multipass-module.md) | [2026-11-16 project audit](../specs/2026-11-16-project-audit.md), decisions 1 and 4 | 5 | Written 2026-11-16. Tasks 1 to 4 are done on `main` (`2467fce`, `7922dce`, `c17ef8c`, `0837da7`). Task 5 needs the owner's word for the install run and the promotion |
 
 The [fixes from the 2026-11-16 audit](completed/2026-11-16-audit-fixes.md) finished on 2026-11-16, 23 tasks with an outcome table. Its [spec](../specs/2026-11-16-project-audit.md) stays open: section E's decisions 1 to 5 are not answered.
 
