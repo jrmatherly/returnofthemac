@@ -17,9 +17,10 @@ DISABLE_AUTO_TITLE="true"
 _set_terminal_title() {
   local title="$(basename "$PWD")"
   if [[ -n $SSH_CONNECTION ]]; then
-    title="$title \xE2\x80\x94 $HOSTNAME"
+    title="$title — $HOST"
   fi
-  print -Pn "\e]2;$title\a"
+  # No -P: a folder name is text, and promptsubst would run a $(...) in it
+  print -rn -- $'\e]2;'"$title"$'\a'
 }
 # Call the function before displaying the prompt
 precmd_functions+=(_set_terminal_title)

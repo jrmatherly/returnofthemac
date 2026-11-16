@@ -190,4 +190,15 @@ lg_own="$tmp/lg-home/Library/Application Support/lazygit/config.yml"
 mkdir -p "$(dirname "$lg_own")" && : > "$lg_own"
 [ "$(lg_file)" = "$repo/lazygit/config.yml,$lg_own" ] || fail "LG_CONFIG_FILE with a user file: $(lg_file)"
 
+# The window title prints the folder name as text: $(...), a backtick or a % in it is never expanded
+for name in '$(touch pwned)' '`touch pwned`' '%n'; do
+  mkdir "$tmp/$name"
+  title=$(cd "$tmp/$name" && user_zsh 'setopt promptsubst; _set_terminal_title')
+  [ ! -e "$tmp/$name/pwned" ] || fail "window title: the folder name $name ran as a command"
+  [[ $title == *"$name"* ]] || fail "window title: $name is not printed as it is"
+done
+# Over SSH the title names the host (zsh sets HOST, not HOSTNAME)
+title=$(run_zsh SSH_CONNECTION='1 2 3 4' zsh -i -c '_set_terminal_title; print -rn -- "|$HOST"')
+[[ $title == *" — ${title##*|}"* && -n ${title##*|} ]] || fail "window title: no host over SSH"
+
 echo "shell: all checks passed"
