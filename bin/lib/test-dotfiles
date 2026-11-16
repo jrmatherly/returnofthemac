@@ -260,6 +260,9 @@ mi dotfiles apply --yes > "$tmp/out" 2>&1 || fail "installed: apply failed: $(ca
   || fail "installed: git does not read the tracked settings through the wrapper"
 [ -d "$home/.config/gh" ] && [ ! -L "$home/.config/gh" ] && [ -f "$home/.config/gh/config.yml" ] && [ ! -L "$home/.config/gh/config.yml" ] \
   || fail "installed: ~/.config/gh is not a real folder with a real config.yml"
+for f in whitelist whitelist_optimize; do
+  [ ! -L "$home/.config/mole/$f" ] && cmp -s "$home/.config/mole/$f" "$repo/mole/$f" || fail "installed: ~/.config/mole/$f is not a seeded copy"
+done
 code_user="$home/Library/Application Support/Code/User"
 [ ! -L "$code_user" ] && [ -f "$code_user/snippets/global.code-snippets" ] && [ ! -L "$code_user/keybindings.json" ] \
   || fail "installed: Code/User is not a real folder with seeded files"
@@ -284,7 +287,7 @@ grep -qx '# mine' "$home/.gitconfig" && grep -qx 'editor: vim' "$home/.config/gh
 home="$tmp/home3"
 mkdir -p "$home" "$tmp/cfg3/conf.d"
 cp "$tmp/cfgmig-old.toml" "$tmp/cfg3/conf.d/40-dotfiles.toml"
-grep -v fastfetch "$installed" > "$tmp/cfg3/config.rotm-installed.toml"
+grep -v -e fastfetch -e mole "$installed" > "$tmp/cfg3/config.rotm-installed.toml"
 ln -s "$repo" "$home/dotfiles"
 mi3() {
   (cd "$tmp" && env -i HOME="$home" PATH="$PATH" MISE_ENV=rotm-installed MISE_CONFIG_DIR="$tmp/cfg3" MISE_STATE_DIR="$tmp/state3" \
@@ -298,5 +301,7 @@ mi3 dotfiles apply --yes > "$tmp/out" 2>&1 || fail "installed migration: apply f
 ffconfig="$home/.config/fastfetch/config.jsonc"
 [ ! -L "$home/.config/fastfetch" ] && [ -f "$ffconfig" ] && [ ! -L "$ffconfig" ] && [ -r "$home/.config/fastfetch/ascii/deadpool-katanas.ascii" ] \
   || fail "installed migration: no config.jsonc of its own after one apply"
+# mise leaves a file that is already there alone, link or not, so a Mac installed before the seed keeps its link
+[ -L "$home/.config/mole/whitelist" ] || fail "installed migration: an existing whitelist link was replaced, so docs/mole.md's hand step is out of date"
 
 echo ok

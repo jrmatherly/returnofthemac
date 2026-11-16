@@ -39,3 +39,7 @@
 # the folder to become real, or one apply leaves no config.jsonc
 "~/.config/fastfetch" = { source = "~/dotfiles/tilde/.config/fastfetch", mode = "symlink-each", exclude = [".DS_Store", "config.jsonc"] }
 "~/.config/fastfetch/config.jsonc" = { source = "~/dotfiles/tilde/.config/fastfetch/config.jsonc", mode = "copy", create_if_missing = true, depends = ["~/.config/fastfetch"] }
+
+# Mole's own editors (mo clean --whitelist) rewrite these files
+"~/.config/mole/whitelist" = { source = "~/dotfiles/mole/whitelist", mode = "copy", create_if_missing = true }
+"~/.config/mole/whitelist_optimize" = { source = "~/dotfiles/mole/whitelist_optimize", mode = "copy", create_if_missing = true }

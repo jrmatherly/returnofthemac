@@ -108,11 +108,13 @@ Mole reads two config files at fixed paths, `~/.config/mole/whitelist` and `~/.c
 | `mole/whitelist.local` | `~/.config/mole/whitelist`, in place of the shared file | No, gitignored |
 | `mole/whitelist_optimize.local` | `~/.config/mole/whitelist_optimize`, in place of the shared file | No, gitignored |
 
-A `.local` file replaces the shared one; nothing is merged. Start one as a copy of the shared file and add the Mac's own lines. A `.local` is not picked up by itself. Add its entry to `tilde/.config/mise/config.local.toml` (gitignored, so it stays on this Mac) and run `mise dotfiles apply`: the local entry replaces the tracked one, and the link is repointed without asking. Delete the entry and apply again to go back. A real file at the destination stops the apply.
+A `.local` file replaces the shared one; nothing is merged. Start one as a copy of the shared file and add the Mac's own lines. A `.local` is not picked up by itself. Add its entry to `tilde/.config/mise/config.local.toml` (gitignored, so it stays on this Mac) and run `mise dotfiles apply`: the local entry replaces the tracked one, and the link is repointed without asking. Delete the entry and apply again to go back. A real file at the destination stops the apply, so on an installed copy delete the seeded file (below) before a `config.local.toml` entry can link in its place.
 
 In a clone, edit the files in the repo. Mole's own editors (`mo clean --whitelist`, `mo optimize --whitelist`) rewrite the file through the link, which drops its comments.
 
-On an installed copy the two links point into the copy, so do not edit them or use Mole's editors: a change there stops `rotm update`. Keep your own list in a file outside the copy, and name it as the `source` of the entry in `~/.config/mise/config.local.toml`, as for a `.local` file above.
+On an installed copy the two files are your own copies, seeded once from the shared files and never linked. Edit them, or use Mole's editors: nothing is written into the copy. A later change to the shared list does not reach them.
+
+A Mac installed before 2026-11-16 still has the two links into the copy, and mise leaves an existing link alone. Delete both links (`rm ~/.config/mole/whitelist ~/.config/mole/whitelist_optimize`), then run `mise dotfiles apply` to get the seeded copies. Skip a file that already links to your own list.
 
 ### Clean whitelist
 

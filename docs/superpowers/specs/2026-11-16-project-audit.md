@@ -20,7 +20,10 @@ State at the start: `pnpm check` exits 0 in 1 minute 58 seconds on this Mac, CI 
 
 ## Owner's decisions
 
-None yet. The section "E. Decisions the owner must make" lists six. Record each answer here with its date when it is given. A plan task that waits on one names it.
+The section "E. Decisions the owner must make" lists six. Decisions 1 to 5 are not answered yet. Record each answer here with its date when it is given. A plan task that waits on one names it.
+
+- **2026-11-16, decision 6: yes.** Seed Mole's two whitelists on an installed copy. Task 8 of the plan ran. On the owner's Mac `whitelist` already links to its own `whitelist.local`, so only `whitelist_optimize` needs the hand step.
+- **2026-11-16, Task 5: yes to all four steps.** The ruleset on `stable`, required SHA pins, vulnerability alerts and one `fresh-install` run. Rows A5, D3 and D8 record each result.
 
 ## A. Fix first
 
