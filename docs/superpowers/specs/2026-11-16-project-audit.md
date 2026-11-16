@@ -24,6 +24,7 @@ The section "E. Decisions the owner must make" lists six. Decisions 1 to 5 are n
 
 - **2026-11-16, decision 6: yes.** Seed Mole's two whitelists on an installed copy. Task 8 of the plan ran. On the owner's Mac `whitelist` already links to its own `whitelist.local`, so only `whitelist_optimize` needs the hand step.
 - **2026-11-16, Task 5: yes to all four steps.** The ruleset on `stable`, required SHA pins, vulnerability alerts and one `fresh-install` run. Rows A5, D3 and D8 record each result.
+- **2026-11-16, promotion without the VM pass.** The owner skipped Guest A for this promotion. `stable` moved from `f56b558` to `d68d3ac` by a fast-forward push, with `check` green on `d68d3ac`. `fresh-install` had passed on `1a9bb95` only, so the owner's own `rotm update` is the first install of the later commits.
 
 ## A. Fix first
 
