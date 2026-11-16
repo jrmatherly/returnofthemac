@@ -217,7 +217,7 @@ desc = "REA reverse-engineering tools (rea-agents from mise, with Homebrew Ghidr
 tools = "open_binary, binary_overview, list_procedures, procedure_pseudo_code, xrefs, analyze_web_bundle, inspect_electron_page, capture_browser_scenario"
 [mcp.hindsight]
 desc = "Hindsight long-term coding memory (the hook package bin/hindsight-memory installs; per-repo banks, only under the opt-in paths in ~/.hindsight/coding-agent.json). The hooks recall and reflect on their own; the tools are for reading the knowledge pages and diagnosing the daemon. Pairs with the hindsight-coding-agent skill."
-tools = "hindsight_search_knowledge_pages, hindsight_list_knowledge_pages, hindsight_read_knowledge_page, hindsight_reflect, hindsight_sync_status, hindsight_diagnose"
+tools = "hindsight_search_pages, hindsight_list_pages, hindsight_read_page, hindsight_reflect, hindsight_sync_status, hindsight_diagnose"
 [mcp.snippetslab]
 desc = "The user's local SnippetsLab library via the app's `lab mcp` helper. Read tools are allowed; create_snippet asks."
 tools = "search_snippets, get_snippet, list_filters"
