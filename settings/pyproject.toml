@@ -17,3 +17,6 @@ packages = ["src/dotfiles_settings"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "registry.toml" = "dotfiles_settings/registry.toml"
+
+[tool.uv]
+exclude-newer = "48 hours"

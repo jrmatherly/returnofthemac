@@ -9,3 +9,6 @@ name = "hindsight-daemon"
 version = "0"
 requires-python = ">=3.13,<3.14"
 dependencies = ["hindsight-embed==1.2.0", "hindsight-api==1.2.0"]
+
+[tool.uv]
+exclude-newer = "48 hours"

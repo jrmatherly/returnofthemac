@@ -57,6 +57,10 @@ grep -q '"minimumReleaseAge": "2 days"' renovate.json || fail "release hold: Ren
 grep -qE '^ *uv tool install ' setup/misc.sh || fail "release hold: setup/misc.sh installs no uv tool, so this check is stale"
 ! grep -E '^ *uv tool install ' setup/misc.sh | grep -qv -- '--exclude-newer "48 hours"' || fail "release hold: a uv tool install has no 48 hour hold"
 grep -q 'capture uv tool upgrade --all --exclude-newer "48 hours"' bin/sysup || fail "release hold: sysup upgrades uv tools with no 48 hour hold"
+for p in settings hindsight; do
+  grep -qx 'exclude-newer = "48 hours"' "$p/pyproject.toml" || fail "release hold: $p/pyproject.toml has no 48 hour hold"
+  grep -qx 'exclude-newer-span = "PT48H"' "$p/uv.lock" || fail "release hold: $p/uv.lock was not locked under the hold"
+done
 
 # tlrc rejects a page with a wrapped line, so render every header through help;
 # without tldr (the CI runner), only check that a header comment starts on line 2

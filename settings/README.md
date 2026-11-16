@@ -239,7 +239,7 @@ The UI tests need Textual, so they run in the package's uv environment:
 uv run --project settings python settings/tests/test_tui.py
 ```
 
-`pnpm check` runs all of them. A core test is listed in `settings_tests` in `bin/lib/check`, and a Textual test goes in the uv block below it. A plan that adds registry entries asserts them in its own test file.
+`pnpm check` runs all of them. A core test is listed in `settings_tests` in `bin/lib/check`, and a Textual test goes in the uv block below it. A plan that adds registry entries asserts them in its own test file. After a dependency change, re-lock with `uv lock --project settings`: `[tool.uv] exclude-newer` in `pyproject.toml` holds a new release for 48 hours.
 
 ## Installing without the clone
 
