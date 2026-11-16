@@ -223,8 +223,13 @@ stop_daemon() {
   local bound=()
   echo "daemon environment updated"
   ! command -v timeout > /dev/null || bound=(timeout 30)
-  ${bound[@]+"${bound[@]}"} "${embed[@]}" -p coding-agent daemon stop \
-    || warning "the coding-agent daemon did not stop and still runs the old environment; stop it with: ${embed[*]} -p coding-agent daemon stop"
+  # hindsight-embed waits 5 s for the process, and a daemon finishing a retain job
+  # took 26 s (2026-11-16). A stop that finds the port free exits 0 at once, so
+  # asking again is the wait
+  for _ in 1 2 3 4 5 6; do
+    ! ${bound[@]+"${bound[@]}"} "${embed[@]}" -p coding-agent daemon stop || return 0
+  done
+  warning "the coding-agent daemon did not stop and still runs the old environment; stop it with: ${embed[*]} -p coding-agent daemon stop"
 }
 
 cmd_upgrade() {

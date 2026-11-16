@@ -56,6 +56,8 @@ cat > "$HOME/bin/embed" << 'EOF'
 #!/bin/bash
 echo "$*" >> "$HOME/embed.log"
 [ ! -e "$HOME/embed-fails" ] || exit 1
+# a daemon still finishing a job: the first stop gives up, the next finds it gone
+[ ! -e "$HOME/embed-slow" ] || { rm "$HOME/embed-slow"; exit 1; }
 EOF
 cat > "$HOME/bin/timeout" << 'EOF'
 #!/bin/bash
@@ -154,6 +156,12 @@ touch "$HOME/embed-fails"
 stuck=$(hm upgrade 2>&1 > /dev/null)
 rm "$HOME/embed-fails"
 check_true "a daemon that did not stop is a warning with the command" grep -q "did not stop and still runs the old environment; stop it with: $HOME/bin/embed -p coding-agent daemon stop" <<< "$stuck"
+: > "$HOME/embed.log"
+echo older > "$HINDSIGHT_DAEMON_ENV/.synced"
+touch "$HOME/embed-slow"
+slow=$(hm upgrade 2>&1 > /dev/null)
+check "a daemon slow to stop is no warning" "" "$(grep 'did not stop' <<< "$slow" || true)"
+check "a daemon slow to stop is asked again" 2 "$(grep -c -- '-p coding-agent daemon stop' "$HOME/embed.log")"
 : > "$HOME/embed.log"
 echo older > "$HINDSIGHT_DAEMON_ENV/.synced"
 hm upgrade > /dev/null
