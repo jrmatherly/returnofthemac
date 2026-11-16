@@ -112,6 +112,9 @@ assert len(all_tools) == 27, f"{len(all_tools)} tools: update this line with the
 for k in ("brew:uv", "brew:ruby", "brew:jq", "brew:minijinja-cli", "brew:git-lfs", "brew:git", "brew:zsh", "brew-cask:visual-studio-code"):
     assert k in base.packages, f"{k} must stay in the base"
 assert set(base.tools) == {"node", "python", "hunk"}, set(base.tools)
+# The owner's own project is a module a fork can switch off, never the base
+assert not base.taps and not any("jrmatherly" in k for k in base.packages), "the base holds the owner's tap or a package from it"
+assert set(mods["multipass"].packages) == {"brew:jrmatherly/tap/claude-multipass", "brew-cask:jrmatherly/tap/claude-multipass-app"}, set(mods["multipass"].packages)
 assert not any(k.startswith("vscode:") for f in files if f.name != "vscode" for k in f.packages), "a vscode: key outside the vscode module"
 fonts = mods["fonts"].packages
 assert all(k.startswith("brew-cask:font-") for k in fonts) and len(fonts) == 7, fonts

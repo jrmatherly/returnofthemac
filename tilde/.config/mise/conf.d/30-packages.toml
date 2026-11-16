@@ -16,10 +16,6 @@
 # homebrew_metadata stays unset: it would hand every cask back to Homebrew.
 adopt = true
 
-[bootstrap.brew.taps]
-# Dotfiles framework
-"jrmatherly/tap" = "https://github.com/jrmatherly/homebrew-tap.git" # claude-multipass; 60-rotm-menubar.toml declares it too
-
 [bootstrap.packages]
 # Dotfiles framework requirements
 #
@@ -36,8 +32,6 @@ adopt = true
 "brew:gh" = "latest" # GitHub CLI, config tracked in tilde/.config/gh
 "brew:git" = "latest" # Version control
 "brew:gnupg" = "latest" # Optional: only needed if you sign commits with GPG instead of SSH
-"brew:jrmatherly/tap/claude-multipass" = "latest" # Switch Claude Desktop between claude.ai accounts (github.com/jrmatherly/claude-multipass; Raycast scripts in its share dir)
-"brew-cask:jrmatherly/tap/claude-multipass-app" = "latest" # Claude Multipass menu bar app (arm64, macOS 14+)
 "brew:lazygit" = "latest" # Full Git management app (zsh `lg` alias)
 "brew:pinentry-mac" = "latest" # Securely enter your GPG passphrase (only needed with GPG signing)
 "brew:ripgrep" = "latest" # Searching within files (better `grep`), tilde/.ripgreprc
@@ -53,7 +47,7 @@ adopt = true
 "brew-cask:coteditor" = "latest" # `cot` CLI required: tilde/.gitconfig core.editor, zsh/env.zsh $EDITOR
 "brew-cask:ghostty" = "latest" # Config tracked in tilde/.config/ghostty
 "brew-cask:visual-studio-code" = "latest" # Main code editor; vscode/User settings symlinked to it
-"brew:ruby" = "latest" # mise reads a tap's Ruby definition with Ruby 3+ (macOS ships 2.6); without it status and cask applies fail on claude-multipass-app
+"brew:ruby" = "latest" # mise reads a tap's Ruby definition with Ruby 3+ (macOS ships 2.6); without it status and cask applies fail on the tap's casks (claude-multipass-app, returnofthemac-app)
 "brew:uv" = "latest" # Fast Python package/project manager
 "brew:git-lfs" = "latest" # Git Large File Storage
 "brew:jq" = "latest" # JSON processor

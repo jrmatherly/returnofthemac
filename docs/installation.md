@@ -20,7 +20,7 @@ You need macOS on Apple Silicon. There are two ways in. [Without a clone](#insta
    | `-h`, `--help` | Prints the flags |
    | Anything else | Goes to `setup.sh`, as in `curl -fsSL … \| bash -s -- -y --without security,cloud` |
 
-   mise fetches the `stable` branch into `~/.local/share/mise/bootstrap-repo`, links `~/.config/mise` into it and applies nothing itself. `setup.sh` then runs from that copy, with the prompts described under [Run setup](#run-setup), and takes its flags from the install line. `--from` trusts this repository's mise configuration for the run, so [read it](../tilde/.config/mise) first if you want to know what it does. To leave groups out from the start, add `--without <names>`, as in `| bash -s -- --without security,cloud`. The groups are `fonts`, `apps`, `vscode`, `claude`, `agents`, `cloud`, `kubernetes`, `devops`, `security`, `network`, `languages`, `media`, `menubar`, `touchid` and `loginshell`.
+   mise fetches the `stable` branch into `~/.local/share/mise/bootstrap-repo`, links `~/.config/mise` into it and applies nothing itself. `setup.sh` then runs from that copy, with the prompts described under [Run setup](#run-setup), and takes its flags from the install line. `--from` trusts this repository's mise configuration for the run, so [read it](../tilde/.config/mise) first if you want to know what it does. To leave groups out from the start, add `--without <names>`, as in `| bash -s -- --without security,cloud`. The groups are `fonts`, `apps`, `vscode`, `claude`, `agents`, `cloud`, `kubernetes`, `devops`, `security`, `network`, `languages`, `media`, `menubar`, `multipass`, `touchid` and `loginshell`.
 
 1. Open a new terminal. If you declined the GitHub login that setup offered, run `gh auth login` there. Without a login GitHub allows 60 anonymous API calls an hour, and mise uses them to read the tap formulae: an update in the same hour as the install can fail on that limit.
 1. Finish the steps setup can't do for you: see [After setup](#after-setup). macOS preferences are not applied by the install: see [Set macOS defaults](#set-macos-defaults).
@@ -118,7 +118,7 @@ Options, which `rotm install` takes too:
 | Flag | Effect |
 | --- | --- |
 | `-y`, `--yes` | Don't wait for confirmation before starting, and pass `--yes` to mise. The task then takes the default at its own questions: it keeps the saved VS Code font preset, and prints `aspire certs trust` to run later where it would have run it. `setup.sh` doesn't offer `gh auth login` either. The git identity prompt on a new Mac still asks |
-| `--without <a,b>` | Turn these modules off before anything is installed, and keep them off on later runs. The modules are `fonts`, `apps`, `vscode`, `claude`, `agents`, `cloud`, `kubernetes`, `devops`, `security`, `network`, `languages`, `media`, `menubar`, `touchid` and `loginshell` |
+| `--without <a,b>` | Turn these modules off before anything is installed, and keep them off on later runs. The modules are `fonts`, `apps`, `vscode`, `claude`, `agents`, `cloud`, `kubernetes`, `devops`, `security`, `network`, `languages`, `media`, `menubar`, `multipass`, `touchid` and `loginshell` |
 | `--skip-codegraph` | Don't install [CodeGraph](https://github.com/colbymchenry/codegraph) or connect it to Claude Code (an existing install is left alone) |
 | `--dash` | Also run the optional [Dash docset setup](../setup/dash.sh) |
 | `-h`, `--help` | Print usage and exit |

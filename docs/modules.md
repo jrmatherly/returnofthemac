@@ -1,6 +1,6 @@
 # Modules: leaving parts out
 
-Everything outside the base is grouped into fifteen modules, and each one can be switched off. All of them are on by default, and a module added in a later update is on too. The base is what the dotfiles themselves run: Git, Zsh, mise, uv, jq, the shell tools, the terminals and VS Code.
+Everything outside the base is grouped into sixteen modules, and each one can be switched off. All of them are on by default, and a module added in a later update is on too. The base is what the dotfiles themselves run: Git, Zsh, mise, uv, jq, the shell tools, the terminals and VS Code.
 
 | Module | What it holds | Leans on |
 | --- | --- | --- |
@@ -17,6 +17,7 @@ Everything outside the base is grouped into fifteen modules, and each one can be
 | `languages` | Language runtimes and build tools from Homebrew, `pnpm` among them, and `ni` |  |
 | `media` | File, text and image processing formulae, Mole among them |  |
 | `menubar` | Return of the Mac, the menu bar app over `rotm settings`, which setup opens once it is installed |  |
+| `multipass` | Claude Multipass, the owner's tool that switches Claude Desktop between accounts, and its menu bar app |  |
 | `touchid` | A system change, not a package: `/etc/pam.d/sudo_local`, which lets `sudo` accept Touch ID. Off leaves the file as it is |  |
 | `loginshell` | A system change, not a package: Homebrew's zsh as the login shell. Off leaves the account's shell as it is |  |
 
@@ -62,11 +63,11 @@ An absent package that is already installed is left in place, and neither setup 
 
 ## Sources outside Homebrew's own lists
 
-These taps are declared by a fragment, so their formulae and casks install with the base or the module that uses them:
+These taps are declared by a fragment, so their formulae and casks install with the module that uses them:
 
 | Tap | Serves | Module |
 | --- | --- | --- |
-| `jrmatherly/tap` | `claude-multipass`, `claude-multipass-app`, `returnofthemac-app` | base, `menubar` |
+| `jrmatherly/tap` | `claude-multipass`, `claude-multipass-app`, `returnofthemac-app` | `multipass`, `menubar` |
 | `kubestellar/tap` | `kubestellar-deploy`, `kubestellar-ops` | `kubernetes` |
 | `skyhook-io/tap` | `radar` | `kubernetes` |
 | `bramstein/webfonttools` | `sfnt2woff` | `media` |

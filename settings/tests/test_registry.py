@@ -109,6 +109,8 @@ assert [model.note_for(a, short) for a in (object(), Plain(), PerSetting())] == 
 assert model.note_for(PerSetting(), by_id["shell.editor"]) == ""
 menubar = by_id["modules.menubar"]
 assert (menubar.kind, menubar.key, menubar.default) == ("module", "menubar", "on"), menubar
+multipass = by_id["modules.multipass"]
+assert (multipass.kind, multipass.key, multipass.default) == ("module", "multipass", "on"), multipass
 touchid = by_id["modules.touchid"]
 assert (touchid.kind, touchid.key, touchid.default) == ("module", "touchid", "on"), touchid
 loginshell = by_id["modules.loginshell"]

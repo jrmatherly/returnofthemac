@@ -1080,6 +1080,18 @@ default = "on"
 access = "rw"
 
 [[setting]]
+id = "modules.multipass"
+section = "Modules"
+label = "Claude Multipass"
+help = "Switches Claude Desktop between saved claude.ai accounts: the command line tool and its menu bar app."
+kind = "module"
+key = "multipass"
+type = "bool"
+true_value = "on"
+default = "on"
+access = "rw"
+
+[[setting]]
 id = "modules.touchid"
 section = "Modules"
 label = "Touch ID for sudo"
