@@ -36,6 +36,7 @@ import Observation
   private let now: () -> Date
   private var checkedAt: Date?
   private var appCheckedAt: Date?
+  private var checkingApp = false
   private var reading: Task<Void, Never>?
 
   public init(makeRunner: @escaping (URL) -> CommandRunner, locate: @escaping () -> URL?, now: @escaping () -> Date = Date.init) {
@@ -97,7 +98,11 @@ import Observation
   /// Reads the cask in the tap, at most once a day. A failed check is silent.
   /// `installed` asks mise whether it installed the cask, only when the tap is newer: mise updates no other copy.
   public func checkAppUpdate(fetch: (URL) async throws -> String, current: String, installed: () async -> Bool) async {
+    if checkingApp { return }
     if let appCheckedAt, now().timeIntervalSince(appCheckedAt) < 86400 { return }
+    // Not appCheckedAt: set before the fetch, a failed fetch would block the next try for a day
+    checkingApp = true
+    defer { checkingApp = false }
     guard let text = try? await fetch(AppUpdate.caskURL) else { return }
     appCheckedAt = now()
     guard let version = AppUpdate.version(inCask: text) else { return }

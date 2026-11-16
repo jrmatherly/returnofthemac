@@ -141,6 +141,21 @@ struct AppUpdateTests {
     #expect(state.lastError == nil)
   }
 
+  @Test func twoChecksAtOnceFetchOnce() async {
+    let state = makeState(FakeRunner())
+    let fetched = FetchCount()
+    let fetch: (URL) async throws -> String = { _ in
+      fetched.count += 1
+      await Task.yield()
+      return "  version \"0.2.0\"\n"
+    }
+    async let a: Void = state.checkAppUpdate(fetch: fetch, current: "0.1.0", installed: { true })
+    async let b: Void = state.checkAppUpdate(fetch: fetch, current: "0.1.0", installed: { true })
+    _ = await (a, b)
+    #expect(fetched.count == 1)
+    #expect(state.appUpdate == "0.2.0")
+  }
+
   @Test func checksAtMostOnceADay() async {
     let clock = Clock()
     let state = makeState(FakeRunner(), clock: clock)
