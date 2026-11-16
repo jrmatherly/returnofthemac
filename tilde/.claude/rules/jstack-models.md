@@ -8,10 +8,6 @@ perf-issue: opus medium
 hillclimb: opus medium
 judgment and prose: fable medium
 hardest tasks: fable medium
-how explorer: sonnet medium
-how explainer: fable medium
-why investigators: sonnet medium
-why synthesizer: fable medium
 reflect tooling: opus medium
 reflect judgment, divergent, synthesizer: fable medium
 arena runners: fable medium, opus medium, opus medium

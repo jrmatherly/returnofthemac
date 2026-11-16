@@ -347,7 +347,7 @@ def test_tracked_rule_roles_are_known_and_parse():
     assert set(held) <= known, set(held) - known      # a subset: Reset deletes a line
     for role, value in held.items():
         tool.parse_seats(role, value)                 # every line the file holds is valid
-    assert len(known) == 17
+    assert len(known) == 13
 
 
 def test_write_note_only_for_jstack_roles():
