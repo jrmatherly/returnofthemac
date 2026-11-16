@@ -102,7 +102,7 @@ Each replacement only applies when the tool is installed. Run the original comma
 | --- | --- |
 | `pn {{args}}` | Run `pnpm` |
 | `nnn` | Install and activate the Node.js version the current project asks for (via `mise`) |
-| `mise use node@{{version}}` | Switch the current project's Node version ([mise](https://mise.jdx.dev/)). For the global default, reorder the version list in `tilde/.config/mise/config.toml` (first = default) rather than `mise use -g`, which replaces the whole list |
+| `mise use node@{{version}}` | Switch the current project's Node version ([mise](https://mise.jdx.dev/)). For the global default in a clone, reorder the version list in `tilde/.config/mise/config.toml` (first = default) rather than `mise use -g`, which replaces the whole list. On an installed copy never edit that file or run `mise use -g`, since both stop `rotm update`: run `mise use --path ~/.config/mise/config.local.toml {{tool}}@{{version}}`, and name every version wanted, because the local file's entry also replaces the tool's whole list |
 | `mise install` | Install the versions a project asks for (`mise.toml`, `.nvmrc`, `.node-version`, `.python-version`) |
 | `mise exec node@{{version}} -- {{command}}` | Run a command with another installed version (Node 22/24/26, Python 3.11 to 3.15). Python versions also work directly: `python3.12` |
 | `nio` | Install dependencies, preferring the offline cache. More information: <https://github.com/antfu/ni>. |
