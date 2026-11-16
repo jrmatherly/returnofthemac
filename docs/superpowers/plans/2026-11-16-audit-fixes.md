@@ -6,7 +6,7 @@
 
 **Architecture:** Every fix is at the line where the fault is, and none adds a module. Each task writes its failing check into the self-check file that already covers the script, sees it fail, then makes the smallest change that passes. The tasks do not depend on each other except where a task says so, and the four stages run in order of what a fault costs.
 
-**Tech Stack:** bash 3.2 and zsh (`bin/`, `setup/`, `tilde/.zshrc`), Python 3.11+ standard library (`settings/src/dotfiles_settings`), Swift 6 with Swift Testing (`app/`), mise 2026.11.8, pnpm, Renovate, GitHub Actions.
+**Tech Stack:** bash 3.2 and zsh (`bin/`, `setup/`, `tilde/.zshrc`), Python 3.11+ standard library (`settings/src/dotfiles_settings`), Swift 5 language mode with Swift Testing (`app/`, tools 5.9), mise 2026.11.8, pnpm, Renovate, GitHub Actions.
 
 **Spec:** [`docs/superpowers/specs/2026-11-16-project-audit.md`](../specs/2026-11-16-project-audit.md). Finding ids (A1, C3) are its ids. Read its "Owner's decisions" before starting. Task 5 needs the owner's word, and Task 8 assumes a yes to decision 6.
 
@@ -17,10 +17,11 @@
 - A change to a command's behaviour carries its doc edit in the same commit (`CLAUDE.md`, "Docs mirror behavior").
 - Never run on this Mac: `sysup`, `./setup.sh`, `set-defaults`, `rotm install`, `rotm update`, `rotm settings sync …`, `claude -p` or the built app. Tests use scratch homes and stubs, as the files they join already do.
 - No new test file. Every case joins an existing file, so the lists in `bin/lib/check` do not change.
+- A task that gives `bin/lib/test-bin` a new script to cover adds its name to that file's header (line 3) and to the comment at `bin/lib/check:154`.
 - A failing check must never write into this repository. Tasks 6 and 7 point the script at a fixture folder for that reason. Keep it.
 - The standard-library tests run as `mise exec python -- python3 settings/tests/<file>` and print `ok` last. The shell self-checks run as `bash bin/lib/<name>` or `bash setup/tests/<name>.sh`.
 - Line numbers are those of `main` at `f56b558`.
-- `CLAUDE.md` is capped at 12,000 bytes and each `.claude/rules/*.md` at 6,000 (`bin/lib/test-conventions:210-212`). `CLAUDE.md` has 2 bytes left and `.claude/rules/setup.md` has 4. Only Task 24 edits `CLAUDE.md`. No task edits `setup.md`.
+- `CLAUDE.md` is capped at 12,000 bytes and each `.claude/rules/*.md` at 6,000 (`bin/lib/test-conventions:210-212`). `CLAUDE.md` has 2 bytes left and `.claude/rules/setup.md` has 4. Only Task 23 edits `CLAUDE.md`. No task edits `setup.md`.
 - Tasks 1 to 4 are the audit's "fix first" group. Do them before anything else.
 
 ## Decided while writing this plan
@@ -32,6 +33,7 @@ Each is a default the owner can change before the task starts.
 - **C1 uses `main` as the compare base.** That is what `push` already falls back to on every run, since `get_parent` never existed. Working out a branch's real parent is not attempted.
 - **C6 changes the seed only.** `~/.gitconfig` on an installed copy is written once and is then the user's file, so a Mac that already has it keeps the double include. Task 13 gives the one-line hand fix.
 - **C9 flips the default, and keeps the question.** When the folder already holds settings the prompt says so and defaults to no. Skipping the question was the other option. It was not chosen because nobody has checked whether setup leaves a file in that folder before the question on a new Mac.
+- **`miserc.local.toml` is not written atomically after all.** The repository's atomic writer, `edit_file`, refuses a path inside an installed copy, and that file is one. A second writer for a crash nobody has seen is not worth its test.
 - **Not planned.** The spec's section G lists six items with the reason each waits. Section E's decisions 1 to 5 get a plan of their own once answered.
 
 ## Measured for this plan (2026-11-16, this Mac)
@@ -43,13 +45,35 @@ Each is a default the owner can change before the task starts.
 | `pnpm audit` reports one high advisory | `sharp <0.35.5`, path `.>avif>sharp` |
 | `stable` has no rules | `gh api repos/jrmatherly/returnofthemac/rules/branches/stable` printed `[]` |
 | uv 0.13.8 takes a relative `--exclude-newer` | `echo six \| uv pip compile - --exclude-newer "7 days"` resolved |
+| mise 2026.11.8 leaves an existing link alone when the entry becomes `create_if_missing` | In `test-dotfiles`' `home3` block, an old layout linked Mole's whitelist, and the apply with the new entries left it a link |
+
+### Checks already run, red then green
+
+On 2026-11-16 each check below was added to a scratch clone of `931d3f8`, run to see it fail, then run again with the fix the task describes. Nothing in this repository was edited. The failure line each task's Step 2 names is the one that was seen.
+
+| Task | Red | Green |
+| --- | --- | --- |
+| 1 | `FAIL: window title: the folder name $(touch pwned) ran as a command` | `shell: all checks passed` |
+| 2, 17 | `AssertionError` from each new test | `ok` from `test_sync`, `test_tool`, `test_cli`, `test_profile` |
+| 3, 6, 10, 11, 12 | 13 `FAIL` lines in `test-bin`, one per new check that should fail | No `FAIL` line |
+| 4 | `1 vulnerabilities found` | `No known vulnerabilities found`, lockfile only |
+| 7 | 2 `FAIL` lines under each bash | No `FAIL` line |
+| 8 | `installed: ~/.config/mole/whitelist is not a seeded copy` | Passes for a new install. An existing link stays, as the row above says |
+| 13 | `installed: ~/.gitconfig.local is read more than once` | `ok` |
+| 14 | 2 `FAIL` lines | No `FAIL` line |
+| 16 | `FAIL: saved, settings already here: says so` | No `FAIL` line, with the fix written as two prompts in an `if` |
+| 21 | `Expectation failed: fetched.count == 1` | 18 tests pass |
+
+Not run: Tasks 5, 9, 15, 18, 19, 20, 22 and 23.
+
+An independent reviewer then read all tasks against the code and ran Tasks 1, 3, 8, 10, 11, 12 and 21 again. Its 13 findings were each checked and are folded in. The largest: the task that wrote `miserc.local.toml` through `edit_file` was dropped, because `edit_file` refuses a path inside an installed copy (`adapters/tool.py:23-25`) and the change would have broken leaving a profile there.
 
 ## Review Focus
 
 Each line is a case the spec implies and a reader would hit. Its check is in the task named.
 
 1. **A folder name holding `%` or a backtick.** `print -P` also expands `%n` and friends. The title must show the name as typed. Task 1.
-2. **A Mac that already has the old link or the old wrapper.** A seeded file is written once, so a fix to the seed does not reach it. Task 8 tests the move from a link, and Task 13 gives a hand fix.
+2. **A Mac that already has the old link or the old wrapper.** A seeded file is written once, and mise leaves an existing link alone, so a fix to the seed does not reach it. Tasks 8, 13 and 14 each give the owner a hand step, and Task 8 pins mise's behaviour with a check.
 3. **`push` to a host that is not GitHub.** It must still print no URL and exit 0. Task 10.
 4. **`pull` hitting a conflict with nothing stashed.** The rollback must abort the rebase and must not try to pop a stash. Task 11.
 5. **`setup.sh -y` in a real terminal.** Task 15's change cannot be tested without a pty. It is checked by reading, and the task says so.
@@ -146,13 +170,13 @@ Subject: `Keep a setting's applied record when its replay write fails`
 
 **Files:**
 - Modify: `bin/git-tidy:23-25` (delete the three lines)
-- Test: `bin/lib/test-bin:68`
+- Test: `bin/lib/test-bin:64`
 
 **Interfaces:** None.
 
 - [ ] **Step 1: Write the failing check**
 
-Before the `git-tidy` call at line 68:
+Before the `git-tidy` call at line 64:
 
 ```bash
 dropped=$(cd "$tmp/repo" && echo e >> top.txt && git stash -q && git rev-parse 'stash@{0}' && git stash drop -q)
@@ -196,7 +220,7 @@ Expected: `1 vulnerabilities found`, `Severity: 1 high`, package `sharp`.
 
 Run: `pnpm update sharp --depth Infinity`
 Then: `pnpm why sharp`
-Expected: `sharp 0.35.5` or later, and `git diff --stat` names only `pnpm-lock.yaml`.
+Expected: `sharp 0.35.5` or later, and `git diff --stat` names only `pnpm-lock.yaml`, about 240 changed lines (sharp's per-platform packages move with it).
 
 - [ ] **Step 3: Let Renovate refresh the lockfile from now on**
 
@@ -217,7 +241,8 @@ Subject: `Update sharp past GHSA-wq5f-xc86-pv6w and refresh the lockfile weekly`
 
 Every step changes GitHub, not the repository. **Do none of them without the owner's word for that step.** State the command and wait.
 
-**Files:** None.
+**Files:**
+- Modify: `docs/superpowers/specs/2026-11-16-project-audit.md` (rows A5, D3 and D8)
 
 **Interfaces:** None.
 
@@ -231,7 +256,7 @@ gh api repos/jrmatherly/returnofthemac/rulesets -X POST --input - <<'JSON'
 JSON
 ```
 
-Verify: `gh api repos/jrmatherly/returnofthemac/rules/branches/stable --jq '.[].type'` prints `deletion` and `non_fast_forward`. A promotion is a plain fast-forward push (`setup/README.md:88`), so it still works.
+Verify: `gh api repos/jrmatherly/returnofthemac/rules/branches/stable --jq '.[].type'` prints `deletion` and `non_fast_forward`. A promotion is a plain fast-forward push (`setup/README.md:85-88`), so it still works.
 
 - [ ] **Step 2: Require SHA-pinned actions**
 
@@ -246,7 +271,13 @@ Verify: `gh api -i repos/jrmatherly/returnofthemac/vulnerability-alerts` answers
 - [ ] **Step 4: Run the fresh-install workflow once**
 
 Run: `gh workflow run fresh-install.yml --ref main`
-Verify: `gh run list --workflow fresh-install --limit 1` shows `success` on the current `main` commit. Record the run id in the spec's D3 row.
+Verify: `gh run list --workflow fresh-install --limit 1` shows `success` on the current `main` commit.
+
+- [ ] **Step 5: Record and commit**
+
+In the spec, add to rows A5, D3 and D8 what was done and when, with the run id for D3. A step the owner declined is recorded as declined.
+
+Subject: `Record the GitHub settings changed after the audit`
 
 ---
 
@@ -256,7 +287,7 @@ Verify: `gh run list --workflow fresh-install --limit 1` shows `success` on the 
 
 **Files:**
 - Modify: `bin/obsidian-vault:72` (top of `capture()`), and its header comment
-- Modify: `docs/README.md` (the `obsidian-vault` row)
+- Modify: `docs/README.md:155` (the `obsidian-vault` row), `obsidian/README.md:41`
 - Test: `bin/lib/test-bin`
 
 **Interfaces:** None.
@@ -299,8 +330,8 @@ Subject: `Refuse obsidian-vault capture on an installed copy`
 ### Task 7: Refuse `claude-config save` on an installed copy (B2)
 
 **Files:**
-- Modify: `bin/claude-config:380` (the `save)` case), and its header comment
-- Modify: `docs/claude-config.md:16`
+- Modify: `bin/claude-config:381` (the `save)` case), and its header comment
+- Modify: `docs/claude-config.md:16`, `agents/README.md:42`
 - Test: `bin/lib/test-claude-config`
 
 **Interfaces:** None.
@@ -311,12 +342,12 @@ Subject: `Refuse obsidian-vault capture on an installed copy`
 fix="$tmp/fix"
 mkdir -p "$fix" "$tmp/data"
 ln -s "$fix" "$tmp/data/bootstrap-repo"
-env -u CLAUDE_CONFIG_SAVE_DIR DOTFILES_DIR="$fix" MISE_DATA_DIR="$tmp/data" "$script" save > "$tmp/save.out" 2>&1
+(unset CLAUDE_CONFIG_SAVE_DIR && DOTFILES_DIR="$fix" MISE_DATA_DIR="$tmp/data" cc save) > "$tmp/save.out" 2>&1
 check "save refuses an installed copy" "[ $? -ne 0 ] && grep -q 'installed copy' '$tmp/save.out'"
 check "save wrote nothing into it" "[ ! -e '$fix/agents' ]"
 ```
 
-The file's other `save` cases all set `CLAUDE_CONFIG_SAVE_DIR`, and they are the proof that a named folder is still written.
+`cc` runs the script under the bash being tested. The file's other `save` cases all set `CLAUDE_CONFIG_SAVE_DIR`, and they are the proof that a named folder is still written.
 
 - [ ] **Step 2: Run it and see it fail**
 
@@ -325,7 +356,7 @@ Expected: `FAIL save refuses an installed copy`, under both bash versions.
 
 - [ ] **Step 3: Add the guard as the first line of the `save)` case**
 
-Refuse only when `CLAUDE_CONFIG_SAVE_DIR` is unset and `"$(dirname "$0")/lib/rotm-mode" "$DOTFILES_DIR"` prints `installed`. Message, to stderr, exit 1: `claude-config: save writes agents/ in the repository, and this is an installed copy. Run it from a clone, or set CLAUDE_CONFIG_SAVE_DIR.` Say the same in the header and in `docs/claude-config.md`.
+Refuse only when `CLAUDE_CONFIG_SAVE_DIR` is unset and `"$(dirname "$0")/lib/rotm-mode" "$DOTFILES_DIR"` prints `installed`. Message, to stderr, exit 1: `claude-config: save writes agents/ in the repository, and this is an installed copy. Run it from a clone, or set CLAUDE_CONFIG_SAVE_DIR.` Say the same in the header, in `docs/claude-config.md` and beside the `claude-config save` advice in `agents/README.md`.
 
 - [ ] **Step 4: Run it and see it pass**
 
@@ -357,12 +388,18 @@ for f in whitelist whitelist_optimize; do
 done
 ```
 
-Then one migration case, in the style of the file's existing one for `~/.claude/rules`. Apply the base config to a fresh scratch home so both whitelists are links, apply again with `MISE_ENV=rotm-installed`, and fail unless each is a regular file with the tracked content.
+Then pin what happens to a Mac that already has the links, in the file's "installed migration" block (the `home3` scratch home). Change its `grep -v fastfetch "$installed"` to `grep -v -e fastfetch -e mole "$installed"`, so the old layout links both whitelists, and after the block's second apply add:
+
+```bash
+[ -L "$home/.config/mole/whitelist" ] || fail "installed migration: an existing whitelist link was replaced, so docs/mole.md's hand step is out of date"
+```
+
+mise leaves a file that is already there alone, link or not (measured below). The check holds that fact still, so a mise release that starts replacing the link shows up here.
 
 - [ ] **Step 2: Run it and see it fail**
 
 Run: `bash bin/lib/test-dotfiles`
-Expected: `FAIL: installed: ~/.config/mole/whitelist is not a seeded copy`
+Expected: `test-dotfiles: installed: ~/.config/mole/whitelist is not a seeded copy`
 
 - [ ] **Step 3: Add the two entries to `config.rotm-installed.toml`**
 
@@ -375,15 +412,25 @@ Expected: `FAIL: installed: ~/.config/mole/whitelist is not a seeded copy`
 - [ ] **Step 4: Run it and see both cases pass**
 
 Run: `bash bin/lib/test-dotfiles`
-Expected: exit 0. If the migration case fails because mise will not replace a link with a copy, stop and tell the owner. Do not add `--force`.
+Expected: exit 0.
 
 - [ ] **Step 5: Rewrite `docs/mole.md:115`**
 
-Say that on an installed copy the two files are the user's own copies, seeded once, that Mole's editors are safe there, and that a later change to the shared list does not reach them.
+Say that on an installed copy the two files are the user's own copies, seeded once, that Mole's editors are safe there, and that a later change to the shared list does not reach them. Add the step for a Mac installed before this change, whose two files are still links: delete both, then run `mise dotfiles apply`. In the `.local` paragraph above it, say that a seeded file must be deleted before a `config.local.toml` entry can link in its place, since a real file at the destination stops the apply.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Commit, then tell the owner the hand step**
 
 Subject: `Seed Mole's whitelists on an installed copy`
+
+This Mac is such an install. Give the owner these two lines to run after the next `rotm update`. Do not run them yourself.
+
+```bash
+rm ~/.config/mole/whitelist ~/.config/mole/whitelist_optimize
+```
+
+```bash
+mise dotfiles apply
+```
 
 ### Task 9: Say where a global mise tool goes on an installed copy (B4)
 
@@ -394,7 +441,7 @@ Subject: `Seed Mole's whitelists on an installed copy`
 
 - [ ] **Step 1: Rewrite the row**
 
-Keep the project sentence. Replace the global sentence with two. In a clone, reorder the version list in `tilde/.config/mise/config.toml`. On an installed copy, never edit that file or run `mise use -g`, both of which stop `rotm update`, and run `mise use --path ~/.config/mise/config.local.toml {{tool}}@{{version}}`.
+Keep the project sentence. Replace the global sentence with two. In a clone, reorder the version list in `tilde/.config/mise/config.toml`. On an installed copy, never edit that file or run `mise use -g`, both of which stop `rotm update`, and run `mise use --path ~/.config/mise/config.local.toml {{tool}}@{{version}}`. Keep the present warning for that command too: the local file's entry replaces the tool's whole version list, so name every version wanted.
 
 - [ ] **Step 2: Verify the command the row names**
 
@@ -483,7 +530,7 @@ git clone -q "$tmp/origin.git" "$tmp/other"
 check "pull on a conflict: exits non-zero" "[ $? -ne 0 ]"
 check "pull on a conflict: no rebase left behind" "[ ! -d '$tmp/repo/.git/rebase-merge' ]"
 check "pull on a conflict: the stash is restored" "[ -z \"\$(git -C '$tmp/repo' stash list)\" ] && [ -f '$tmp/repo/untracked.txt' ]"
-rm "$tmp/repo/untracked.txt"
+rm -f "$tmp/repo/untracked.txt"
 (cd "$tmp/repo" && "$root/bin/pull") > "$tmp/pull.out" 2>&1
 check "pull on a conflict with nothing stashed: no rebase, no stash pop" "[ ! -d '$tmp/repo/.git/rebase-merge' ] && ! grep -q 'Restoring tree' '$tmp/pull.out'"
 ```
@@ -559,7 +606,7 @@ printf '[x]\n  y = 1\n' > "$home/.gitconfig.local"
 - [ ] **Step 2: Run it and see it fail**
 
 Run: `bash bin/lib/test-dotfiles`
-Expected: `FAIL: installed: ~/.gitconfig.local is read more than once`
+Expected: `test-dotfiles: installed: ~/.gitconfig.local is read more than once`
 
 - [ ] **Step 3: Delete the second `[include]` from `tilde/.gitconfig.installed`**
 
@@ -594,7 +641,7 @@ check "ssh signing: git is told where the allowed signers are" "grep -qx '  allo
 check "ssh signing: the key is an allowed signer" "grep -qx 'a@b.c ssh-ed25519 AAAA' '$h/.config/git/allowed_signers'"
 ```
 
-After the "no signing lines" check at line 91:
+After the "no signing lines" check at line 91, a guard that already passes and must keep passing:
 
 ```bash
 check "ssh signing without 1Password: no allowed signers file" "[ ! -e '$h0/.config/git/allowed_signers' ]"
@@ -634,7 +681,7 @@ Check: `git log -1 --format=%G?` prints `G`.
 
 **Files:**
 - Modify: `setup/misc.sh:428`
-- Modify: `docs/installation.md` (the row near line 120 that lists what `-y` still asks)
+- Modify: `docs/installation.md:120` (the `-y` row), `setup/README.md:157` (the Aspire step)
 
 **Interfaces:**
 - Consumes: `asks()` at `setup/misc.sh:75`, which is true only in a terminal with `DOTFILES_YES` unset.
@@ -656,26 +703,40 @@ Subject: `Skip the Aspire certificate prompt under setup -y`
 
 **Files:**
 - Modify: `setup.sh:526-528`
-- Modify: `docs/settings-sync.md` (the paragraph on a new Mac's first setup)
-- Test: `bin/lib/test-bootstrap` (after the `saved:` cases that start near line 586)
+- Modify: `docs/installation.md:133` ("Enter loads them"), `docs/settings-sync.md:46`
+- Test: `bin/lib/test-bootstrap:586-606`
 
 **Interfaces:** None.
 
 - [ ] **Step 1: Write the failing checks**
 
-One case in the file's own style. Its `prepare` stubs `gh` with `$saved` and puts one file, `tools.toml`, in the folder that `rotm-user-layer dir` prints for the fixture. Run with `answers='\n'`.
+Setup reads one line at "Press Enter key to continue" (`setup.sh:247`) before the question, so every answer string starts with `\n`. The fixture's folder is `$HOME/.config/rotm`.
+
+Add to the first `saved:` case, after "restores the repository once":
 
 ```bash
-check_true "saved, settings already here: says so" has 'already holds settings'
-check_true "saved, settings already here: Return does not restore" restores 0
+check_true "saved: a new Mac is asked the plain question" lacks 'already holds settings'
 ```
 
-A second run with `answers='y\n'` and `check_true "saved, settings already here: yes still restores" restores 1`.
+Add before the `prepare()` that writes `saved-config.override.toml`:
+
+```bash
+prepare() {
+  stub gh "$saved"
+  mkdir -p "$HOME/.config/rotm"
+  echo '[tools]' > "$HOME/.config/rotm/tools.toml"
+}
+answers='\n\n' run
+check_true "saved, settings already here: says so" has 'already holds settings'
+check_true "saved, settings already here: Return does not restore" restores 0
+answers='\ny\n' run
+check_true "saved, settings already here: yes still restores" restores 1
+```
 
 - [ ] **Step 2: Run it and see it fail**
 
 Run: `bash bin/lib/test-bootstrap`
-Expected: `saved, settings already here: says so` fails.
+Expected: `FAIL: saved, settings already here: says so`
 
 - [ ] **Step 3: Change the question in `load_saved_settings`**
 
@@ -684,7 +745,7 @@ Read `folder` before the question. When it holds a regular file other than `modu
 - [ ] **Step 4: Run it and see it pass**
 
 Run: `bash bin/lib/test-bootstrap`
-Expected: exit 0. The existing `saved:` cases still pass, which is the proof that a new Mac is asked as before.
+Expected: exit 0, no `FAIL` line.
 
 - [ ] **Step 5: Commit**
 
@@ -694,7 +755,7 @@ Subject: `Default to no when loading saved settings over existing ones`
 
 **Files:**
 - Modify: `settings/src/dotfiles_settings/sync.py:26-30`
-- Modify: `settings/src/dotfiles_settings/adapters/tool.py:89, 98, 127`
+- Modify: `settings/src/dotfiles_settings/adapters/tool.py:89, 100, 127`
 - Test: `settings/tests/test_sync.py`, `settings/tests/test_tool.py`
 
 **Interfaces:**
@@ -763,7 +824,7 @@ Copy only, so no test.
 - [ ] **Step 1: Edit the three lines**
 
 - `setup/dash.sh:158`: keep `restore it with git checkout` when `dash_dir` is the repository's `dash` folder. Otherwise print `delete it and run this again to start from the shipped one`. Lines 27 to 30 already copy the shipped file when it is missing.
-- `bin/optimize-image:42`: `avif is not installed: run pnpm install in $DOTFILES`.
+- `bin/optimize-image:42`: `avif is not installed: run pnpm install in $root`. The script sets `root` at line 28 and never sets `DOTFILES`, which `set -u` would trip on.
 - `bin/wg`: one header sentence saying a file that lacked a final newline gains one.
 
 - [ ] **Step 2: Verify**
@@ -800,7 +861,7 @@ Subject: `Correct three hints that named the wrong command`
 - [ ] **Step 2: Verify**
 
 Run: `pnpm check`
-Expected: exit 0. After the push, the Dependency Dashboard (`gh issue view 4`) stops listing an update for `jdx/mise`. Renovate refreshes it within a few hours, so record the check in the commit body as pending if it has not refreshed.
+Expected: exit 0. The rule's effect cannot be seen today: the Dependency Dashboard lists `jdx/mise` only as a detected dependency, and a disabled one stays listed. The proof is that no Renovate branch for mise 2026.11.9 appears once its 7-day wait ends, about 2026-11-23. Say so in the commit body.
 
 - [ ] **Step 3: Commit**
 
@@ -821,14 +882,15 @@ Read the `macos-26` image's Readme in `actions/runner-images`, section "Cached T
 
 Set `python-version` to that version. Delete the `bash app/scripts/build-app.sh` step and its comment at lines 83 and 84, since `pnpm check` runs `bin/lib/test-app-build`.
 
-- [ ] **Step 3: Verify**
+- [ ] **Step 3: Commit**
 
-Run: `pnpm check`, commit, push, then `gh run watch`.
-Expected: the run passes, the `setup-python` step's log has no "was not found in the local cache" line, and that step takes under 10 seconds (`gh run view <id> --json jobs`).
-
-- [ ] **Step 4: Commit**
-
+Run: `pnpm check`
 Subject: `Use a cached Python in CI and build the app once`
+
+- [ ] **Step 4: Push and verify on the run**
+
+Run: `gh run watch`
+Expected: the run passes, the `setup-python` step's log has no "was not found in the local cache" line, and that step takes under 10 seconds (`gh run view <id> --json jobs`). If it does not, say so and put line 36 back in a second commit.
 
 ### Task 21: Run one app-update check at a time (D7)
 
@@ -840,10 +902,9 @@ Subject: `Use a cached Python in CI and build the app once`
 
 - [ ] **Step 1: Write the failing test**
 
-Build `state` as the neighbouring tests do.
-
 ```swift
 @Test func twoChecksAtOnceFetchOnce() async {
+  let state = makeState(FakeRunner())
   let fetched = FetchCount()
   let fetch: (URL) async throws -> String = { _ in
     fetched.count += 1
@@ -876,28 +937,7 @@ Expected: all pass.
 
 Subject: `Run one app update check at a time`
 
-### Task 22: Write `miserc.local.toml` atomically (spec section G)
-
-**Files:**
-- Modify: `settings/src/dotfiles_settings/profile.py:129`
-
-**Interfaces:**
-- Consumes: `edit_file(path: Path, change: Callable[[str], str]) -> None` from `adapters/tool.py`, which writes a temp file and replaces.
-
-- [ ] **Step 1: Replace `path.write_text(left)` with `edit_file(path, lambda _: left)`**
-
-Import it inside the function if a top-level import makes a cycle, as `sync._save` does. Line 95 writes a modules-off file, not the miserc, and stays as it is.
-
-- [ ] **Step 2: Verify**
-
-Run: `mise exec python -- python3 settings/tests/test_profile.py && bash bin/lib/test-profiles`
-Expected: `ok`, then exit 0. A crash mid-write is not tested. The existing cases prove the text written is unchanged.
-
-- [ ] **Step 3: Commit**
-
-Subject: `Write the profile's miserc file atomically`
-
-### Task 23: Find why the console stop test is flaky (D2)
+### Task 22: Find why the console stop test is flaky (D2)
 
 A diagnosis, not a fix. The deliverable is a paragraph in the spec's D2 row.
 
@@ -924,7 +964,7 @@ If it fails only in full runs, the cause to name is the `DispatchQueue.main.asyn
 
 Subject: `Record the console stop test's flake measurements`
 
-### Task 24: Bring `CLAUDE.md` and the plans index up to date (D6)
+### Task 23: Bring `CLAUDE.md` and the plans index up to date (D6)
 
 Run last, since it records the other tasks.
 

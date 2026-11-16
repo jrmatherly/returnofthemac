@@ -6,7 +6,7 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 | Plan | Spec | Tasks | State |
 | --- | --- | --- | --- |
-| [Fixes from the 2026-11-16 audit](2026-11-16-audit-fixes.md) | [2026-11-16 project audit](../specs/2026-11-16-project-audit.md) | 24 | Written 2026-11-16, not started. Tasks 1 to 4 first. Task 5 needs the owner's word, Task 8 the answer to the spec's decision 6 |
+| [Fixes from the 2026-11-16 audit](2026-11-16-audit-fixes.md) | [2026-11-16 project audit](../specs/2026-11-16-project-audit.md) | 23 | Written 2026-11-16 and reviewed the same day, not started. Tasks 1 to 4 first. Task 5 needs the owner's word, Task 8 the answer to the spec's decision 6 |
 
 [P6](completed/2026-11-15-p6-docs-for-the-new-path.md) finished on 2026-11-15. [P7](completed/2026-11-15-p7-stable-and-the-owners-mac.md) finished the same day, and with it the [installable-setup spec](../specs/completed/2026-11-11-installable-setup-profiles-and-sync.md): the owner's Mac runs an install from `stable`. The [context trim](completed/2026-11-15-claude-code-context-trim.md) and its [audit](../specs/completed/2026-11-15-claude-code-context-audit.md) finished that evening: 14 plugins and 14 skills are off in this repository only. Its check script started stray headless sessions during the run, and the audit's "What went wrong while it ran" is the account to read before starting any `claude -p` here. The audit's out-of-scope findings stay open, the CodeGraph prompt hook first, at about 3,000 tokens a prompt in every project.
 

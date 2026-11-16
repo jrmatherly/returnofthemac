@@ -84,7 +84,7 @@ Each has a recommendation. None has a task until it is answered.
 3. **Record what `latest` resolved to.** About twelve mise tools are `latest`, and `mise settings get lockfile` is unset. Recommended: probe `lockfile = true` in a scratch `MISE_CONFIG_DIR` first, since nobody has measured what it records for a global config.
 4. **Move the owner's tap out of the base list.** Every install gets `jrmatherly/tap`, `claude-multipass` and its app (`30-packages.toml:20, 39-40`). Recommended: move them into a module, so a fork can switch them off.
 5. **The CodeGraph prompt hook.** It costs about 3,000 tokens a prompt, and `setup/misc.sh:171` reinstalls it on every run. Recommended: remove the hook from `settings.json` after the install step.
-6. **Seed the Mole whitelists on an installed copy (B3).** A seeded copy lets Mole's editors work, and it stops receiving later changes to the shared list. The plan's Task 8 assumes yes. Say no and the task is dropped, since the docs already warn.
+6. **Seed the Mole whitelists on an installed copy (B3).** A seeded copy lets Mole's editors work, and it stops receiving later changes to the shared list. The plan's Task 8 assumes yes. Say no and the task is dropped, since the docs already warn. A yes reaches new installs only: mise 2026.11.8 leaves an existing link alone (ran in a scratch clone on 2026-11-16), so a Mac installed earlier needs the two links deleted by hand.
 
 ## F. Closed without a fix
 
@@ -98,7 +98,7 @@ Each has a recommendation. None has a task until it is answered.
 | --- | --- |
 | No subprocess timeouts in the settings CLI (`mise.py:15`, `sync.py:169`) | The app already kills a hung command after 120 seconds (`CLI.swift:97`). Only a terminal user waits |
 | `sync on` after the settings repository was deleted and made again | Rare, and the hand fix is in the installable-setup spec |
-| Non-atomic writes of `effective.applied.json` and the macOS fragment | Both recover. A JSON read failure is tolerated, and git restores the fragment. The one that does not recover, `miserc.local.toml`, is in the plan |
+| Non-atomic writes of `effective.applied.json`, the macOS fragment and `miserc.local.toml` (`profile.py:129`) | The first two recover: a JSON read failure is tolerated, and git restores the fragment. A truncated `miserc.local.toml` needs a hand edit, but the repository's atomic writer, `edit_file`, refuses a path inside an installed copy, where that file lives. A second writer needs an installed-copy test, for a crash nobody has seen |
 | `helmfile` 1.8.3 is installed on this Mac and no config declares it | Machine state. `mise uninstall --all helmfile` clears it |
 | The Software Update and trackpad defaults may write to a domain macOS no longer reads | Unproven. It needs a fresh Mac |
 | Amp or cmux may rewrite a tracked file on an installed copy | Unproven. Amp is not installed here |
