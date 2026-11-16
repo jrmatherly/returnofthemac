@@ -6,9 +6,9 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 | Plan | Spec | Tasks | State |
 | --- | --- | --- | --- |
-| [A 48 hour release hold and a Claude Multipass module](2026-11-16-release-hold-and-multipass-module.md) | [2026-11-16 project audit](../specs/2026-11-16-project-audit.md), decisions 1 and 4 | 5 | Written 2026-11-16. Tasks 1 to 4 are done on `main` (`2467fce`, `7922dce`, `c17ef8c`, `0837da7`). Task 5 needs the owner's word for the install run and the promotion |
+| None | | | |
 
-The [fixes from the 2026-11-16 audit](completed/2026-11-16-audit-fixes.md) finished on 2026-11-16, 23 tasks with an outcome table. Its [spec](../specs/2026-11-16-project-audit.md) stays open: section E's decisions 1 to 5 are not answered.
+The [fixes from the 2026-11-16 audit](completed/2026-11-16-audit-fixes.md) finished on 2026-11-16, 23 tasks with an outcome table. The [48 hour release hold and the Claude Multipass module](completed/2026-11-16-release-hold-and-multipass-module.md) built decisions 1 and 4 the same day and was promoted to `stable` at `2fb0d53`. Every decision of the [spec](../specs/completed/2026-11-16-project-audit.md) is then answered and built, and it is filed in `completed/`.
 
 [P6](completed/2026-11-15-p6-docs-for-the-new-path.md) finished on 2026-11-15. [P7](completed/2026-11-15-p7-stable-and-the-owners-mac.md) finished the same day, and with it the [installable-setup spec](../specs/completed/2026-11-11-installable-setup-profiles-and-sync.md): the owner's Mac runs an install from `stable`. The [context trim](completed/2026-11-15-claude-code-context-trim.md) and its [audit](../specs/completed/2026-11-15-claude-code-context-audit.md) finished that evening: 14 plugins and 14 skills are off in this repository only. Its check script started stray headless sessions during the run, and the audit's "What went wrong while it ran" is the account to read before starting any `claude -p` here. The audit's out-of-scope findings stay open, the CodeGraph prompt hook first, at about 3,000 tokens a prompt in every project.
 

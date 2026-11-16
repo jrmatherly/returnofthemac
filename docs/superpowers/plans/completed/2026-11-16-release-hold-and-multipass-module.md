@@ -8,7 +8,7 @@
 
 **Tech Stack:** bash 3.2, mise 2026.11.8, uv 0.13.8, pnpm 12, bun, npm, Renovate, Python 3.11+ standard library for the settings tests.
 
-**Spec:** [`docs/superpowers/specs/2026-11-16-project-audit.md`](../specs/2026-11-16-project-audit.md), section "Owner's decisions", decisions 1 and 4. Read that section in full before starting. Decisions 2 and 3 are "leave as is" and decision 5 is done, so this plan is the last one the spec waits for.
+**Spec:** [`docs/superpowers/specs/completed/2026-11-16-project-audit.md`](../../specs/completed/2026-11-16-project-audit.md), section "Owner's decisions", decisions 1 and 4. Read that section in full before starting. Decisions 2 and 3 are "leave as is" and decision 5 is done, so this plan is the last one the spec waits for.
 
 ## Global Constraints
 
@@ -72,7 +72,7 @@ An independent reviewer then read every task against the code and probed uv in s
 
 ## Outcome
 
-Tasks 1 to 4 ran on 2026-11-16 on `main`, natively, each red then green with `pnpm check` passing before its commit. Task 5's install run, promotion and filing are open.
+Tasks 1 to 4 ran on 2026-11-16 on `main`, natively, each red then green with `pnpm check` passing before its commit. Task 5 ran the same day.
 
 | Task | Commit | Difference from the plan |
 | --- | --- | --- |
@@ -80,6 +80,9 @@ Tasks 1 to 4 ran on 2026-11-16 on `main`, natively, each red then green with `pn
 | 2 | `7922dce` | None. Step 4's scratch probe gave a plainly installed ruff `exclude-newer-span = "PT48H"` |
 | 3 | `c17ef8c` | None. Each `uv.lock` gained four lines and no version moved |
 | 4 | `0837da7` | `docs/installation.md` names the module list twice (lines 23 and 121), and both gained `multipass`. `docs/forking.md` also names `--without multipass` |
+| 5 | this commit | `fresh-install` run 43946820165 passed on the `clone` and the `installed` path on `2fb0d53`, and the owner took it as the proof in place of Guest A. `stable` moved from `d68d3ac` to `2fb0d53`. After the owner's `rotm update` and `sysup`: both uv receipts hold `exclude-newer-span = "PT48H"`, `npm config get min-release-age` prints `2`, `rotm settings list` shows `modules.multipass` on, 146 formulae and 37 casks were "already installed", and the Hindsight daemon is running |
+
+The first item of "Not verified" is settled: `sysup` gave Serena and Scrapling the hold and reported `uv` as up to date, with no modified environment. The other two stay unverified, except that pnpm, bun and npm took the new values in the `fresh-install` run.
 
 ## Review Focus
 

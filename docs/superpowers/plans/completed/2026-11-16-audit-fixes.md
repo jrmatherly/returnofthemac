@@ -8,7 +8,7 @@
 
 **Tech Stack:** bash 3.2 and zsh (`bin/`, `setup/`, `tilde/.zshrc`), Python 3.11+ standard library (`settings/src/dotfiles_settings`), Swift 5 language mode with Swift Testing (`app/`, tools 5.9), mise 2026.11.8, pnpm, Renovate, GitHub Actions.
 
-**Spec:** [`docs/superpowers/specs/2026-11-16-project-audit.md`](../../specs/2026-11-16-project-audit.md). Finding ids (A1, C3) are its ids. Read its "Owner's decisions" before starting. Task 5 needs the owner's word, and Task 8 assumes a yes to decision 6.
+**Spec:** [`docs/superpowers/specs/completed/2026-11-16-project-audit.md`](../../specs/completed/2026-11-16-project-audit.md). Finding ids (A1, C3) are its ids. Read its "Owner's decisions" before starting. Task 5 needs the owner's word, and Task 8 assumes a yes to decision 6.
 
 ## Global Constraints
 
