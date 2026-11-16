@@ -1,6 +1,6 @@
 ---
 name: add-tool
-description: Checklist for adding a CLI, app, runtime, VS Code extension or MCP server to these dotfiles: mise package vs mise tool vs uv, taps, setup wiring, telemetry opt-outs, symlinked config and docs. Use whenever a tool is being added ("add X", "we need X installed", a `brew install …` command, a VS Code Marketplace or install-docs link) or an existing one's install method changes.
+description: 'Checklist for adding a CLI, app, runtime, VS Code extension or MCP server to these dotfiles: mise package vs mise tool vs uv, taps, setup wiring, telemetry opt-outs, symlinked config and docs. Use whenever a tool is being added ("add X", "we need X installed", a `brew install …` command, a VS Code Marketplace or install-docs link) or an existing one''s install method changes.'
 argument-hint: '[tool name]'
 ---
 
