@@ -144,7 +144,7 @@ check "--accept installs a held skill" "grep -q -- '-s h -a claude-code' '$TEST_
 PATH="$tmp/bin:$PATH" cc restore skills --accept nope > "$tmp/out" 2>&1
 check "--accept refuses a name that is not tracked" "[ \$? = 2 ] && grep -q 'no tracked skill named nope' '$tmp/out'"
 cc save > /dev/null 2>&1
-check "save records the lock's folder SHA as the reviewed value" "grep -qx 'skill a o/r claude-code aaa' '$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt'"
+check "save writes an untrusted GitHub row with its folder" "grep -qx 'skill a o/r claude-code aaa skills/a' '$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt'"
 
 # A skill from a source in claude-skills-trusted.txt is compared with the
 # installed copy and reinstalled when upstream moved. g stays behind its review
@@ -178,7 +178,30 @@ PATH="$tmp/bin:$(tr ':' '\n' <<< "$PATH" | while read -r d; do [ -x "$d/gh" ] ||
 check "with no gh an installed trusted skill is left alone" "grep -qx 'skill unknown k' '$tmp/out' && ! grep -qx 'skill updated k' '$tmp/out'"
 cc save > /dev/null 2>&1
 check "save writes a trusted source's row with no reviewed value" "grep -qx 'skill k t/r claude-code' '$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt'"
-check "save still writes an untrusted row's reviewed value" "grep -qx 'skill g o/r claude-code ggg' '$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt'"
+check "save still writes an untrusted row's reviewed value" "grep -qx 'skill g o/r claude-code ggg skills/g' '$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt'"
+check "save writes a root skill's folder as a dot" "grep -qx 'skill d o/r claude-code rootsha .' '$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt'"
+
+# A reviewed value that moved in the repository (a merged review) is installed
+# over the older copy, unless upstream has moved again past it
+cat > "$tmp/bin/gh" << 'EOF'
+#!/bin/bash
+echo '{"sha":"rootsha","tree":[{"path":"skills/a","type":"tree","sha":"aaa"},{"path":"skills/p","type":"tree","sha":"pnew"},{"path":"skills/q","type":"tree","sha":"qnewer"}]}'
+EOF
+chmod +x "$tmp/bin/gh"
+jq '.skills += {
+  p: {sourceType: "github", source: "o/r", skillPath: "skills/p/SKILL.md", skillFolderHash: "pold"},
+  q: {sourceType: "github", source: "o/r", skillPath: "skills/q/SKILL.md", skillFolderHash: "qold"},
+  w: {sourceType: "well-known", source: "w.example", sourceBaseUrl: "https://w.example", skillFolderHash: "", wellKnownDigest: "sha256:ww"}}' \
+  "$HOME/.agents/.skill-lock.json" > "$tmp/lock" && mv "$tmp/lock" "$HOME/.agents/.skill-lock.json"
+printf 'skill a o/r claude-code aaa skills/a\nskill p o/r claude-code pnew skills/p\nskill q o/r claude-code qrev skills/q\n' > "$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt"
+for n in p q w; do mkdir -p "$CLAUDE_CONFIG_DIR/skills/$n"; done
+: > "$TEST_LOG.npx"
+PATH="$tmp/bin:$PATH" cc restore skills --update > "$tmp/out" 2>&1
+check "a merged review ahead of the installed copy is installed" "grep -qx 'skill updated p' '$tmp/out' && grep -q -- '-s p -a claude-code' '$TEST_LOG.npx'"
+check "upstream past the merged review still waits" "grep -qx 'skill changed q' '$tmp/out' && ! grep -q -- '-s q ' '$TEST_LOG.npx'"
+check "a skill at its reviewed value is left alone" "grep -qx 'skill same a' '$tmp/out' && ! grep -q -- '-s a ' '$TEST_LOG.npx'"
+cc save > /dev/null 2>&1
+check "save writes a well-known row with an empty folder hash as four fields" "grep -qx 'skill w https://w.example claude-code' '$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt'"
 
 base="$CLAUDE_CONFIG_SAVE_DIR/claude-settings.json"
 allow() { jq -c '.permissions.allow' "$1"; }

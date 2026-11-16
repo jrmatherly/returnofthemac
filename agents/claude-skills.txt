@@ -1,5 +1,5 @@
 # User skills installed with the `skills` CLI — see bin/claude-config.
-# skill <name> <source> <agents> [<reviewed>]. No reviewed value for a source in claude-skills-trusted.txt
+# skill <name> <source> <agents> [<reviewed> [<folder>]]. No reviewed value for a source in claude-skills-trusted.txt
 skill archify tt-a1i/archify claude-code,codex
 skill better-auth-best-practices better-auth/skills claude-code,codex
 skill better-auth-security-best-practices better-auth/skills claude-code,codex

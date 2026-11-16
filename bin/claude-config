@@ -18,7 +18,7 @@
 #
 # `claude-config retire`
 #
-# - Reinstall each tracked skill from a trusted source that moved upstream, and for any other source report a skill past its reviewed value and install one an agent lacks only when it matches (`sysup` runs this):
+# - Reinstall each tracked skill from a trusted source that moved upstream, and for any other source install a skill whose merged review is ahead of the installed copy, report one past its reviewed value and install one an agent lacks only when it matches (`sysup` runs this):
 #
 # `claude-config restore skills --update`
 #
@@ -40,6 +40,7 @@
 #                        which agents (claude-code → ~/.claude/skills,
 #                        codex → ~/.agents/skills), and the reviewed folder
 #                        SHA or well-known digest (none for a trusted source)
+#                        and, for a GitHub source, the skill's folder
 #   claude-skills-trusted.txt
 #                        skill sources whose changes install with no review
 # Reads ~/.claude (or $CLAUDE_CONFIG_DIR) and ~/.agents. Needs jq; skills need
@@ -286,22 +287,27 @@ save_skills() {
   valid_json "$skill_lock" "$skills_list" || return 0
   {
     echo "# User skills installed with the \`skills\` CLI — see bin/claude-config."
-    echo "# skill <name> <source> <agents> [<reviewed>]. No reviewed value for a source in claude-skills-trusted.txt"
+    echo "# skill <name> <source> <agents> [<reviewed> [<folder>]]. No reviewed value for a source in claude-skills-trusted.txt"
     # A well-known source (https://host/.well-known/agent-skills) records a
     # bare host in `source`, which `skills add` treats as a git URL and fails
     # to clone; `sourceBaseUrl` keeps the URL as typed
-    jq -r '.skills | to_entries[] | "\(.key) \(.value.sourceBaseUrl // .value.source) \(.value.skillFolderHash // .value.wellKnownDigest // "")"' "$skill_lock" | sort \
-      | while read -r name source reviewed; do
+    # The folder that holds SKILL.md follows the reviewed value of a GitHub
+    # row: bin/lib/skill-review has no lock to read it from. Only beside a
+    # folder hash, so read never sees an empty column before it
+    jq -r '.skills | to_entries[] | [.key, (.value.sourceBaseUrl // .value.source), (.value.skillFolderHash // .value.wellKnownDigest // ""),
+        (.value | if .sourceType == "github" and (.skillFolderHash // "") != "" and (.skillPath // "") != ""
+          then (.skillPath | if test("/") then sub("/[^/]*$"; "") else "." end) else "" end)] | @tsv' "$skill_lock" | sort \
+      | while IFS=$'\t' read -r name source reviewed folder; do
         local agents=()
         [ -e "$config/skills/$name" ] && agents+=(claude-code)
         [ -e "$HOME/.agents/skills/$name" ] && agents+=(codex)
         [ ${#agents[@]} -gt 0 ] || continue
         # A trusted row has no reviewed value, so an update changes no tracked file
-        ! trusted "$source" || reviewed=""
+        ! trusted "$source" || reviewed="" folder=""
         echo "skill $name $source $(
           IFS=,
           echo "${agents[*]}"
-        )${reviewed:+ $reviewed}"
+        )${reviewed:+ $reviewed}${folder:+ $folder}"
       done
   } > "$skills_list.tmp" && mv "$skills_list.tmp" "$skills_list"
 }
@@ -343,10 +349,10 @@ upstream() {
 }
 
 restore_skills() {
-  local kind name source agents reviewed agent missing before state updated npx=(npx)
+  local kind name source agents reviewed folder agent missing before state updated installed npx=(npx)
   command -v mise > /dev/null && npx=(mise exec node -- npx)
   tree_cache=$(mktemp -d)
-  while read -r kind name source agents reviewed; do
+  while read -r kind name source agents reviewed folder; do
     [ "$kind" = skill ] || continue
     [ -z "$accept" ] || [ "$name" = "$accept" ] || continue
     # Only the agents that don't have it yet. --accept takes them all: the
@@ -375,7 +381,17 @@ restore_skills() {
       if [ "$state" = same ] || [ ${#missing[@]} -eq 0 ]; then echo "skill $state $name"; else updated=true; fi
     elif [ "$update" = true ]; then
       state=$(upstream "$name" "$reviewed")
-      echo "skill $state $name"
+      # A row with a folder is an untrusted GitHub one. Its reviewed value
+      # ahead of the installed copy is a merged review: install it
+      if [ "$state" = same ] && [ -z "$accept" ] && [ -n "$folder" ] \
+        && installed=$(jq -r --arg n "$name" '.skills[$n].skillFolderHash // empty' "$skill_lock" 2> /dev/null) \
+        && [ -n "$installed" ] && [ "$installed" != "$reviewed" ]; then
+        # shellcheck disable=SC2206 # agents is a comma list of plain names
+        missing=(${agents//,/ })
+        updated=true
+      else
+        echo "skill $state $name"
+      fi
       if [ "$state" != same ] && [ -z "$accept" ] && [ ${#missing[@]} -gt 0 ]; then
         echo "skill held $name"
         continue
