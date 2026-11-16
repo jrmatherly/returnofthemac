@@ -33,7 +33,7 @@ The section "E. Decisions the owner must make" lists six. Decisions 1 to 5 are n
 | A2 | A failed write during replay erases the applied record. `_replay` saves only the ids it wrote, so a later reset from another Mac never reaches this one. A failed reset keeps its record (line 139). A failed write does not. | `settings/src/dotfiles_settings/sync.py:124-141` | Worker ran a repro with a stub adapter. Confirmed by reading |
 | A3 | `git tidy` runs a bare `git prune`, which deletes a dropped stash's commit at once. | `bin/git-tidy:25` | Worker ran. Confirmed the line |
 | A4 | `sharp@0.35.4` has a high advisory, GHSA-wq5f-xc86-pv6w. It arrives through `avif`, so Renovate does not see it, and the repository's vulnerability alerts are off. | `pnpm-lock.yaml` | Reproduced with `pnpm audit` |
-| A5 | `stable` has no protection. Installed Macs pull it, and nothing blocks a force-push or a deletion. | GitHub settings | Reproduced. The protection API returns 404 and the branch rules list is empty |
+| A5 | `stable` has no protection. Installed Macs pull it, and nothing blocks a force-push or a deletion. | GitHub settings | Reproduced. The protection API returns 404 and the branch rules list is empty. **Done 2026-11-16:** ruleset 27382636 blocks deletion and force-push of `stable`, and `rules/branches/stable` lists `deletion` and `non_fast_forward` |
 
 ## B. Commands that write into an installed copy
 
@@ -71,12 +71,12 @@ One worker claim under this heading was wrong and is dropped. `bin/vscode-settin
 | --- | --- | --- | --- |
 | D1 | The next Renovate bump of mise will fail the gate. `test-override-env:37` requires `check.yml` to match `setup/mise-floor.sh`, Renovate tracks only `check.yml`, and mise 2026.11.9 is out. | `renovate.json`, `check.yml:41` | Confirmed |
 | D2 | One Swift test is flaky. `stopEndsACommandThatIgnoresTheInterrupt` took 11.47 seconds against a 10 second bound in 1 of 3 full runs. | `ConsoleSessionTests.swift:102-110` | Worker ran. Not reproduced by the lead session |
-| D3 | `fresh-install.yml` last ran on `cbd63b0`, before `install.sh` existed. Eight commits have touched the install path since. | `.github/workflows/fresh-install.yml` | Worker ran. Confirmed the dates |
+| D3 | `fresh-install.yml` last ran on `cbd63b0`, before `install.sh` existed. Eight commits have touched the install path since. | `.github/workflows/fresh-install.yml` | Worker ran. Confirmed the dates. **Done 2026-11-16:** run 43892315785 passed on `1a9bb95`, both the `clone` and the `installed` path |
 | D4 | CI spends 33 to 61 seconds installing Python 3.15 in 9 of 10 runs, because the runner does not cache that version. | `check.yml:34-36` | Worker ran |
 | D5 | CI builds the app twice. `pnpm check` already runs `test-app-build`. | `check.yml:83-84` | Confirmed |
 | D6 | `CLAUDE.md` is 11,998 bytes against a 12,000 byte cap, and `.claude/rules/setup.md` is 5,996 against 6,000. `CLAUDE.md` also omits `--without` and `app-release.yml`. | `bin/lib/test-conventions:210-212` | Reproduced with `wc -c` |
 | D7 | The app's update check can run twice at once, because `appCheckedAt` is set only after the fetch returns. | `app/Sources/RotmCore/AppState.swift:99-106` | Confirmed by reading |
-| D8 | Every action is pinned by SHA, but the repository does not require it. | GitHub settings | Reproduced |
+| D8 | Every action is pinned by SHA, but the repository does not require it. | GitHub settings | Reproduced. **Done 2026-11-16:** `actions/permissions` shows `sha_pinning_required: true`. Vulnerability alerts (A4) are on too: the endpoint answers 204 |
 
 ## E. Decisions the owner must make
 
