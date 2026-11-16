@@ -3,6 +3,8 @@ against stub gh, mise, rotm-user-layer and rotm-modules scripts. Run: python3 te
 import atexit, os, shutil, sys, tempfile, tomllib
 from pathlib import Path
 
+os.environ.pop("MISE_ENV", None)  # an installed copy's `mise exec` sets it, and it would replace the saved profile
+
 tmp = Path(tempfile.mkdtemp()).resolve()
 atexit.register(shutil.rmtree, tmp, True)
 home, conf, stubs, log, answers = (tmp / n for n in ("home", "conf", "stubs", "log", "answers"))

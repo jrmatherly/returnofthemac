@@ -3,6 +3,8 @@ import atexit, contextlib, io, json, os, re, shutil, sys, tempfile, tomllib
 from dataclasses import replace
 from pathlib import Path
 
+os.environ.pop("MISE_ENV", None)  # an installed copy's `mise exec` sets it, and it would replace the saved profile
+
 tmp = Path(tempfile.mkdtemp())
 atexit.register(shutil.rmtree, tmp, True)
 home, conf = tmp / "home", tmp / "conf"

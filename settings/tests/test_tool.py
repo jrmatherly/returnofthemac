@@ -2,6 +2,8 @@
 import atexit, contextlib, http.server, json, os, shutil, stat, subprocess, sys, tempfile, threading, tomllib
 from pathlib import Path
 
+os.environ.pop("MISE_ENV", None)  # an installed copy's `mise exec` sets it, and it would replace the saved profile
+
 tmp = Path(tempfile.mkdtemp()).resolve()
 atexit.register(shutil.rmtree, tmp, True)
 repo = Path(__file__).resolve().parents[2]
