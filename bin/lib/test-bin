@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Self-check for small bin/ scripts (serve, git-find, git-tidy, obsidian-vault) in a scratch HOME and git repo.
+# Self-check for small bin/ scripts (serve, git-find, git-tidy, obsidian-vault, push) in a scratch HOME and git repo.
 #
 # - Run it (pnpm check does too); exits 1 when an assertion fails:
 #
@@ -79,6 +79,26 @@ check "capture refuses an installed copy" "[ $? -ne 0 ] && grep -q 'installed co
 check "capture wrote nothing into it" "[ ! -e '$fix/obsidian/.obsidian' ]"
 DOTFILES="$fix" MISE_DATA_DIR="$tmp/none" OBSIDIAN_VAULT="$tmp/vault" "$root/bin/obsidian-vault" capture > /dev/null 2>&1
 check "capture still writes into a clone" "[ -f '$fix/obsidian/.obsidian/app.json' ]"
+
+# push: a git stub answers only `remote get-url --push`, so the push itself goes to a local bare repository, and a gh stub keeps the network out
+mkdir "$tmp/stub"
+printf '#!/bin/bash\nif [ "$1 $2 $3" = "remote get-url --push" ]; then echo "$PUSH_URL"; exit 0; fi\nexec %q "$@"\n' "$(command -v git)" > "$tmp/stub/git"
+printf '#!/bin/sh\nexit 1\n' > "$tmp/stub/gh"
+chmod +x "$tmp/stub/git" "$tmp/stub/gh"
+git init -q --bare -b main "$tmp/origin.git"
+git -C "$tmp/repo" remote add origin "$tmp/origin.git"
+n=0
+for u in git@github.com:o/r.git git@github.com:o/r ssh://git@github.com/o/r.git https://github.com/o/r.git; do
+  n=$((n + 1))
+  git -C "$tmp/repo" checkout -qb "feat$n" main
+  (cd "$tmp/repo" && PATH="$tmp/stub:$PATH" PUSH_URL=$u "$root/bin/push") > "$tmp/push.out" 2>&1
+  check "push $u: compare URL" "[ \"\$(tail -1 '$tmp/push.out')\" = https://github.com/o/r/compare/main...feat$n ]"
+  check "push $u: no missing command" "! grep -q 'command not found' '$tmp/push.out'"
+done
+git -C "$tmp/repo" checkout -qb feat-lab main
+(cd "$tmp/repo" && PATH="$tmp/stub:$PATH" PUSH_URL=https://gitlab.com/o/r.git "$root/bin/push") > "$tmp/push.out" 2>&1
+check "push to another host: exits 0 and prints no URL" "[ $? -eq 0 ] && ! grep -q '^https://' '$tmp/push.out'"
+git -C "$tmp/repo" checkout -q main
 
 [ "$fails" -eq 0 ] || {
   echo "$fails failed" >&2

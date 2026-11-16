@@ -151,7 +151,7 @@ job quiet bash bin/lib/test-shell
 job quiet bash bin/lib/test-packages
 # mise's override layer: the version floor, the gitignored local files and zsh/override-env.zsh under a temp HOME and MISE_CONFIG_DIR
 job quiet bash bin/lib/test-override-env
-# bin/serve, bin/git-find, bin/git-tidy and bin/obsidian-vault under a scratch HOME and git repo
+# bin/serve, bin/git-find, bin/git-tidy, bin/obsidian-vault and bin/push under a scratch HOME and git repo
 job quiet bash bin/lib/test-bin
 # bin/lib/rotm-mode and bin/rotm against fixture repositories with mise, setup.sh and dotfiles-settings stubbed
 job quiet bash bin/lib/test-rotm
