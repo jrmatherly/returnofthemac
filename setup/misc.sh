@@ -425,7 +425,7 @@ fi
 if command_exists aspire && command_exists dotnet && module_on cloud; then
   if [[ "$(dotnet dev-certs https --check --trust 2>&1)" == *'A trusted certificate was found'* ]]; then
     echo "Aspire HTTPS dev certificate already trusted" | indent
-  elif [ -t 0 ]; then
+  elif asks; then
     info "🔐 Trusting the Aspire HTTPS dev certificate (macOS may ask for your password)…"
     aspire certs trust --nologo || warning "aspire certs trust failed — run it later: aspire certs trust"
   else

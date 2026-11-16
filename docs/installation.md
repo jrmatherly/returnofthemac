@@ -117,7 +117,7 @@ Options, which `rotm install` takes too:
 
 | Flag | Effect |
 | --- | --- |
-| `-y`, `--yes` | Don't wait for confirmation before starting, and pass `--yes` to mise. The task then takes the default at its own questions: it keeps the saved VS Code font preset. `setup.sh` doesn't offer `gh auth login` either. The git identity prompt on a new Mac still asks |
+| `-y`, `--yes` | Don't wait for confirmation before starting, and pass `--yes` to mise. The task then takes the default at its own questions: it keeps the saved VS Code font preset, and prints `aspire certs trust` to run later where it would have run it. `setup.sh` doesn't offer `gh auth login` either. The git identity prompt on a new Mac still asks |
 | `--without <a,b>` | Turn these modules off before anything is installed, and keep them off on later runs. The modules are `fonts`, `apps`, `vscode`, `claude`, `agents`, `cloud`, `kubernetes`, `devops`, `security`, `network`, `languages`, `media`, `menubar`, `touchid` and `loginshell` |
 | `--skip-codegraph` | Don't install [CodeGraph](https://github.com/colbymchenry/codegraph) or connect it to Claude Code (an existing install is left alone) |
 | `--dash` | Also run the optional [Dash docset setup](../setup/dash.sh) |
