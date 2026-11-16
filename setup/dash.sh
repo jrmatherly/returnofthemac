@@ -155,7 +155,11 @@ else
 fi
 
 if ! plutil -lint "$PLIST" > /dev/null; then
-  echo "✖ $PLIST is no longer a valid plist — restore it with git checkout" >&2
+  if [ "$dash_dir" = "$DOTFILES_DIR/dash" ]; then
+    echo "✖ $PLIST is no longer a valid plist — restore it with git checkout" >&2
+  else
+    echo "✖ $PLIST is no longer a valid plist — delete it and run this again to start from the shipped one" >&2
+  fi
   exit 1
 fi
 

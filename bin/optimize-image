@@ -39,7 +39,7 @@ if ! command -v cwebp &> /dev/null; then
 fi
 
 if [[ ! -x "$bin/avif" ]]; then
-  error "avif is not installed: npm install avif"
+  error "avif is not installed: run pnpm install in $root"
   exit 1
 fi
 

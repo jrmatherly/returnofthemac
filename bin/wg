@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Replace in files. Uses `ripgrep` to find files, so all `ripgrep` arguments work.
-# > Note: Use `gf` command for dry-run, and then replace it with `wg` command.
+# > Note: Use `gf` command for dry-run, and then replace it with `wg` command. A changed file that lacked a final newline gains one.
 #
 # - Replace a pattern in a file:
 #
