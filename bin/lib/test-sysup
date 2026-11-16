@@ -159,7 +159,7 @@ case $1 in
   retire) [ -e "$STATE/retire-fails" ] && exit 1
     [ -e "$STATE/settings" ] && echo "{}" > "$CLAUDE_CONFIG_DIR/settings.json" ;;
   restore) case "$*" in *--dry-run*) [ -e "$STATE/config-pending" ] && [ "$2" = settings ] && echo "merge tracked"; exit 0 ;; esac
-    if [ -e "$STATE/skills" ]; then printf "skill changed one\n\033[38;5;250mART\033[0m\n\033[?25l◒  Cloning…\033[1G\033[J◐  Cloning…\033[1G\033[J◇  Repository cloned\n\033[?25h\nskill same two\nskill held one\nskill unknown three\nskill held three\n"; else printf "skill same one\nskill unknown two\n"; fi
+    if [ -e "$STATE/skills-out" ]; then cat "$STATE/skills-out"; elif [ -e "$STATE/skills" ]; then printf "skill changed one\n\033[38;5;250mART\033[0m\n\033[?25l◒  Cloning…\033[1G\033[J◐  Cloning…\033[1G\033[J◇  Repository cloned\n\033[?25h\nskill same two\nskill held one\nskill unknown three\nskill held three\n"; else printf "skill same one\nskill unknown two\n"; fi
     [ ! -e "$STATE/bad-byte" ] || printf "\377\nafter the bad byte\n" ;;
 esac
 exit 0'
@@ -501,6 +501,16 @@ run
 check_true "a byte sed can't decode: the step still reports" has '^✔ agent skills'
 check_true "a byte sed can't decode: the output after it still reaches the log" grep -qx 'after the bad byte' "$DOTFILES"/logs/sysup-*.log
 rm -f "$STATE/bad-byte"
+
+rm -rf "$DOTFILES/logs"
+printf 'skill updated one\nskill updated two\nskill same three\n' > "$STATE/skills-out"
+run
+check_true "changes: updated skills named" has '^↻ agent skills +2 skills updated: one, two; 1 unchanged$'
+rm -rf "$DOTFILES/logs"
+echo 'skill changed four' >> "$STATE/skills-out"
+run
+check_true "changes: an update beside a skill to review is a notice naming both" has '^● agent skills +2 skills updated: one, two; 1 skill changed upstream: four; 1 unchanged; review, then run: claude-config restore skills --accept four$'
+rm -f "$STATE/skills-out"
 
 rm -rf "$DOTFILES/logs" "$STATE/claude-config.log"
 printf 'claude\nagents\nfonts\napps\n' > "$HOME/.config/mise/modules-off.local"

@@ -570,8 +570,9 @@ if ! module_off fonts Iosevka; then
   fi
 fi
 
-# Claude Code: check the tracked user skills against their reviewed SHAs and
-# install an unchanged one an agent lacks, record the current
+# Claude Code: update the tracked user skills from trusted sources, check the
+# rest against their reviewed SHAs and install an unchanged one an agent lacks,
+# record the current
 # plugins, base settings and user skills in the repo (review with `git diff`),
 # then rebuild the catalog of installed skills/agents/MCP servers
 if command -v claude > /dev/null; then
@@ -593,26 +594,31 @@ if command -v claude > /dev/null; then
         status ok "Claude Code" "$before up to date"
       fi
     fi
-    # claude-config prints "skill same|changed|unknown <name>" per tracked skill
-    # (unknown: another source type, or gh or the site's index.json failed)
-    # and installs what an agent lacks only for a same skill, printing "skill
-    # held <name>" for the rest. A changed or held skill is a notice: it is
-    # third-party code, installed only after a review
+    # claude-config prints "skill same|changed|unknown|updated <name>" per
+    # tracked skill (unknown: another source type, or gh or the site's
+    # index.json failed; updated: reinstalled from a trusted source). For any
+    # other source it installs what an agent lacks only for a same skill,
+    # printing "skill held <name>" for the rest. A changed or held skill is a
+    # notice: it is third-party code, installed only after a review
     step "agent skills"
     if capture claude-config restore skills --update; then
       skills_changed=$(sed -n 's/^skill changed //p' <<< "$out")
       skills_unknown=$(sed -n 's/^skill unknown //p' <<< "$out")
       skills_same=$(grep -c '^skill same ' <<< "$out" || true)
       skills_held=$(sed -n 's/^skill held //p' <<< "$out")
+      skills_updated=$(sed -n 's/^skill updated //p' <<< "$out")
+      skills_head=""
+      [ -z "$skills_updated" ] || skills_head="$(plural "$(wc -l <<< "$skills_updated" | tr -d ' ')" skill) updated: $(list <<< "$skills_updated"); "
       skills_note="$skills_same unchanged${skills_unknown:+, could not check: $(list <<< "$skills_unknown")}"
       if [ -n "$skills_changed$skills_held" ]; then
         skills_pending=$(printf '%s\n%s\n' "$skills_changed" "$skills_held" | grep . | sort -u)
         skills_accept='<name>'
         [ "$(wc -l <<< "$skills_pending" | tr -d ' ')" != 1 ] || skills_accept=$skills_pending
-        skills_head=""
-        [ -z "$skills_changed" ] || skills_head="$(plural "$(wc -l <<< "$skills_changed" | tr -d ' ')" skill) changed upstream: $(list <<< "$skills_changed"); "
+        [ -z "$skills_changed" ] || skills_head+="$(plural "$(wc -l <<< "$skills_changed" | tr -d ' ')" skill) changed upstream: $(list <<< "$skills_changed"); "
         [ -z "$skills_held" ] || skills_head+="not installed until reviewed: $(list <<< "$skills_held"); "
         status notice "agent skills" "$skills_head$skills_note; review, then run: claude-config restore skills --accept $skills_accept"
+      elif [ -n "$skills_updated" ]; then
+        status changed "agent skills" "$skills_head$skills_note"
       else
         status ok "agent skills" "$skills_note"
       fi
