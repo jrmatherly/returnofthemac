@@ -25,7 +25,9 @@ Tried on 2026-11-15, Claude Code 2.1.325: with `"skillOverrides": {"theme-factor
 
 ## Findings
 
-Measured on the owner's Mac. Token figures are estimates, characters divided by four. Two windows were scanned: the 601 session transcripts of the last 14 days, across every project, for usage and hook output, and the 50 most recent (10 hours, 38 projects) for hook timing and denials. `usage.py` and `hooks-and-denials.py` in the git-ignored `private/context-trim/` print both, as counts and names only. They are kept out of the repository so that this audit adds only Markdown to `main`.
+Measured on the owner's Mac. Token figures are estimates, characters divided by four. Two windows were scanned: the session transcripts of the last 14 days, across every project, for usage and hook output, and the 50 most recent sessions (10 hours, 38 projects) for hook timing and denials. `usage.py` and `hooks-and-denials.py` in [`2026-11-15-claude-code-context-audit/`](2026-11-15-claude-code-context-audit/) print both, as counts and names only, and `listed.sh` beside them prints what a new session starts with.
+
+The first run of `usage.py` read 601 top-level transcripts. A review found that subagent transcripts are nested and were missed, so it is recursive now and reads 2,316 files for the same 14 days. The hook and prompt figures below are from the first run. The zero-use findings were checked again on the full set and hold. The 50-session window moves with each run, so its counts are of that evening and will not reproduce.
 
 The usage counters in `~/.claude.json` are per Mac, not per project. A plugin with a count of zero is unused in every project so far, which is stronger than this audit needs: a plugin another project starts using stays on there.
 
@@ -49,8 +51,8 @@ Enabled at user scope, a lifetime count of 0 or 1 in `pluginUsage`, and no skill
 
 | Plugin | Uses since install | Listing cost | `claude-stack` can turn it off |
 | --- | --- | --- | --- |
-| `voltagent-lang@voltagent-subagents` | 0 | about 1,800 (29 agents) | Yes |
-| `voltagent-qa-sec@voltagent-subagents` | 1, 28 days ago | about 1,100 (20 agents) | No |
+| `voltagent-lang@voltagent-subagents` | 0 | about 1,800 (30 agents) | Yes |
+| `voltagent-qa-sec@voltagent-subagents` | 1, on 2026-10-19 | about 1,100 (19 agents) | No |
 | `agent-sdk-dev@claude-plugins-official` | 0 | about 360 | No |
 | `mcp-server-dev@claude-plugins-official` | 0 | about 360 | No |
 | `modern-web-guidance@claude-plugins-official` | 0 | about 290 | No |
@@ -60,11 +62,11 @@ Enabled at user scope, a lifetime count of 0 or 1 in `pluginUsage`, and no skill
 | `claude-md-management@claude-plugins-official` | 0 | about 130 | No |
 | `code-simplifier@claude-plugins-official` | 0 | about 100 | No |
 | `session-report@claude-plugins-official` | 0 | about 50 | No |
-| `browser-use@claude-plugins-official` | 0 | none: its tools are deferred | No |
+| `browser-use@claude-plugins-official` | 0 | not counted: its tools are deferred, but its server adds a long instructions block to every session | No |
 | `rust-analyzer-lsp@claude-plugins-official` | 0 | none | No |
 | `lua-lsp@claude-plugins-official` | 0 | none | No |
 
-About 4,700 tokens a session. The two voltagent figures are read off the session's agent list, because their install folders did not match the script's layout. The two language servers' counter is recent, so their zero is weaker evidence.
+About 4,700 tokens a session, not counting `browser-use`'s instructions. The two voltagent figures are read off the session's agent list, because their install folders did not match the script's layout. `lua-lsp` was installed on 2026-10-25 and the repository holds four `.lua` files, in the mise vscode plugin, so turning it off costs Lua diagnostics on those four.
 
 `claude-stack` turns off only a plugin named in `[stack.signals]` of `agents/catalog/curated.toml`, and calls the rest core. Its scan keeps `voltagent-lang` here because the repository holds Python. The other thirteen need the `enabledPlugins` entry written by hand. `merge_settings` in `agents/catalog/stack.py` removes and rewrites only the keys the manifest lists as owned.
 
@@ -80,13 +82,13 @@ Kept, though their counter is zero: `coding-standards` (jstack reads it, which i
 
 `.claude/skills/add-tool/SKILL.md`, line 3: the `description:` value holds an unquoted `: ` ("…these dotfiles: mise package vs…"). Ruby's YAML rejects it. Claude Code loaded the skill with its description in this session, so nothing is broken today. Of the 29 agent and skill files checked, it is the only one.
 
-### F5. The rtk hook costs a retry in auto mode (out of scope, global)
+### F5. A hook that rewrites a call costs a retry in auto mode (out of scope, global)
 
-Of 31 denied tool calls in the 10-hour window, 21 were `automode-unavailable`. Claude Code's message for them says a hook changed the call's input after auto mode reviewed it, and the `PreToolUse` hook that rewrites a Bash command is rtk's. Each costs a second call. None was the owner saying no. The commands differ each time, so no allow rule would match them.
+Of 31 denied tool calls in the 10-hour window, 21 were `automode-unavailable`. Claude Code's message for them says a hook changed the call's input after auto mode reviewed it. For a Bash call the hook that rewrites the command is rtk's. About a third of them are `Edit`, `Write` and `Agent` calls (10 in a later run of the script), which rtk does not rewrite. The audit session saw why: when one response holds a Bash call and other calls, the rewrite of the Bash call voids the review of the others too, and Claude Code says so ("another call in this response was changed after auto mode reviewed it"). Each costs a second call. None was the owner saying no. The commands differ each time, so no allow rule would match them.
 
 ### F6. Three MCP servers this project never calls
 
-`agent-browser`, `jean` and `astro-docs` had no call in 14 days and nothing here names them. `mise`, `scrapling` and `snippetslab` had none either, but `setup/misc.sh` registers them and `sysup` checks the first, so a session in this repository is where a fault in them would be seen. All six are deferred and cost no context.
+`agent-browser`, `jean` and `astro-docs` had no call in 14 days, in any project, and nothing here names them. `mise` and `snippetslab` had none either, and `scrapling` had 16, all from subagents. `setup/misc.sh` registers those three and `sysup` checks the first, so a session in this repository is where a fault in them would be seen, and they stay on. The tools of all six are deferred. `agent-browser` adds a short instructions block to every session.
 
 ### F7. What `/usage` flagged, last 7 days (out of scope)
 
