@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- The gate is `pnpm check`. Every task ends with it passing. Edit and commit in separate Bash calls.
+- The gate is `pnpm check`. Every task's last step runs it before the commit. Edit and commit in separate Bash calls.
 - One commit per task on `main`, with the subject the task names. `CLAUDE.md`'s standing approval covers the commit and the push.
 - A change to setup behaviour carries its doc edit in the same commit (`CLAUDE.md`, "Docs mirror behavior").
 - Never run on this Mac: `sysup`, `./setup.sh`, `set-defaults`, `rotm install`, `rotm update`, `uv tool install` or `uv tool upgrade` against the real tool folder, `mise bootstrap packages apply`, `upgrade` or `prune`. Probes use scratch folders (`XDG_CONFIG_HOME`, `UV_TOOL_DIR`, `UV_TOOL_BIN_DIR`, `MISE_CONFIG_DIR`).
@@ -29,6 +29,7 @@ Each is a default the owner can change before the task starts.
 - **`brew:ruby` stays in the base.** The `menubar` module's cask needs it too, and `bin/lib/test-packages:112` already requires it there.
 - **uv gets its hold in two places, neither of them global.** The two `uv tool install` lines take `--exclude-newer "48 hours"`, and the repository's two uv projects (`settings/`, `hindsight/`) take `[tool.uv] exclude-newer = "48 hours"` in their own `pyproject.toml`. A project file cannot hold a uv tool, and a flag cannot hold a project, so both are needed.
 - **The project hold goes in each `pyproject.toml`, not one `uv.toml` at the repository root.** A root file was seen from `--project settings` when uv ran from the root, but `dotfiles-settings` runs from any folder, and that case was not measured. The per-project table is certain.
+- **`npm:rea-agents` keeps its 6 hour hold.** `60-rotm-agents.toml:31` shortens mise's hold for that one tool on purpose, and `setup/README.md:137` says why. This plan leaves it, and the check's comment names it.
 - **`sysup`'s upgrade carries the hold too.** `setup/misc.sh` installs each tool only when its binary is missing, so on a Mac that already has both, the install flag never runs. `uv tool upgrade --all --exclude-newer "48 hours"` applies the hold and writes it into the receipt of a tool installed without one (measured below), so there is no hand step.
 
 ## Measured for this plan (2026-11-16, this Mac, scratch folders only)
@@ -42,6 +43,8 @@ Each is a default the owner can change before the task starts.
 | A project config does not reach `uv tool install` | Run from a folder whose `uv.toml` had a 2023 cutoff, it installed ruff 0.17.5 |
 | The install flag holds, and upgrades keep it | `uv tool install --exclude-newer 2023-01-01T00:00:00Z ruff` installed 0.0.205, and `uv tool upgrade --all` then said "Nothing to upgrade" |
 | The upgrade flag governs, and reaches a tool installed without a hold | A tool held at 2023-01, then `uv tool upgrade --all --exclude-newer 2023-06-01T00:00:00Z`: ruff 0.0.205 became 0.0.270, not the newest. A plain install, then `uv tool upgrade --all --exclude-newer "48 hours"`: the receipt gained `exclude-newer-span = "PT48H"` |
+| A forced reinstall without the flag drops the hold | A tool installed with `--exclude-newer "48 hours"`, then `uv tool install --force` plain: the receipt's two `exclude` lines went to none. `setup/misc.sh:268` prints that plain command as a hint |
+| CI's uv reads a duration hold | Run 43903511518 logged "Successfully installed uv version 0.13.8", the version measured here |
 | Setup skips a uv tool that is installed | `setup/misc.sh:233, 251` guard each install with `[ ! -x "$serena_bin" ]` and `[ ! -x "$scrapling_bin" ]` |
 | The setup diagram does not show the npm value | `grep -c min-release-age setup/bootstrap-runtime.svg` printed 0, so the JSON edit in Task 1 needs no re-export |
 | The owner's two receipts hold nothing today | `grep -c exclude` on both `uv-receipt.toml` files printed 0 |
@@ -57,7 +60,15 @@ Each was run in a scratch clone of `c0c47a9`. Nothing in this repository was edi
 | 3 | The `uv run --locked` failure in the table above | `uv run --locked --project settings` ran, and `uv lock --check --project hindsight` resolved 231 packages |
 | 4 | `AssertionError: the base holds the owner's tap or a package from it`, `FAIL: list`, `KeyError: 'modules.multipass'` | `test-packages` and `test-modules` exit 0, `test_registry`, `test_cli` and `test_module` print `ok` |
 
-The hold block was run by itself, cut out of the file, because `test-conventions` stops earlier in any fresh clone with `FAIL: zsh prettier-ignored: tilde/.zshenv`, with or without this plan's changes. It passes in the real checkout. Not run: the docs edits, Task 2's `sysup` change with its `test-sysup` lines, and Task 5.
+The hold block was run by itself, cut out of the file, because `test-conventions` stops earlier in any fresh clone with `FAIL: zsh prettier-ignored: tilde/.zshenv`, with or without this plan's changes. It passes in the real checkout. Not run: the docs edits, Task 2's `sysup` change with its `test-sysup` lines, Task 2's check as it now reads, and Task 5.
+
+An independent reviewer then read every task against the code and probed uv in scratch folders. It found every cited line number right and no blocker, and its eight findings were each checked and are folded in. The largest: re-locking `hindsight/uv.lock` restarts the Hindsight daemon once, a third install hint would have dropped the hold, and two instruction files named the old install command.
+
+### Not verified
+
+- How the real Serena and Scrapling environments take their first held upgrade. If a dependency is younger than 48 hours, uv may report a modified environment, which `sysup` shows as a change. Only a one-package tool was probed.
+- Renovate's lockfile maintenance against a `[tool.uv] exclude-newer` table.
+- pnpm, bun and npm accepting the new values in a real install. Task 5's fresh-install run is the proof.
 
 ## Review Focus
 
@@ -72,8 +83,8 @@ The hold block was run by itself, cut out of the file, because `test-conventions
 ### Task 1: Hold npm, pnpm, bun and Renovate for 48 hours
 
 **Files:**
-- Modify: `pnpm-workspace.yaml:2`, `tilde/.bunfig.toml:9-11`, `setup/misc.sh:453-454`, `renovate.json:5`
-- Modify: `setup/README.md:158`, `setup/bootstrap-runtime.archify.json:459`, `docs/updating.md:58`
+- Modify: `pnpm-workspace.yaml:1-2`, `tilde/.bunfig.toml:9-11`, `setup/misc.sh:453-454`, `renovate.json:5`
+- Modify: `setup/README.md:158`, `setup/bootstrap-runtime.archify.json:459`, `docs/updating.md:58`, `tilde/README.md:31`, `tilde/.config/mise/conf.d/60-rotm-agents.toml:30`
 - Test: `bin/lib/test-conventions` (a new block before the `# tlrc rejects a page` comment, and one clause in the header at lines 10 to 23)
 
 **Interfaces:**
@@ -82,7 +93,8 @@ The hold block was run by itself, cut out of the file, because `test-conventions
 - [ ] **Step 1: Write the failing checks**
 
 ```bash
-# One release-age hold everywhere: 48 hours, as mise's minimum_release_age (the audit spec, decision 1)
+# One release-age hold everywhere: 48 hours, as mise's minimum_release_age (the audit spec, decision 1).
+# npm:rea-agents alone is shorter, on purpose (60-rotm-agents.toml)
 grep -qx 'minimum_release_age = "48h"' tilde/.config/mise/config.toml || fail "release hold: mise is not 48h"
 grep -qx 'minimumReleaseAge: 2880' pnpm-workspace.yaml || fail "release hold: pnpm is not 2880 minutes"
 grep -qx 'minimumReleaseAge = 172800' tilde/.bunfig.toml || fail "release hold: bun is not 172800 seconds"
@@ -97,16 +109,16 @@ Expected: `FAIL: release hold: pnpm is not 2880 minutes`
 
 - [ ] **Step 3: Change the four values and their comments**
 
-`10080` to `2880`, `604800` to `172800`, `min-release-age 7` to `2`, `"7 days"` to `"2 days"`. Each comment beside a value that says 7 days says 48 hours. `.claude/rules/ci.md:19` already says to keep Renovate in step with pnpm and needs no edit.
+`10080` to `2880`, `604800` to `172800`, `min-release-age 7` to `2`, `"7 days"` to `"2 days"`. Each comment beside a value that says 7 days or one week says 48 hours: `pnpm-workspace.yaml:1`, `tilde/.bunfig.toml:9-10`, `setup/misc.sh:453`, and `60-rotm-agents.toml:30`, which quotes npm's `min-release-age=7`. `.claude/rules/ci.md:19` already says to keep Renovate in step with pnpm and needs no edit. The "a week before the pin could install it" notes in `bin/hindsight-memory:238` and `.claude/rules/hindsight-wiring.md:14` are dated history and stay.
 
-- [ ] **Step 4: Update the three docs**
+- [ ] **Step 4: Update the four docs**
 
-`setup/README.md:158` and the archify JSON name `min-release-age 7`: make it `2`. The exported diagram does not show that text, so it is not re-exported. In `docs/updating.md:58` change the Renovate wait from 7 days to 48 hours.
+`setup/README.md:158` holds two values on one line, `min-release-age 7` and bun's "`minimumReleaseAge` 7 days": make them `2` and 48 hours. The archify JSON names `min-release-age 7`: make it `2`. `tilde/README.md:31` says "7-day release age": make it 48-hour. The exported diagram does not show that text, so it is not re-exported. In `docs/updating.md:58` change the Renovate wait from 7 days to 48 hours.
 
 - [ ] **Step 5: Run it and see it pass**
 
-Run: `bash bin/lib/test-conventions && pnpm install --frozen-lockfile`
-Expected: both exit 0. A shorter hold never invalidates the lockfile.
+Run: `bash bin/lib/test-conventions && pnpm install --frozen-lockfile && pnpm check`
+Expected: all exit 0. A shorter hold never invalidates the lockfile.
 
 - [ ] **Step 6: Commit**
 
@@ -115,9 +127,10 @@ Subject: `Hold npm, pnpm, bun and Renovate releases for 48 hours`
 ### Task 2: Hold the two uv tools for 48 hours
 
 **Files:**
-- Modify: `setup/misc.sh:235, 253` (the two `uv tool install` lines and the command each warning prints)
+- Modify: `setup/misc.sh:235-236, 253-254, 268` (the two `uv tool install` lines, the command each warning prints, and the reinstall hint)
 - Modify: `bin/sysup:497-498` (the upgrade and the command its failure line prints)
-- Modify: `setup/README.md:148-149` (the Serena and Scrapling steps), `docs/updating.md` (the uv tools line)
+- Modify: `setup/README.md:148-149` (the Serena and Scrapling steps), `docs/updating.md:33` (the uv tools line)
+- Modify: `tilde/.claude/rules/serena.md:9`, `.claude/skills/add-tool/SKILL.md:14, 22` (both name the commands; 4,737 and 4,629 bytes of a 6,000 cap)
 - Test: `bin/lib/test-conventions` (the block from Task 1), `bin/lib/test-sysup:306, 316`
 
 **Interfaces:**
@@ -126,11 +139,14 @@ Subject: `Hold npm, pnpm, bun and Renovate releases for 48 hours`
 - [ ] **Step 1: Write the failing check**
 
 ```bash
-[ "$(grep -c 'uv tool install --exclude-newer "48 hours" ' setup/misc.sh)" = 2 ] || fail "release hold: a uv tool install has no 48 hour hold"
+grep -qE '^ *uv tool install ' setup/misc.sh || fail "release hold: setup/misc.sh installs no uv tool, so this check is stale"
+! grep -E '^ *uv tool install ' setup/misc.sh | grep -qv -- '--exclude-newer "48 hours"' || fail "release hold: a uv tool install has no 48 hour hold"
 grep -q 'capture uv tool upgrade --all --exclude-newer "48 hours"' bin/sysup || fail "release hold: sysup upgrades uv tools with no 48 hour hold"
 ```
 
-In `bin/lib/test-sysup:306, 316`, the two expected failure lines end `run: uv tool upgrade --all --exclude-newer "48 hours"`.
+The second line fails for any install command without the flag, so a tool added later is covered. It reads command lines only: a hint inside a warning starts with `||` or `warning`.
+
+In `bin/lib/test-sysup:306, 316`, the two expected failure lines end `run: uv tool upgrade --all --exclude-newer "48 hours"$`.
 
 - [ ] **Step 2: Run them and see them fail**
 
@@ -139,7 +155,7 @@ Expected: `FAIL: release hold: a uv tool install has no 48 hour hold`, and the t
 
 - [ ] **Step 3: Add `--exclude-newer "48 hours"` to the three commands**
 
-Right after `uv tool install` on both lines of `setup/misc.sh`, and after `--all` in `bin/sysup:497`. The "run it later" text in each warning and the `status fail` line in `sysup` name the same command, so each gains the flag too. `sysup`'s stub of `uv` in `test-sysup` must still match the longer command: read how it matches before editing.
+Right after `uv tool install` on both command lines of `setup/misc.sh`, and after `--all` in `bin/sysup:497`. Every hint that names one of the commands gains the flag too, or following the hint drops the hold (measured above): the two "run it later" warnings, the `--force` reinstall hint at `setup/misc.sh:268`, and the `status fail` line at `bin/sysup:498`. Those four sit inside double-quoted strings. In `setup/misc.sh` write `--exclude-newer '48 hours'`, as the strings already quote `'scrapling[ai]'`. In `bin/sysup:498` write `\"48 hours\"`, which is what the `test-sysup` lines expect. The `uv` stub in `test-sysup:115-116` matches on `"$1 $2"`, so the longer command needs no stub change.
 
 - [ ] **Step 4: Verify that an upgrade gives an unheld tool the hold**
 
@@ -148,11 +164,11 @@ Expected: `uv-receipt.toml` holds `exclude-newer-span = "PT48H"`. This is the ow
 
 - [ ] **Step 5: Say it in the docs**
 
-`setup/README.md:148-149`: both commands as they now read, and one sentence that the hold is kept in the tool's receipt. `docs/updating.md`, the uv tools line: `sysup` upgrades them under the same 48 hour hold, which also gives it to a tool installed before the hold existed.
+`setup/README.md:148-149`: both commands as they now read, and one sentence that the hold is kept in the tool's receipt. `docs/updating.md:33`: `sysup` upgrades them under the same 48 hour hold, which also gives it to a tool installed before the hold existed. `tilde/.claude/rules/serena.md:9` names the install command: add the flag there. `.claude/skills/add-tool/SKILL.md:14, 22` tell the reader how to add a uv tool and what `sysup` runs: both commands gain the flag, and line 14 says a new tool's install line needs it or `test-conventions` fails.
 
 - [ ] **Step 6: Run the checks and commit**
 
-Run: `bash bin/lib/test-conventions && bash bin/lib/test-bootstrap && LC_ALL=en_US.UTF-8 bash bin/lib/test-sysup`
+Run: `bash bin/lib/test-conventions && bash bin/lib/test-bootstrap && LC_ALL=en_US.UTF-8 bash bin/lib/test-sysup && pnpm check`
 Expected: all exit 0. `test-bootstrap:783` matches the text `uv tool install`, which the flag leaves intact.
 
 Subject: `Hold Serena and Scrapling releases for 48 hours`
@@ -199,6 +215,8 @@ Expected: `ok`. This is CI's and a fork's case, with no user-level uv file.
 Run: `uv lock --check --quiet --directory hindsight && bash bin/lib/test-hindsight-memory`
 Expected: exit 0. The first is the gate's own line (`bin/lib/check:92`). `bin/hindsight-memory` copies both hindsight files to `~/.hindsight/daemon-env` and syncs with `--frozen`, which reads the lock as it is.
 
+One effect to expect, not to fix: `bin/hindsight-memory:146-151` compares the lock's checksum with the last one synced, and a difference stops the daemon (lines 216 and 235). The four new lines are a difference. So the first `rotm update` or `sysup` after promotion restarts the Hindsight daemon once and reports the memory environment as updated. No package version changes, so the database backup that a version bump calls for is not needed. Say so in the commit body.
+
 - [ ] **Step 5: Document the re-lock and commit**
 
 In `settings/README.md`, one sentence: a dependency change is `uv lock --project settings`, which holds a release for 48 hours. `hindsight/pyproject.toml:6` already names its re-lock command.
@@ -212,7 +230,7 @@ Subject: `Hold the settings and Hindsight lockfiles' releases for 48 hours`
 - Create: `tilde/.config/mise/conf.d/60-rotm-multipass.toml`
 - Modify: `tilde/.config/mise/conf.d/30-packages.toml:19-21, 39-40, 56`, `tilde/.config/mise/conf.d/60-rotm-menubar.toml:7-8`
 - Modify: `bin/lib/rotm-modules:46`, `settings/registry.toml` (a new entry before `modules.touchid`)
-- Modify: `docs/modules.md:3, 19, 69`, `docs/installation.md:121`, `docs/forking.md:13`, `docs/gui/raycast.md:48`
+- Modify: `docs/modules.md:3, 19, 65, 69`, `docs/installation.md:121`, `docs/forking.md:13`, `docs/gui/raycast.md:48`
 - Test: `bin/lib/test-packages:114`, `bin/lib/test-modules:38`, `settings/tests/test_registry.py:111`
 
 **Interfaces:**
@@ -279,7 +297,7 @@ Expected: both packages, each `installed`. This reads only. It shows a Mac with 
 
 - [ ] **Step 6: Update the docs**
 
-- `docs/modules.md`: "fifteen" becomes "sixteen", a `multipass` row follows `menubar` ("Claude Multipass, the owner's tool that switches Claude Desktop between accounts, and its menu bar app"), and the tap table's `jrmatherly/tap` row names `multipass`, `menubar` in place of `base`, `menubar`.
+- `docs/modules.md`: line 65 says the taps' packages "install with the base or the module that uses them", and no tap is in the base any more, so it becomes "with the module that uses them". "fifteen" becomes "sixteen", a `multipass` row follows `menubar` ("Claude Multipass, the owner's tool that switches Claude Desktop between accounts, and its menu bar app"), and the tap table's `jrmatherly/tap` row names `multipass`, `menubar` in place of `base`, `menubar`.
 - `docs/installation.md:121`: `multipass` joins the `--without` list after `menubar`.
 - `docs/forking.md:13`: the row says Claude Multipass is the `multipass` module, switched off with `rotm settings set modules.multipass off`. The `state = "absent"` advice goes.
 - `docs/gui/raycast.md:48`: the package is in the `multipass` module.
@@ -314,7 +332,7 @@ Verify: `gh run list --workflow fresh-install.yml --limit 1` shows `success` on 
 
 - [ ] **Step 4: Verify on the owner's Mac after the update (read-only)**
 
-The owner runs `sysup` once, since setup skips an installed uv tool.
+The update restarts the Hindsight daemon once, as Task 3 says. The owner then runs `sysup` once, since setup skips an installed uv tool.
 Run: `grep exclude-newer-span ~/.local/share/uv/tools/serena-agent/uv-receipt.toml ~/.local/share/uv/tools/scrapling/uv-receipt.toml`
 Expected: `PT48H` in both.
 Run: `npm config get min-release-age` and `rotm settings list | grep multipass`
