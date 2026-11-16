@@ -1,0 +1,12 @@
+# Skill sources whose changes `claude-config restore skills --update` installs with no review, one per line,
+# spelled as the source field of agents/claude-skills.txt. Any other source waits for a review.
+D4Vinci/Scrapling
+anthropics/skills
+better-auth/skills
+https://docs.siderolabs.com
+jrmatherly/skills
+microsoft/azure-skills
+supabase/agent-skills
+tt-a1i/archify
+vectorize-io/hindsight
+vercel-labs/skills

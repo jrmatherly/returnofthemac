@@ -18,11 +18,11 @@
 #
 # `claude-config retire`
 #
-# - Report each tracked skill whose GitHub folder or well-known site digest moved past its reviewed value, and install for an agent that lacks one only when it matches its review (`sysup` runs this):
+# - Reinstall each tracked skill from a trusted source that moved upstream, and for any other source report a skill past its reviewed value and install one an agent lacks only when it matches (`sysup` runs this):
 #
 # `claude-config restore skills --update`
 #
-# - Reinstall one changed skill after reviewing it, for every agent on its row, then record its new value with `claude-config save`:
+# - Reinstall one changed skill from a source that is not trusted after reviewing it, for every agent on its row, then record its new value with `claude-config save`:
 #
 # `claude-config restore skills --accept {{name}}`
 #
@@ -39,7 +39,9 @@
 #   claude-skills.txt    user skills installed with the `skills` CLI, for
 #                        which agents (claude-code → ~/.claude/skills,
 #                        codex → ~/.agents/skills), and the reviewed folder
-#                        SHA or well-known digest
+#                        SHA or well-known digest (none for a trusted source)
+#   claude-skills-trusted.txt
+#                        skill sources whose changes install with no review
 # Reads ~/.claude (or $CLAUDE_CONFIG_DIR) and ~/.agents. Needs jq; skills need
 # npx (Node from mise).
 #
@@ -54,6 +56,7 @@ plugins_list="$save_dir/claude-plugins.txt"
 settings_base="$save_dir/claude-settings.json"
 skills_list="$save_dir/claude-skills.txt"
 retired_list="$save_dir/claude-permissions-retired.txt"
+trusted_list="$save_dir/claude-skills-trusted.txt"
 settings="$config/settings.json"
 skill_lock="$HOME/.agents/.skill-lock.json"
 # Never saved: keys other tools write (plugins are restored separately;
@@ -273,12 +276,17 @@ retire_settings() {
 # Skills
 #
 
+# trusted <source>: the owner takes this source's changes with no review
+trusted() {
+  grep -qxF -- "$1" "$trusted_list" 2> /dev/null
+}
+
 save_skills() {
   missing_source "$skill_lock" "$skills_list" && return 0
   valid_json "$skill_lock" "$skills_list" || return 0
   {
     echo "# User skills installed with the \`skills\` CLI — see bin/claude-config."
-    echo "# skill <name> <source> <agents> [<reviewed>]"
+    echo "# skill <name> <source> <agents> [<reviewed>]. No reviewed value for a source in claude-skills-trusted.txt"
     # A well-known source (https://host/.well-known/agent-skills) records a
     # bare host in `source`, which `skills add` treats as a git URL and fails
     # to clone; `sourceBaseUrl` keeps the URL as typed
@@ -288,6 +296,8 @@ save_skills() {
         [ -e "$config/skills/$name" ] && agents+=(claude-code)
         [ -e "$HOME/.agents/skills/$name" ] && agents+=(codex)
         [ ${#agents[@]} -gt 0 ] || continue
+        # A trusted row has no reviewed value, so an update changes no tracked file
+        ! trusted "$source" || reviewed=""
         echo "skill $name $source $(
           IFS=,
           echo "${agents[*]}"
@@ -333,7 +343,7 @@ upstream() {
 }
 
 restore_skills() {
-  local kind name source agents reviewed agent missing before state npx=(npx)
+  local kind name source agents reviewed agent missing before state updated npx=(npx)
   command -v mise > /dev/null && npx=(mise exec node -- npx)
   tree_cache=$(mktemp -d)
   while read -r kind name source agents reviewed; do
@@ -354,7 +364,16 @@ restore_skills() {
     # One line per skill for sysup: skill <same|changed|unknown> <name>. A
     # changed or unknown skill waits for a review and --accept: upstream is
     # third-party code, so an agent that lacks it gets nothing (skill held <name>)
-    if [ "$update" = true ]; then
+    updated=false
+    if [ "$update" = true ] && [ -z "$accept" ] && trusted "$source"; then
+      # A trusted source is compared with the installed copy, which cannot
+      # record a review, and is never held: skill updated <name> after a
+      # reinstall, or after a first install it could not check
+      state=$(upstream "$name")
+      # shellcheck disable=SC2206 # agents is a comma list of plain names
+      [ "$state" != changed ] || missing=(${agents//,/ })
+      if [ "$state" = same ] || [ ${#missing[@]} -eq 0 ]; then echo "skill $state $name"; else updated=true; fi
+    elif [ "$update" = true ]; then
       state=$(upstream "$name" "$reviewed")
       echo "skill $state $name"
       if [ "$state" != same ] && [ -z "$accept" ] && [ ${#missing[@]} -gt 0 ]; then
@@ -367,6 +386,7 @@ restore_skills() {
     # the usual cause, and the fix is on the lock side
     before=$failed failed=0
     DO_NOT_TRACK=1 DISABLE_TELEMETRY=1 run "${npx[@]}" -y skills add "$source" -g -s "$name" -a "${missing[@]}" -y
+    [ "$updated" = false ] || [ "$failed" != 0 ] || echo "skill updated $name"
     [ "$failed" = 0 ] || echo "claude-config: if $source no longer ships $name, drop it: npx -y skills remove -g -s $name -y, then claude-config save" >&2
     [ "$before" = 0 ] || failed=1
   done < <(grep -Ev '^\s*(#|$)' "$skills_list")

@@ -62,6 +62,13 @@ for p in settings hindsight; do
   grep -qx 'exclude-newer-span = "PT48H"' "$p/uv.lock" || fail "release hold: $p/uv.lock was not locked under the hold"
 done
 
+# A trusted source no row uses is a misspelling: the skill would fall back to the review gate.
+# The file test is its own line: a missing file ends the loop below with no error
+[ -f agents/claude-skills-trusted.txt ] || fail "agents/claude-skills-trusted.txt is missing"
+while read -r source; do
+  awk -v s="$source" '$1 == "skill" && $3 == s { f = 1 } END { exit !f }' agents/claude-skills.txt || fail "trusted skill source with no skill: $source"
+done < <(grep -Ev '^[[:space:]]*(#|$)' agents/claude-skills-trusted.txt)
+
 # tlrc rejects a page with a wrapped line, so render every header through help;
 # without tldr (the CI runner), only check that a header comment starts on line 2
 have_tldr=false

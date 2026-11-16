@@ -146,6 +146,40 @@ check "--accept refuses a name that is not tracked" "[ \$? = 2 ] && grep -q 'no 
 cc save > /dev/null 2>&1
 check "save records the lock's folder SHA as the reviewed value" "grep -qx 'skill a o/r claude-code aaa' '$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt'"
 
+# A skill from a source in claude-skills-trusted.txt is compared with the
+# installed copy and reinstalled when upstream moved. g stays behind its review
+echo 't/r' > "$CLAUDE_CONFIG_SAVE_DIR/claude-skills-trusted.txt"
+cat > "$tmp/bin/gh" << 'EOF'
+#!/bin/bash
+echo '{"sha":"rootsha","tree":[{"path":"skills/g","type":"tree","sha":"ggg"},{"path":"skills/k","type":"tree","sha":"knew"},{"path":"skills/l","type":"tree","sha":"lll"},{"path":"skills/m","type":"tree","sha":"mmm"}]}'
+EOF
+jq '.skills += {
+  k: {sourceType: "github", source: "t/r", skillPath: "skills/k/SKILL.md", skillFolderHash: "kold"},
+  l: {sourceType: "github", source: "t/r", skillPath: "skills/l/SKILL.md", skillFolderHash: "lll"},
+  n: {sourceType: "github", source: "t/r", skillPath: "skills/n/SKILL.md", skillFolderHash: "nold"}}' \
+  "$HOME/.agents/.skill-lock.json" > "$tmp/lock" && mv "$tmp/lock" "$HOME/.agents/.skill-lock.json"
+trusted_rows() { printf 'skill g o/r claude-code old\nskill k t/r claude-code\nskill l t/r claude-code\nskill m t/r claude-code\nskill n t/r claude-code\n' > "$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt"; }
+trusted_rows
+for n in k l n; do mkdir -p "$CLAUDE_CONFIG_DIR/skills/$n"; done
+: > "$TEST_LOG.npx"
+PATH="$tmp/bin:$PATH" cc restore skills --update > "$tmp/out" 2>&1
+check "a trusted skill that moved upstream is reinstalled" "grep -qx 'skill updated k' '$tmp/out' && grep -q -- '-s k -a claude-code' '$TEST_LOG.npx'"
+check "a trusted skill that did not move is left alone" "grep -qx 'skill same l' '$tmp/out' && ! grep -q -- '-s l ' '$TEST_LOG.npx'"
+check "a trusted skill an agent lacks is installed unchecked" "grep -qx 'skill updated m' '$tmp/out' && grep -q -- '-s m -a claude-code' '$TEST_LOG.npx' && ! grep -qE '^skill (held|unknown) m$' '$tmp/out'"
+check "an installed trusted skill it can't check is left alone" "grep -qx 'skill unknown n' '$tmp/out' && ! grep -q -- '-s n ' '$TEST_LOG.npx'"
+check "an untrusted skill beside them still waits for its review" "grep -qx 'skill changed g' '$tmp/out' && ! grep -q -- '-s g ' '$TEST_LOG.npx'"
+cp "$tmp/bin/npx" "$tmp/npx.keep"
+printf '#!/bin/bash\nexit 1\n' > "$tmp/bin/npx"
+PATH="$tmp/bin:$PATH" cc restore skills --update > "$tmp/out" 2>&1
+check "a trusted skill whose reinstall failed is not reported as updated" "[ \$? = 1 ] && ! grep -qx 'skill updated k' '$tmp/out' && grep -qx 'skill changed g' '$tmp/out'"
+cp "$tmp/npx.keep" "$tmp/bin/npx"
+rm "$tmp/bin/gh"
+PATH="$tmp/bin:$(tr ':' '\n' <<< "$PATH" | while read -r d; do [ -x "$d/gh" ] || echo "$d"; done | paste -sd: -)" cc restore skills --update > "$tmp/out" 2>&1
+check "with no gh an installed trusted skill is left alone" "grep -qx 'skill unknown k' '$tmp/out' && ! grep -qx 'skill updated k' '$tmp/out'"
+cc save > /dev/null 2>&1
+check "save writes a trusted source's row with no reviewed value" "grep -qx 'skill k t/r claude-code' '$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt'"
+check "save still writes an untrusted row's reviewed value" "grep -qx 'skill g o/r claude-code ggg' '$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt'"
+
 base="$CLAUDE_CONFIG_SAVE_DIR/claude-settings.json"
 allow() { jq -c '.permissions.allow' "$1"; }
 printf '# why\n\nBash(old)\n' > "$CLAUDE_CONFIG_SAVE_DIR/claude-permissions-retired.txt"
