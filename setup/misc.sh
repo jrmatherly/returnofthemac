@@ -232,8 +232,8 @@ fi
 serena_bin="$HOME/.local/bin/serena"
 if $agents_on && command_exists uv && [ ! -x "$serena_bin" ]; then
   info "🧰 Installing Serena…"
-  uv tool install -p 3.13 serena-agent | indent \
-    || warning "Serena install failed — run it later: uv tool install -p 3.13 serena-agent"
+  uv tool install --exclude-newer "48 hours" -p 3.13 serena-agent | indent \
+    || warning "Serena install failed — run it later: uv tool install --exclude-newer '48 hours' -p 3.13 serena-agent"
 fi
 if $agents_on && [ -x "$serena_bin" ] && [ -x "$claude_bin" ]; then
   register_mcp serena Serena -- serena start-mcp-server --context claude-code --project-from-cwd
@@ -250,8 +250,8 @@ scrapling_bin="$HOME/.local/bin/scrapling"
 scrapling_mcp_bin="$HOME/.local/bin/scrapling-mcp"
 if $agents_on && command_exists uv && [ ! -x "$scrapling_bin" ]; then
   info "🕷️ Installing Scrapling…"
-  uv tool install -p 3.13 "scrapling[ai]" | indent \
-    || warning "Scrapling install failed — run it later: uv tool install -p 3.13 'scrapling[ai]'"
+  uv tool install --exclude-newer "48 hours" -p 3.13 "scrapling[ai]" | indent \
+    || warning "Scrapling install failed — run it later: uv tool install --exclude-newer '48 hours' -p 3.13 'scrapling[ai]'"
 fi
 if $agents_on && [ -x "$scrapling_bin" ]; then
   "$scrapling_bin" install 2>&1 | indent \
@@ -265,7 +265,7 @@ if $agents_on && [ -x "$scrapling_mcp_bin" ] && [ -x "$claude_bin" ] && command_
   if "$(uv tool dir)/scrapling/bin/python" -c 'import scrapling.core.ai' 2> /dev/null; then
     register_mcp scrapling Scrapling -- "$scrapling_mcp_bin"
   else
-    warning "scrapling-mcp can't start (installed without the ai extra?) — reinstall: uv tool install --force -p 3.13 'scrapling[ai]'"
+    warning "scrapling-mcp can't start (installed without the ai extra?) — reinstall: uv tool install --force --exclude-newer '48 hours' -p 3.13 'scrapling[ai]'"
   fi
 fi
 

@@ -6,7 +6,7 @@ paths:
 
 # Serena MCP: Claude Code launch invariants (global)
 
-How Serena is wired into Claude Code. The `serena` binary lives at `~/.local/bin/serena` (`uv tool install -p 3.13 serena-agent`, upgrade with `uv tool upgrade serena-agent`, the docs' only documented install method). **Verify the live state before changing** with `claude mcp get serena`.
+How Serena is wired into Claude Code. The `serena` binary lives at `~/.local/bin/serena` (`uv tool install --exclude-newer "48 hours" -p 3.13 serena-agent`, upgrade with `uv tool upgrade serena-agent`, the docs' only documented install method). **Verify the live state before changing** with `claude mcp get serena`.
 
 ## The one correct launch
 

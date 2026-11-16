@@ -54,6 +54,9 @@ grep -qx 'minimumReleaseAge: 2880' pnpm-workspace.yaml || fail "release hold: pn
 grep -qx 'minimumReleaseAge = 172800' tilde/.bunfig.toml || fail "release hold: bun is not 172800 seconds"
 grep -q '^  npm config set min-release-age 2$' setup/misc.sh || fail "release hold: npm is not 2 days"
 grep -q '"minimumReleaseAge": "2 days"' renovate.json || fail "release hold: Renovate is not 2 days"
+grep -qE '^ *uv tool install ' setup/misc.sh || fail "release hold: setup/misc.sh installs no uv tool, so this check is stale"
+! grep -E '^ *uv tool install ' setup/misc.sh | grep -qv -- '--exclude-newer "48 hours"' || fail "release hold: a uv tool install has no 48 hour hold"
+grep -q 'capture uv tool upgrade --all --exclude-newer "48 hours"' bin/sysup || fail "release hold: sysup upgrades uv tools with no 48 hour hold"
 
 # tlrc rejects a page with a wrapped line, so render every header through help;
 # without tldr (the CI runner), only check that a header comment starts on line 2

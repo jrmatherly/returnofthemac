@@ -494,8 +494,8 @@ fi
 # uv tools (Serena, Scrapling)
 if command -v uv > /dev/null; then
   step uv
-  if ! capture uv tool upgrade --all; then
-    status fail uv "run: uv tool upgrade --all"
+  if ! capture uv tool upgrade --all --exclude-newer "48 hours"; then
+    status fail uv "run: uv tool upgrade --all --exclude-newer \"48 hours\""
     show
   elif grep -q 'Nothing to upgrade' <<< "$out"; then
     status ok uv "up to date"

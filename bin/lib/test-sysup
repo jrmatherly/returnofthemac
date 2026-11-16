@@ -303,7 +303,7 @@ check_true "changes: two backends of one tool stay apart" has '^    node \(npm\)
 check_true "changes: prune ran before the upgrade" grep -q 'mise prune.*mise ' <<< "$(grep -oE '^== mise( prune)? ==' "$DOTFILES"/logs/sysup-*.log | tr '\n' ' ')"
 check_true "changes: mise held release is a notice" has '^● mise +aspire 13.6.3 held until 2026-10-24 14:17 EDT by minimum_release_age$'
 check_true "changes: mise reinstall failure is a notice" has '^● mise +failed to reinstall pipx tools; the next sysup.s mise prune removes a version no config pins$'
-check_true "changes: uv failure names the command" has '^✖ uv +run: uv tool upgrade --all$'
+check_true "changes: uv failure names the command" has '^✖ uv +run: uv tool upgrade --all --exclude-newer "48 hours"$'
 check_true "changes: uv failure output shown" has '^    error: network down$'
 check_true "changes: Claude Code failure names the command" has '^✖ Claude Code +run: claude update$'
 check_true "changes: Claude Code failure output shown" has '^    Error: update failed$'
@@ -313,7 +313,7 @@ check_true "changes: steps after the failure still run" has '^✔ Raycast +asked
 for section in Changed Notices Failed; do
   check_true "changes: summary has $section" has "^$section\$"
 done
-check_true "changes: summary lists the failure" has '^  ✖ uv +run: uv tool upgrade --all$'
+check_true "changes: summary lists the failure" has '^  ✖ uv +run: uv tool upgrade --all --exclude-newer "48 hours"$'
 check_true "changes: restart action" has '^  › Restart Claude Code to apply plugin updates$'
 check_true "changes: new terminal action" has '^  › Open a new terminal: dotfiles changed$'
 check_true "changes: action banner counts the items" has '^ ▶ ACTION NEEDED \([0-9]+ items\) $'
