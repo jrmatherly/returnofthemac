@@ -115,6 +115,12 @@ configure_git_identity() {
     return
   fi
 
+  if [ "$sign_method" = ssh ]; then
+    # Without this file git cannot check an SSH signature, its own included
+    mkdir -p "$HOME/.config/git"
+    echo "$email $signing_key" > "$HOME/.config/git/allowed_signers"
+  fi
+
   {
     echo "[user]"
     echo "  name = $name"
@@ -128,6 +134,7 @@ configure_git_identity() {
         echo "  format = ssh"
         echo "[gpg \"ssh\"]"
         echo "  program = $op_sign"
+        echo "  allowedSignersFile = ~/.config/git/allowed_signers"
         echo
         echo "[commit]"
         echo "  gpgSign = true"

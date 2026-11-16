@@ -89,6 +89,7 @@ h0="$tmp/h0"
 run "$h0" DOTFILES_GIT_NAME='A B' DOTFILES_GIT_EMAIL=a@b.c DOTFILES_GIT_SIGN_METHOD=ssh DOTFILES_GIT_SIGNINGKEY='ssh-ed25519 AAAA'
 check "ssh signing without 1Password: the identity is written" "grep -qx '  name = A B' '$h0/.gitconfig.local'"
 check "ssh signing without 1Password: no signing lines" "! grep -qE 'gpgSign|signingKey|format = ssh|op-ssh-sign' '$h0/.gitconfig.local'"
+check "ssh signing without 1Password: no allowed signers file" "[ ! -e '$h0/.config/git/allowed_signers' ]"
 check "ssh signing without 1Password: warned" "grep -q 'op-ssh-sign is not installed' '$tmp/out'"
 mkdir -p "$tmp/apps/1Password.app/Contents/MacOS"
 printf '#!/bin/sh\n' > "$tmp/apps/1Password.app/Contents/MacOS/op-ssh-sign"
@@ -97,6 +98,8 @@ chmod +x "$tmp/apps/1Password.app/Contents/MacOS/op-ssh-sign"
 run "$h" DOTFILES_GIT_NAME='A B' DOTFILES_GIT_EMAIL=a@b.c DOTFILES_GIT_SIGN_METHOD=ssh DOTFILES_GIT_SIGNINGKEY='ssh-ed25519 AAAA'
 check "knobs write the identity" "grep -qx '  name = A B' '$h/.gitconfig.local' && grep -qx '  signingKey = ssh-ed25519 AAAA' '$h/.gitconfig.local'"
 check "ssh signing written" "grep -qx '  format = ssh' '$h/.gitconfig.local' && grep -q 'op-ssh-sign' '$h/.gitconfig.local'"
+check "ssh signing: git is told where the allowed signers are" "grep -qx '  allowedSignersFile = ~/.config/git/allowed_signers' '$h/.gitconfig.local'"
+check "ssh signing: the key is an allowed signer" "grep -qx 'a@b.c ssh-ed25519 AAAA' '$h/.config/git/allowed_signers'"
 run "$h" DOTFILES_GIT_NAME=Other DOTFILES_GIT_EMAIL=o@b.c
 check "an existing identity file is kept" "grep -qx '  name = A B' '$h/.gitconfig.local'"
 check "second run: cot link kept, nothing asked of sudo" "[ -L '$tmp/bin/cot' ] && ! grep -q '^sudo' '$tmp/log'"
