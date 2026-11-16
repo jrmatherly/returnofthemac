@@ -38,6 +38,12 @@
       "matchManagers": ["github-actions"],
       "matchDepNames": ["jdx/mise"],
       "enabled": false
+    },
+    {
+      "description": "check.yml asks for the newest Python the macos-26 runner image caches (its Readme, Cached Tools), so setup-python downloads nothing. Raise it by hand when the image gains a version",
+      "matchManagers": ["github-actions"],
+      "matchDepNames": ["python"],
+      "enabled": false
     }
   ]
 }
