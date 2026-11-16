@@ -35,6 +35,8 @@ unstash() {
 rollback() {
   echo
   echo "${color_error}Something went wrong, rolling back…${color_reset}"
+  # A conflict leaves the rebase half-done, and the stash cannot pop onto it
+  git rebase --abort 2> /dev/null
   unstash
   exit "$1"
 }

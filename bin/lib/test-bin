@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Self-check for small bin/ scripts (serve, git-find, git-tidy, obsidian-vault, push) in a scratch HOME and git repo.
+# Self-check for small bin/ scripts (serve, git-find, git-tidy, obsidian-vault, push, pull) in a scratch HOME and git repo.
 #
 # - Run it (pnpm check does too); exits 1 when an assertion fails:
 #
@@ -99,6 +99,19 @@ git -C "$tmp/repo" checkout -qb feat-lab main
 (cd "$tmp/repo" && PATH="$tmp/stub:$PATH" PUSH_URL=https://gitlab.com/o/r.git "$root/bin/push") > "$tmp/push.out" 2>&1
 check "push to another host: exits 0 and prints no URL" "[ $? -eq 0 ] && ! grep -q '^https://' '$tmp/push.out'"
 git -C "$tmp/repo" checkout -q main
+
+# pull on a rebase conflict rolls all the way back: no rebase left, the stash restored
+git -C "$tmp/repo" push -q origin main
+git clone -q "$tmp/origin.git" "$tmp/other"
+(cd "$tmp/other" && echo theirs > top.txt && git commit -qam theirs && git push -q origin main)
+(cd "$tmp/repo" && echo ours > top.txt && git commit -qam ours && echo dirty > untracked.txt)
+(cd "$tmp/repo" && "$root/bin/pull") > "$tmp/pull.out" 2>&1
+check "pull on a conflict: exits non-zero" "[ $? -ne 0 ]"
+check "pull on a conflict: no rebase left behind" "[ ! -d '$tmp/repo/.git/rebase-merge' ]"
+check "pull on a conflict: the stash is restored" "[ -z \"\$(git -C '$tmp/repo' stash list)\" ] && [ -f '$tmp/repo/untracked.txt' ]"
+rm -f "$tmp/repo/untracked.txt"
+(cd "$tmp/repo" && "$root/bin/pull") > "$tmp/pull.out" 2>&1
+check "pull on a conflict with nothing stashed: no rebase, no stash pop" "[ ! -d '$tmp/repo/.git/rebase-merge' ] && ! grep -q 'Restoring tree' '$tmp/pull.out'"
 
 [ "$fails" -eq 0 ] || {
   echo "$fails failed" >&2
