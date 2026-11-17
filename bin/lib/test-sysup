@@ -176,6 +176,8 @@ else echo "wrote /tmp/cat/CATALOG.md, CATALOG-lite.md, catalog.html, since 2026-
 stub open 'exit 0'
 stub amp 'echo "Amp is already up to date"'
 stub nyan 'exit 0'
+stub rotm '[ ! -e "$STATE/rotm-fails" ] || { echo "rotm: could not fetch stable from origin" >&2; exit 1; }
+echo "{\"mode\":\"installed\",\"branch\":\"stable\",\"behind\":$(cat "$STATE/behind" 2> /dev/null || echo 0)}"'
 stub op '[ "$1" = read ] && echo secret'
 stub hindsight-memory '[ -e "$STATE/hindsight-fails" ] && { echo "installer failed"; exit 1; }; [ -e "$STATE/hindsight-newer" ] && echo "newer release 0.9.0 on npm; bump CODING_AGENTS_VERSION"
 if [ -e "$STATE/hindsight-warns" ]; then echo "│  ✓ runtime staged at ~/.hindsight/coding-agents"; echo "│  ▲ macOS needs a current Rust toolchain to build the daemon'"'"'s dependencies (litellm"; echo "│    publishes no macOS wheel). Install from https://rustup.rs"; fi
@@ -482,8 +484,19 @@ run
 check_true "installed: claude-config save is not run" no_save
 check_true "installed: restore --dry-run still runs" grep -qx 'restore settings --dry-run' "$STATE/claude-config.log"
 check_true "installed: the Claude config line says why" has 'Claude config.*installed copy'
-check_true "installed: the dotfiles step points at rotm update" has 'dotfiles.*rotm update'
-check_true "installed: the copy is not called up to date" lacks 'dotfiles.*up to date'
+check_true "installed: a level copy is up to date" has '^✔ dotfiles +installed copy up to date$'
+check_true "installed: … with no advice to update" lacks 'dotfiles.*rotm update'
+echo 2 > "$STATE/behind"
+rm -rf "$DOTFILES/logs"
+run
+check_true "installed, behind: the count and the command" has '^● dotfiles +2 updates waiting; run: rotm update$'
+rm -f "$STATE/behind"
+touch "$STATE/rotm-fails"
+rm -rf "$DOTFILES/logs"
+run
+check_true "installed, offline: says it could not check" has "^● dotfiles +couldn't check the installed copy; run: rotm update --check\$"
+check_true "installed, offline: … and never up to date" lacks 'dotfiles.*up to date'
+rm -f "$STATE/rotm-fails"
 check_true "installed: no advice to run claude-config save" lacks 'claude-config save'
 rm -rf "$DOTFILES/logs" "$STATE/claude-config.log"
 touch "$STATE/config-pending"
@@ -493,7 +506,7 @@ rm -rf "$DOTFILES/logs" "$STATE/claude-config.log" "$STATE/config-pending"
 touch "$STATE/macos"
 run
 check_true "installed, with a macOS update: claude-config save is still not run" no_save
-check_true "installed, with a macOS update: the dotfiles step still points at rotm update" has 'dotfiles.*rotm update'
+check_true "installed, with a macOS update: the dotfiles step still pulls nothing" has '^✔ dotfiles +installed copy up to date$'
 rm -rf "$MISE_DATA_DIR" "$STATE/macos"
 unset MISE_DATA_DIR
 
