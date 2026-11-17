@@ -29,11 +29,11 @@ All nine tasks are done. Tasks 1 to 8 ran natively on `main`, each red then gree
 | 9, Step 2 | none | `rotm update` printed 160 lines where the audited run printed 276: `84 scripts executable`, no font menu, `CodeGraph already connected`, `rtk hook already present`, `nothing to restore`, `SnippetsLab skill unchanged`, and a catalog line with no braces. The `WARNING` block and the Enter wait still showed on this one run: the `rotm` that started it was the old one from `2cbdee8`, which bash kept reading after the update replaced the file, so it never exported `ROTM_UPDATE` |
 | 9, Step 3 | none | The first `sysup` printed `✔ dotfiles  installed copy up to date`, `↻ packages cleanup  0 old versions removed, 1 link fixed` (the dead `README.md` link, gone afterwards), and `◷ mise hold  azd 1.38.0 until 2026-11-18 13:57 EST (minimum_release_age)` with a headline of "3 changed" and no notices. It also upgraded three packages |
 | 9, Step 4 | none | The second `sysup` therefore printed `↻ packages cleanup  3 old versions removed, 2 links fixed`, the first real removal: `kubestellar-deploy` 0.9.23, `kubestellar-ops` 0.9.23 and `pkgconf` 3.0.10, with the alias links `opt/pkg-config` and `opt/pkgconfig` repointed to 3.0.11. Afterwards a dry run printed `nothing superseded`, `pkg-config --version` printed 3.0.11, and `mise bootstrap packages status` listed nothing missing |
+| 9, Step 3, Task 3 | none | The owner saw no 1Password prompt during the plugins step of either `sysup` run, and both printed `67 plugins up to date`. The inference Task 3 rested on held |
 
 Not verified:
 
 - That the `WARNING` block is gone on a `rotm update` started by the new `rotm`. The self-checks assert it (`bin/lib/test-rotm`, `bin/lib/test-bootstrap`). The owner's next `rotm update` is the proof.
-- That Task 3 removed the 1Password prompt. The plugins step passed twice over HTTPS (`67 plugins up to date`), but whether a prompt appeared is something only the owner saw, and the session did not record an answer.
 - `✔ packages cleanup  nothing superseded` printed by `sysup` itself. Both runs had something to do. The dry run after them printed it.
 
 ## Evidence and the owner's decisions
