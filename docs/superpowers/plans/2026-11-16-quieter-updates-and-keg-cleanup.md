@@ -502,6 +502,14 @@ Check by hand, since SnippetsLab is installed here: run `install-snippetslab-ski
 
 ### Task 9: The owner's proof
 
+Tasks 1 to 8 are built and pushed (2026-11-16, `3a124a9` to `941c99c`). Differences from the plan as written:
+
+- Task 2: a third assertion needed the new wording (`bin/lib/test-sysup`, "installed, with a macOS update").
+- Task 4: the prototype did not parse under `/bin/bash` 3.2 (a bare `)` case pattern inside `$(…)`, and a quoted `${t/"a/b"/…}` pattern), so both are written the 3.2 way. An absolute link that names the prefix by its physical path is matched too.
+- Task 5: the changed line counts links with a singular ("1 link fixed").
+- Task 7: the CodeGraph stubs answer only `install`, because `misc.sh` also calls `codegraph telemetry off`. Two cases were added: a restore that prints something, and a failed CodeGraph install.
+- Task 8: `setup/tests/dotfiles-extras.sh` asserted the Firefox warning and now asserts the skipped line.
+
 `sysup` and `rotm update` are never run by an agent on this Mac. This task is the owner's.
 
 - [ ] **Step 1: Promote `main` to `stable` the way the last plan did (`docs/superpowers/plans/completed/2026-11-16-trusted-skill-sources-and-hook-pin.md`, Task 6), after `check` and a `fresh-install` run pass on the commit.**
@@ -517,7 +525,7 @@ Check by hand, since SnippetsLab is installed here: run `install-snippetslab-ski
 - [ ] **Step 3: The owner runs `sysup`. Expected:**
 
 - `✔ dotfiles  installed copy up to date`
-- `↻ packages cleanup  0 old versions removed, 1 links fixed` on the first run (the dead `README.md` link), unless an upgrade since 2026-11-16 left kegs, in which case the count is theirs
+- `↻ packages cleanup  0 old versions removed, 1 link fixed` on the first run (the dead `README.md` link), unless an upgrade since 2026-11-16 left kegs, in which case the count is theirs
 - any held release as a dim `◷ mise hold` line, and a headline that does not count it
 - no 1Password prompt during the plugins step. If one appears, Task 3's premise is wrong: say so in the outcome section and reopen it.
 
