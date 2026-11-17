@@ -1,5 +1,5 @@
 """Checks the cleanup/status rules and change tracking. Run: python3 test_build_catalog.py"""
-import json, os, tempfile
+import json, os, re, tempfile
 from pathlib import Path
 
 # Set before the import: build_catalog reads it at module load (the path is never created)
@@ -94,6 +94,17 @@ assert b.lint([], {}, stack_cur("pydantic-ai@m", paths=["("]), pl) == ["curated 
 by = {"ai:x": it[0]}
 cur = {**stack_cur("pydantic-ai@m"), "group": [{"title": "G", "pick": ["ai:x"], "items": ["ai:x"]}]}
 assert b.lint([], by, cur, pl) == ["curated stack signal on a plugin that owns a pick: pydantic-ai@m (ai:x)"]
+
+# the line sysup parses: a sentence, with both of sysup's patterns still matching
+line = b.summary_line("/c", {"skill": 362, "command": 42, "agent": 202, "mcp": 28}, 67, 57570,
+                      {"review": 16, "watch": 10, "retire": 0}, "2026-11-16", 0, 0)
+assert line == ("wrote /c/CATALOG.md, CATALOG-lite.md, catalog.html: 362 skills, 42 commands, 202 agents, "
+                "28 MCP servers, 67 plugins, 57,570 always-on tokens, 16 to review, 10 to watch, 0 to retire, "
+                "since 2026-11-16: +0 -0"), line
+assert re.match(r"^wrote (.*)/CATALOG\.md,.*", line).group(1) == "/c"
+assert re.match(r"^wrote .*, since (.*): \+([0-9]+) -([0-9]+)$", line).groups() == ("2026-11-16", "0", "0")
+first = b.summary_line("/c", {"skill": 1, "command": 1, "agent": 1, "mcp": 1}, 1, 0, {"review": 0, "watch": 0, "retire": 0})
+assert first.endswith("0 to review, 0 to watch, 0 to retire"), first
 
 # an empty CLAUDE_CONFIG_DIR means unset, like the shell's ${VAR:-}, not the cwd
 import importlib

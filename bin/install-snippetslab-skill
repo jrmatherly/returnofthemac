@@ -30,7 +30,12 @@ if ! "$lab" skill show > "$tmp" || [ ! -s "$tmp" ]; then
   exit 1
 fi
 mkdir -p "$skill_dir" "$HOME/.claude/skills"
-mv "$tmp" "$skill_dir/SKILL.md"
+result="written to $skill_dir/SKILL.md ($(wc -c < "$tmp" | tr -d ' ') bytes)"
+if cmp -s "$tmp" "$skill_dir/SKILL.md"; then
+  result=unchanged
+else
+  mv "$tmp" "$skill_dir/SKILL.md"
+fi
 
 # `ln -sfn` onto an existing real directory nests the link inside it, so a
 # copy installed by hand (the app's own instructions write one there) would
@@ -40,4 +45,4 @@ if [ -e "$link" ] && [ ! -L "$link" ]; then
   exit 1
 fi
 ln -sfn ../../.agents/skills/snippetslab "$link"
-echo "SnippetsLab skill written to $skill_dir/SKILL.md ($(wc -c < "$skill_dir/SKILL.md" | tr -d ' ') bytes)"
+echo "SnippetsLab skill $result"

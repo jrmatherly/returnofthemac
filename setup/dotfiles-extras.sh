@@ -220,7 +220,7 @@ if [ -n "$ff_dev_profile_dir" ] && [ -d "$ff_dev_profile_dir" ]; then
     hard_link "$DOTFILES_DIR/firefox/$file" "$dst"
   done
 else
-  warn "No Firefox Developer Edition profile found — skipping Firefox styles"
+  skipped "Firefox styles (no Firefox Developer Edition profile)"
 fi
 
 # bat only sees custom themes (tilde/.config/bat/themes) after its cache is

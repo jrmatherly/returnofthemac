@@ -602,6 +602,14 @@ def render_html(plugins, items, cur, extra):
     return tpl.replace("/*DATA*/null", data.replace("</", "<\\/"))
 
 
+def summary_line(out, kinds, n_plugins, total_cost, flags, since=None, added=0, removed=0):
+    """The one line a build prints. bin/sysup reads the folder and the "since" tail from it."""
+    return (f"wrote {out}/CATALOG.md, CATALOG-lite.md, catalog.html: {kinds['skill']} skills, "
+            f"{kinds['command']} commands, {kinds['agent']} agents, {kinds['mcp']} MCP servers, {n_plugins} plugins, "
+            f"{total_cost:,} always-on tokens, {flags['review']} to review, {flags['watch']} to watch, "
+            f"{flags['retire']} to retire" + (f", since {since}: +{added} -{removed}" if since else ""))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", type=Path, default=HERE)
@@ -627,9 +635,7 @@ def main():
     probs = lint(items, by_name, cur, plugins)
     kinds = {k: sum(1 for i in items if i["kind"] == k) for k in KIND_LABEL}
     flags = {s: sum(p["status"] == s for p in plugins) for s in ("review", "watch", "retire")}
-    print(f"wrote {a.out}/CATALOG.md, CATALOG-lite.md, catalog.html — {kinds}, {len(plugins)} plugins, "
-          f"{extra['total_cost']:,} always-on tokens, plugin flags {flags}"
-          + (f", since {since}: +{len(new)} -{len(removed)}" if since else ""))
+    print(summary_line(a.out, kinds, len(plugins), extra["total_cost"], flags, since, len(new), len(removed)))
     for line in filter(None, (named("added", new), named("removed", removed))):
         print(line)
     for p in probs:
