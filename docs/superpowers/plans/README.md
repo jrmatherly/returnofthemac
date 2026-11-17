@@ -6,7 +6,7 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 | Plan | Spec | Tasks | State |
 | --- | --- | --- | --- |
-| None | | | |
+| [Quieter updates and a keg cleanup](2026-11-16-quieter-updates-and-keg-cleanup.md) | None of its own: the plan records the 2026-11-16 audit of one `rotm update` and one `sysup` run | 9 | Written 2026-11-16, not started. Tasks 1 to 3 and 6 to 8 are independent. Task 5 needs Task 4. Task 9 is the owner's proof |
 
 [Trusted skill sources and a watched hook pin](completed/2026-11-16-trusted-skill-sources-and-hook-pin.md) finished on 2026-11-16 and was promoted to `stable` at `2cbdee8`: `sysup` updates a skill from a trusted source by itself, any other GitHub source gets a review pull request, and Renovate watches the Hindsight hook pin.
 
