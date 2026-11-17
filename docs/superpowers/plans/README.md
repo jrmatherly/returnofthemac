@@ -6,7 +6,9 @@ Written 2026-11-14. This page lists the plans in this folder that are not finish
 
 | Plan | Spec | Tasks | State |
 | --- | --- | --- | --- |
-| [Trusted skill sources and a watched hook pin](2026-11-16-trusted-skill-sources-and-hook-pin.md) | None of its own. It changes decision 2 of the [2026-11-16 project audit](../specs/completed/2026-11-16-project-audit.md) | 6 | Tasks 1 to 5 built on 2026-11-16 and promoted to `stable` at `2cbdee8`. Open from Task 6 Step 2: the owner's `rotm update`, then two `sysup` runs, the second of which must update no skill |
+| None | | | |
+
+[Trusted skill sources and a watched hook pin](completed/2026-11-16-trusted-skill-sources-and-hook-pin.md) finished on 2026-11-16 and was promoted to `stable` at `2cbdee8`: `sysup` updates a skill from a trusted source by itself, any other GitHub source gets a review pull request, and Renovate watches the Hindsight hook pin.
 
 The [fixes from the 2026-11-16 audit](completed/2026-11-16-audit-fixes.md) finished on 2026-11-16, 23 tasks with an outcome table. The [48 hour release hold and the Claude Multipass module](completed/2026-11-16-release-hold-and-multipass-module.md) built decisions 1 and 4 the same day and was promoted to `stable` at `2fb0d53`. Every decision of the [spec](../specs/completed/2026-11-16-project-audit.md) is then answered and built, and it is filed in `completed/`.
 

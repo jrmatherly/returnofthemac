@@ -8,11 +8,11 @@
 
 **Tech Stack:** bash 3.2, jq, `gh api`, the `skills` CLI through `npx`, GitHub Actions, Renovate (Mend app).
 
-**Spec:** None of its own. This plan changes decision 2 of [`docs/superpowers/specs/completed/2026-11-16-project-audit.md`](../specs/completed/2026-11-16-project-audit.md) ("the reviewed folder hash stays the only check"), and the section below is the record of that change. Read it and the audit's "Owner's decisions" before starting.
+**Spec:** None of its own. This plan changes decision 2 of [`docs/superpowers/specs/completed/2026-11-16-project-audit.md`](../../specs/completed/2026-11-16-project-audit.md) ("the reviewed folder hash stays the only check"), and the section below is the record of that change. Read it and the audit's "Owner's decisions" before starting.
 
-## Outcome so far (2026-11-16)
+## Outcome (2026-11-16)
 
-Tasks 1 to 5 ran natively on `main`, each red then green. Task 6 is open from Step 2: it waits for the owner's `rotm update` and two `sysup` runs.
+All six tasks are done. Tasks 1 to 5 ran natively on `main`, each red then green, and the owner's own `rotm update` and two `sysup` runs were the proof of Task 6.
 
 | Task | Commit | Difference from the plan |
 | --- | --- | --- |
@@ -21,9 +21,13 @@ Tasks 1 to 5 ran natively on `main`, each red then green. Task 6 is open from St
 | 3 | `7a38d2c` | None |
 | 4 | `b7542ee` | The runner is `ubuntu-26.04`, the image `app-release.yml` already pins, not `ubuntu-24.04`. Step 7's run (43983853396) passed and opened nothing. Step 8: the owner said yes, and the setting now reads `"can_approve_pull_request_reviews":true` |
 | 4, added | `aa571b6` | A file name from the untrusted repository could write Markdown into the pull request body. Characters outside a plain path become `?` and each list has a count |
-| 5 | `667cde9` | None. Step 5, Renovate's own verdict, is not read yet |
+| 5 | `667cde9` | None. Step 5: Renovate's Dependency Dashboard lists `regex (1)` with `@vectorize-io/hindsight-coding-agents 0.8.7` under `bin/hindsight-memory`, and no config error issue is open |
 | Review | `2cbdee8` | An independent reviewer found that `save` took an untrusted row's reviewed value from the lock, so `sysup`'s `save` in a clone wrote an older value over a merged review that had not installed. `save` now keeps a six-field row's value and `--accept` records the value it installed, in its own row, so "then run `claude-config save`" is gone from the docs. A dry run no longer prints `skill updated`, and whitespace on a trusted source line fails `pnpm check` |
 | 6, Step 1 | none | The owner took a `fresh-install` run as the proof: run 43986835873 passed on the `clone` and the `installed` path on `2cbdee8`, with `check` green on the same commit. `stable` moved from `2fb0d53` to `2cbdee8` by a fast-forward push |
+| 6, Step 2 | none | The owner's first `sysup` after `rotm update` printed `↻ agent skills  2 skills updated: hindsight-docs, microsoft-foundry; 20 unchanged`. Each lock hash then equalled its upstream folder SHA, so the `skills` CLI moves the lock on a reinstall, which "Not verified" had left open |
+| 6, Step 3 | none | The owner's second `sysup` printed `✔ agent skills  22 unchanged` |
+
+Still not run for real, because every source is trusted: the workflow's pull request path, `check` on a reopened pull request, `bin/lib/skill-review` on Ubuntu beyond an empty `--list`, and an untrusted skill installing after a merged review. An automated review also noted that the pull request body compares file contents only, so a file-mode change is not listed and a truncated tree listing is not flagged. Look at both before the first untrusted source is added.
 
 Left as it is, on purpose: a review pull request that no longer applies (the change was taken with `--accept`, or upstream went back) stays open until someone closes it, and one untrusted source that cannot be read fails the whole workflow run before any branch moves.
 
