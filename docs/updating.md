@@ -33,6 +33,7 @@ sysup
 - updates the stable Rust toolchain (`rustup update`). rustup is the `brew:rustup` package, called by path because it keeps its proxies in `/opt/homebrew/opt/rustup/bin`. A notice follows when `cargo --version` fails in that shell, or when a mise rust toolchain that no config pins shadows it
 - upgrades the uv tools (Serena and Scrapling) under the same 48 hour release hold as their install, which also gives the hold to a tool installed before it existed, then re-runs `scrapling install` so its Chromium matches
 - prunes the uv cache (`uv cache prune`, waiting at most 10 s for the lock) and reports how many cached environments are waiting when open Claude Code sessions keep it busy
+- updates the Google Cloud CLI with its own updater (`gcloud components update --quiet`), because mise never upgrades that cask: it is an installer, not one app
 - reinstalls the Iosevka Code font if its upstream zip changed
 - updates Claude Code itself (`claude update`) and reports its version, before the steps below so they run on the new binary
 - reinstalls an agent skill from a trusted source (`agents/claude-skills-trusted.txt`) when it moved upstream and shows it as a change, and for any other source checks each tracked agent skill against its reviewed value in `agents/claude-skills.txt` (a GitHub folder's git SHA or a well-known site's digest) and installs what an agent lacks only for a skill that matches it (`claude-config restore skills --update`); a skill that moved upstream, or one it can't check that an agent lacks, is a notice and is not installed, so review the change, then run `claude-config restore skills --accept <name>`, which in a clone also records the new value; a skill it can't check is named on the ok line
@@ -44,7 +45,7 @@ sysup
 - asks Raycast to check for app and extension updates
 - updates Amp, if it's installed
 
-A step that belongs to a [module](modules.md) you switched off (`rotm settings set modules.<module> off`) prints `the <module> module is off` and does nothing: the font with `fonts`, Raycast with `apps`, the Claude Code steps with `claude`, and the REA, Hindsight, SnippetsLab, Scrapling and mise MCP steps with `agents`. The package steps need no switch, because mise no longer reads that module's file. The packages it installed stay, so the notice that counts packages no config declares names the modules that are off. A package you declared `{ state = "absent" }` in `config.local.toml` is not reported as missing.
+A step that belongs to a [module](modules.md) you switched off (`rotm settings set modules.<module> off`) prints `the <module> module is off` and does nothing: the font with `fonts`, Raycast with `apps`, the Google Cloud CLI with `cloud`, the Claude Code steps with `claude`, and the REA, Hindsight, SnippetsLab, Scrapling and mise MCP steps with `agents`. The package steps need no switch, because mise no longer reads that module's file. The packages it installed stay, so the notice that counts packages no config declares names the modules that are off. A package you declared `{ state = "absent" }` in `config.local.toml` is not reported as missing.
 
 It doesn't re-apply the dotfiles. When a pull brings new symlinks, tools or config, run setup again:
 

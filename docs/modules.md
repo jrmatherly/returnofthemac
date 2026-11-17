@@ -9,7 +9,7 @@ Everything outside the base is grouped into sixteen modules, and each one can be
 | `vscode` | Every VS Code extension. VS Code itself is in the base |  |
 | `claude` | Claude Code: its installer, its saved config and skills, the plugin catalog, `bun`, and the `catalog.md` Claude rule. A rule already linked stays when the module is switched off later |  |
 | `agents` | `rtk`, CodeRabbit, CodeGraph, REA, Serena, Scrapling, Hindsight memory, the MCP server registrations, and the `rtk.md` and `hindsight.md` Claude rules. A rule already linked stays when the module is switched off later | `claude` for the registrations. Hindsight's daemon needs `cargo`, from `rustup` in `devops`. REA also uses Ghidra (`security`) and Hopper (`apps`) when they are there |
-| `cloud` | The cloud, Azure and AWS CLIs, `azd`, Azure Functions Core Tools, Aspire and Serverless |  |
+| `cloud` | The Azure, AWS and Google Cloud CLIs, `azd`, Azure Functions Core Tools, Aspire and Serverless |  |
 | `kubernetes` | Kubernetes, container and infra CLIs, OrbStack and Docker, `flux2`, `talosctl`, `mirrord` and `lazydocker` |  |
 | `devops` | CI, linting and DevOps formulae, `rustup`, and the Sentry CLI |  |
 | `security` | Security and pentesting formulae, such as `nmap`, `hydra` and `ghidra` |  |

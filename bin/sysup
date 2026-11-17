@@ -591,6 +591,24 @@ if command -v uv > /dev/null; then
   fi
 fi
 
+# mise never upgrades the gcloud-cli cask (an installer, not one app), so the
+# SDK's own updater does. --quiet because it asks before it updates
+if ! module_off cloud gcloud && command -v gcloud > /dev/null; then
+  step gcloud
+  gcloud_before=$(gcloud version 2> /dev/null | sed -n 's/^Google Cloud SDK //p' || true)
+  if ! capture gcloud components update --quiet; then
+    status fail gcloud "run: gcloud components update"
+    show
+  else
+    gcloud_after=$(gcloud version 2> /dev/null | sed -n 's/^Google Cloud SDK //p' || true)
+    if [ "$gcloud_after" != "$gcloud_before" ]; then
+      status changed gcloud "$gcloud_before → $gcloud_after"
+    else
+      status ok gcloud "up to date"
+    fi
+  fi
+fi
+
 # Iosevka Code Nerd Font (VS Code's font; no cask, so not covered by the
 # packages step above) — reinstalls only when the upstream zip changed
 if ! module_off fonts Iosevka; then

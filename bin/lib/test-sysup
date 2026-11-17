@@ -137,6 +137,12 @@ uv_envs() {
   done
 }
 stub scrapling 'echo "Chromium already installed"'
+stub gcloud 'case $1 in
+  version) if [ -e "$STATE/gcloud-done" ]; then echo "Google Cloud SDK 594.0.0"; else echo "Google Cloud SDK 593.0.0"; fi ;;
+  components) echo "gcloud $*" >> "$STATE/gcloud.log"
+    [ ! -e "$STATE/gcloud-fails" ] || { echo "ERROR: (gcloud.components.update) no network"; exit 1; }
+    [ ! -e "$STATE/gcloud" ] || touch "$STATE/gcloud-done"; echo "All components are up to date." ;;
+esac'
 stub install-iosevka-code 'echo "Iosevka Code is up to date"'
 stub install-snippetslab-skill '[ ! -e "$STATE/snippetslab" ] || { mkdir -p "$HOME/.agents/skills/snippetslab"; date +%s%N > "$HOME/.agents/skills/snippetslab/SKILL.md"; }'
 stub claude 'case "$1 $2" in "plugin update" | "plugin marketplace") echo "${GIT_TERMINAL_PROMPT:-}|${GIT_CONFIG_COUNT:-}|${GIT_CONFIG_KEY_0:-}|${GIT_CONFIG_VALUE_0:-}" >> "$STATE/plugin-git.log" ;; esac
@@ -226,6 +232,8 @@ check_true "up to date: no brew command named" lacks '(^|[^[:alpha:]])brew([^[:a
 no_token() { [ -s "$STATE/mise-env.log" ] && ! grep -vqx 'MISE_GITHUB_TOKEN=' "$STATE/mise-env.log"; }
 check_true "up to date: no package command is handed a token" no_token
 check_true "up to date: an installed Scrapling browser gets a line" has '^✔ Scrapling +browser up to date$'
+check_true "up to date: gcloud's own updater ran without a prompt" grep -qx 'gcloud components update --quiet' "$STATE/gcloud.log"
+check_true "up to date: gcloud gets a line" has '^✔ gcloud +up to date$'
 check_true "up to date: a connected mise MCP server gets a line" has '^✔ mise MCP +connected$'
 check_true "up to date: config left dirty before the run is unchanged" has '^✔ Claude config +unchanged$'
 retire_then_save() { [ "$(grep -E '^(retire|save)' "$STATE/claude-config.log" | tr '\n' ,)" = 'retire,save,' ]; }
@@ -269,7 +277,7 @@ check_true "under HOME: the log path is the ~/ form" has '^Logging to ~/dotfiles
 rm -rf "$DOTFILES/logs"
 mkdir -p "$STATE/installs/node/24.0.0" "$STATE/installs/aspire/13.6.0"
 head -c 2048 /dev/zero > "$STATE/installs/node/24.0.0/bin"
-touch "$STATE/settings" "$STATE/skills" "$STATE/hindsight-change" "$STATE/snippetslab" "$STATE/prune" "$STATE/pull" "$STATE/pkg" "$STATE/mise-newer" "$STATE/mise" "$STATE/uv-fails" "$STATE/plugin" "$STATE/config" "$STATE/claude-fails" "$STATE/hindsight-newer" "$STATE/hindsight-warns" "$STATE/rea" "$STATE/catalog-delta" "$STATE/cache-stale"
+touch "$STATE/gcloud" "$STATE/settings" "$STATE/skills" "$STATE/hindsight-change" "$STATE/snippetslab" "$STATE/prune" "$STATE/pull" "$STATE/pkg" "$STATE/mise-newer" "$STATE/mise" "$STATE/uv-fails" "$STATE/plugin" "$STATE/config" "$STATE/claude-fails" "$STATE/hindsight-newer" "$STATE/hindsight-warns" "$STATE/rea" "$STATE/catalog-delta" "$STATE/cache-stale"
 uv_envs
 mkdir -p "$CLAUDE_CONFIG_DIR/skills"
 ln -s /nonexistent "$CLAUDE_CONFIG_DIR/skills/reverse-engineer-anything"
@@ -297,6 +305,7 @@ check_true "changes: a formula's versions in a row" has '^    gh +2\.103\.1 → 
 check_true "changes: a cask's versions in a row" has '^    codex +0\.164\.0 → 0\.165\.0$'
 check_true "changes: summary keeps the short packages line" has '^  ↻ packages +2 packages upgraded$'
 check_true "changes: mise upgraded itself" has '^↻ mise self-update +2026\.11\.8 → 2026\.11\.9$'
+check_true "changes: gcloud names both versions" has '^↻ gcloud +593\.0\.0 → 594\.0\.0$'
 check_true "changes: mise line counts" has '^↻ mise +4 versions upgraded$'
 check_true "changes: one tool in two pinned versions keeps its short name" has '^    tsc     5\.8\.0 → 5\.8\.1$'
 check_true "changes: mise names each old → new pair, one row each" has '^    node    24\.1\.0 → 24\.1\.1$'
@@ -332,8 +341,10 @@ check_true "changes: log keeps the status lines and the table" grep -q -e '^↻ 
 # A warning alone (no newer release) must still replace the ok line
 rm -rf "$DOTFILES/logs" "$STATE/hindsight-newer" "$STATE/skills" "$STATE/hindsight-change" "$STATE/snippetslab" "$STATE/catalog-delta" "$STATE/pkg" "$STATE/pkg-upgraded" "$STATE/mise-newer" "$STATE/self-updated" "$STATE/cache-stale"
 uv_envs
-touch "$STATE/pkg-broken" "$STATE/cache-busy"
+touch "$STATE/pkg-broken" "$STATE/cache-busy" "$STATE/gcloud-fails"
 run
+check_true "a failed gcloud update names the command" has '^✖ gcloud +run: gcloud components update$'
+rm -f "$STATE/gcloud-fails"
 check_true "cache: busy is ok and carries the count" has '^✔ uv cache +in use, not pruned \(25 cached environments\)$'
 check_true "warned: installer warning is the step's only line" lacks '^✔ Hindsight memory'
 check_true "warned: installer warning still a notice" has '^● Hindsight memory +installer: '

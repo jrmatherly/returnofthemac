@@ -13,6 +13,10 @@
 # Aspire and VS tooling expect. Do NOT also install the `dotnet` formula: both
 # claim /opt/homebrew/bin/dotnet (Homebrew/homebrew-core#275368).
 "brew-cask:dotnet-sdk" = "latest" # .NET SDK
+# An installer, not one app, so mise never upgrades it ("requires a single owned
+# app"): `sysup` runs the SDK's own `gcloud components update` instead. The cask
+# installs with usage reporting off.
+"brew-cask:gcloud-cli" = "latest" # Google Cloud CLI (`gcloud`, `bq`, `gsutil`)
 
 [tools]
 # A global npm CLI installed by mise (not `npm install -g`), so it survives
