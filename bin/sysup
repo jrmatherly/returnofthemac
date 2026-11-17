@@ -200,9 +200,11 @@ plural() {
 
 # https_git <cmd…>: the command with git told to fetch github.com over HTTPS.
 # The marketplace clones have git@github.com: remotes, and an SSH fetch through
-# the 1Password agent asks for approval with no line to announce it
+# the 1Password agent asks for approval with no line to announce it. No
+# terminal prompt either: a repo HTTPS cannot read fails its step instead of
+# asking for a username under the progress line
 https_git() {
-  GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=url.https://github.com/.insteadOf GIT_CONFIG_VALUE_0=git@github.com: "$@"
+  GIT_TERMINAL_PROMPT=0 GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=url.https://github.com/.insteadOf GIT_CONFIG_VALUE_0=git@github.com: "$@"
 }
 
 # module_off <module> <step>…: true when that module is switched off, after
@@ -343,13 +345,15 @@ if [ -d "${HOMEBREW_PREFIX:-/opt/homebrew}/Cellar" ]; then
   step "packages cleanup"
   if capture "$keg_cleanup" --apply; then
     read -r kegs repointed removed <<< "$(tail -n 1 <<< "$out" | sed -nE 's/^([0-9]+) kegs, ([0-9]+) links repointed, ([0-9]+) links removed$/\1 \2 \3/p')"
-    if [ $((${kegs:-0} + ${repointed:-0} + ${removed:-0})) -eq 0 ]; then
+    if [ "$(tail -n 1 <<< "$out")" = "nothing superseded" ]; then
       status ok "packages cleanup" "nothing superseded"
-    else
+    elif [ -n "$kegs" ]; then
       status changed "packages cleanup" "$(plural "$kegs" "old version") removed, $(plural $((repointed + removed)) link) fixed"
+    else
+      status notice "packages cleanup" "unrecognized output; see the log"
     fi
   else
-    status fail "packages cleanup" "run: brew-keg-cleanup"
+    status fail "packages cleanup" "run: brew-keg-cleanup --apply"
     show
   fi
 fi

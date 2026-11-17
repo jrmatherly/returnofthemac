@@ -509,6 +509,7 @@ Tasks 1 to 8 are built and pushed (2026-11-16, `3a124a9` to `941c99c`). Differen
 - Task 5: the changed line counts links with a singular ("1 link fixed").
 - Task 7: the CodeGraph stubs answer only `install`, because `misc.sh` also calls `codegraph telemetry off`. Two cases were added: a restore that prints something, and a failed CodeGraph install.
 - Task 8: `setup/tests/dotfiles-extras.sh` asserted the Firefox warning and now asserts the skipped line.
+- Review: an independent reviewer reproduced four defects in `brew-keg-cleanup` on fake prefixes, none of which this Mac's prefix triggers. A `HOMEBREW_PREFIX` ending in `/` unlinked links it should have repointed. An `opt` link into another rack's keg of the same version counted as this rack's current one. A link name holding a newline and the path of a real link got that link removed. An empty current keg still replaced the old one. Cases u to x pin them. In `sysup`, the plugin commands also get `GIT_TERMINAL_PROMPT=0`, a last line the step cannot read is a notice, and the failure hint is `brew-keg-cleanup --apply`.
 
 `sysup` and `rotm update` are never run by an agent on this Mac. This task is the owner's.
 

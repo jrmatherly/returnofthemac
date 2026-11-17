@@ -61,7 +61,11 @@ foo() {
   keg foo 2.0 lib/a bin/tool
   link opt/foo ../Cellar/foo/2.0
 }
-run() { out=$("$script" "$@" 2>&1); }
+# rc is kept, so a case that exits non-zero fails its own check and not the whole run
+run() {
+  rc=0
+  out=$("$script" "$@" 2>&1) || rc=$?
+}
 has() { grep -qE -- "$1" <<< "$out"; }
 lacks() { ! has "$1"; }
 target() { [ "$(readlink "$P/$1")" = "$2" ]; }
@@ -161,8 +165,7 @@ check "m: a link with a space is repointed" target "lib/a b" ../Cellar/foo/2.0/l
 check "m: … or unlinked" [ ! -L "$P/lib/c d" ]
 
 foo
-rc=0
-run --bogus || rc=$?
+run --bogus
 check "o: an unknown argument exits 2" [ "$rc" = 2 ]
 check "o: … and changes nothing" [ -d "$P/Cellar/foo/1.0" ]
 
@@ -202,5 +205,39 @@ touch "$tmp/elsewhere/Cellar/foo/1.0/x"
 link bin/x "$tmp/elsewhere/Cellar/foo/1.0/x"
 run --apply
 check "t: a link into another prefix's Cellar is left alone" target bin/x "$tmp/elsewhere/Cellar/foo/1.0/x"
+
+foo lib/a lib/b
+link lib/a ../Cellar/foo/1.0/lib/a
+link lib/b ../Cellar/foo/1.0/lib/b
+HOMEBREW_PREFIX="$P/" run --apply
+check "u: a prefix with a trailing slash still repoints" target lib/a ../Cellar/foo/2.0/lib/a
+check "u: … and exits 0" [ "$rc" = 0 ]
+
+foo lib/a
+keg bar 2.0 lib/a
+rm "$P/opt/foo"
+link opt/foo ../Cellar/bar/2.0
+link lib/a ../Cellar/foo/1.0/lib/a
+run --apply
+check "v: opt naming another rack's keg keeps both kegs" [ -d "$P/Cellar/foo/1.0" ] && check "v: …" [ -d "$P/Cellar/foo/2.0" ]
+check "v: … and the link" target lib/a ../Cellar/foo/1.0/lib/a
+
+foo bin/tool
+keg bar 1.0 bin/keep
+link opt/bar ../Cellar/bar/1.0
+link bin/keep ../Cellar/bar/1.0/bin/keep
+link "share/x"$'\n'"$P/bin/keep" ../../Cellar/foo/1.0/bin/tool
+run --apply
+check "w: a newline name that spells a real link leaves that link alone" target bin/keep ../Cellar/bar/1.0/bin/keep
+
+fresh
+keg foo 1.0 lib/a
+old foo 1.0
+keg foo 2.0
+link opt/foo ../Cellar/foo/2.0
+link lib/a ../Cellar/foo/1.0/lib/a
+run --apply
+check "x: an empty current keg replaces nothing" [ -d "$P/Cellar/foo/1.0" ]
+check "x: … and the link stays" target lib/a ../Cellar/foo/1.0/lib/a
 
 echo "keg-cleanup: all checks passed"

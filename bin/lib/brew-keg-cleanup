@@ -32,6 +32,8 @@ case ${1:-} in
 esac
 
 P=${HOMEBREW_PREFIX:-/opt/homebrew}
+# find prints $P//… for a trailing slash, and no link would then pass the prefix check below
+P=${P%/}
 [ -d "$P/Cellar" ] || {
   echo "nothing superseded"
   exit 0
@@ -48,7 +50,10 @@ superseded=$(
     cur=$(basename "$cur")
     # The leading ( is for bash 3.2, which ends a $(…) at a case pattern's bare )
     case $cur in ('' | . | ..) continue ;; esac
-    [ -d "$rack/$cur" ] || continue
+    # -ef: opt may name a keg of the same version in another rack (a renamed formula)
+    [ -d "$rack/$cur" ] && [ "$rack/$cur" -ef "$P/opt/$n" ] || continue
+    # An empty current keg is an interrupted pour, and the old one is all there is
+    [ -n "$(ls -A "$rack/$cur")" ] || continue
     # A keg-only formula has no linked record; one that has it must agree with opt
     linked=$(readlink "$P/var/homebrew/linked/$n" 2> /dev/null) || linked=$cur
     [ "$(basename "$linked")" = "$cur" ] || continue
@@ -76,6 +81,8 @@ if [ -n "$superseded" ]; then
     while IFS=$'\t' read -r l t; do
       # A name with a tab or newline splits wrongly: act only on a real link under the prefix
       case $l in "$P"/*) [ -L "$l" ] || continue ;; *) continue ;; esac
+      # … and only when it is the link this line was read from
+      [ "$(readlink "$l")" = "$t" ] || continue
       # Whole path components, so 1.2 never matches 1.2.1 or node node@26; an
       # absolute target must be in this prefix's Cellar
       case $t in

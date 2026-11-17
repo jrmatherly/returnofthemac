@@ -139,7 +139,7 @@ uv_envs() {
 stub scrapling 'echo "Chromium already installed"'
 stub install-iosevka-code 'echo "Iosevka Code is up to date"'
 stub install-snippetslab-skill '[ ! -e "$STATE/snippetslab" ] || { mkdir -p "$HOME/.agents/skills/snippetslab"; date +%s%N > "$HOME/.agents/skills/snippetslab/SKILL.md"; }'
-stub claude 'case "$1 $2" in "plugin update" | "plugin marketplace") echo "${GIT_CONFIG_COUNT:-}|${GIT_CONFIG_KEY_0:-}|${GIT_CONFIG_VALUE_0:-}" >> "$STATE/plugin-git.log" ;; esac
+stub claude 'case "$1 $2" in "plugin update" | "plugin marketplace") echo "${GIT_TERMINAL_PROMPT:-}|${GIT_CONFIG_COUNT:-}|${GIT_CONFIG_KEY_0:-}|${GIT_CONFIG_VALUE_0:-}" >> "$STATE/plugin-git.log" ;; esac
 case "$1 $2" in
   "plugin update") if [ -e "$STATE/plugin-fails" ] && [ "$4" = beta@m ]; then
       echo "fatal: unable to access https://github.com/o/r.git/: Recv failure: Operation timed out"; exit 1
@@ -243,7 +243,7 @@ check_true "cache: the wait is bounded" [ "$(cat "$STATE/lock-timeout")" = 10 ]
 check_true "up to date: nothing for mise prune" has '^✔ mise prune +nothing unused$'
 check_true "up to date: no changed, notice or failed line" lacks '^ *[↻●✖]'
 check_true "no Homebrew prefix: the cleanup step does not appear" lacks 'packages cleanup'
-check_true "plugins: every fetch is told to use HTTPS for github.com" [ "$(sort -u "$STATE/plugin-git.log")" = '1|url.https://github.com/.insteadOf|git@github.com:' ]
+check_true "plugins: every fetch is told to use HTTPS for github.com" [ "$(sort -u "$STATE/plugin-git.log")" = '0|1|url.https://github.com/.insteadOf|git@github.com:' ]
 rm -rf "$DOTFILES/logs"
 printf '{"plugins":{}}' > "$CLAUDE_CONFIG_DIR/plugins/installed_plugins.json"
 run
@@ -569,7 +569,7 @@ run
 # Before the check: a failed check exits, and the trap cannot delete a read-only rack
 chmod 755 "$HOMEBREW_PREFIX/Cellar/foo"
 rm -rf "$HOMEBREW_PREFIX"
-check_true "kegs: a failure names the command" has '^✖ packages cleanup +run: brew-keg-cleanup$'
+check_true "kegs: a failure names the command" has '^✖ packages cleanup +run: brew-keg-cleanup --apply$'
 
 rm -rf "$DOTFILES/logs"
 echo cloud > "$HOME/.config/mise/modules-off.local"
