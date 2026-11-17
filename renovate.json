@@ -7,6 +7,16 @@
   "mise": {
     "managerFilePatterns": ["tilde/.config/mise/conf.d/60-rotm-*.toml"]
   },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "The Hindsight hook package pin. A PR, never an automatic merge: 0.8.7 renamed three tools and a rule file changed with it",
+      "managerFilePatterns": ["bin/hindsight-memory"],
+      "matchStrings": ["CODING_AGENTS_VERSION=(?<currentValue>\\S+)"],
+      "depNameTemplate": "@vectorize-io/hindsight-coding-agents",
+      "datasourceTemplate": "npm"
+    }
+  ],
   "packageRules": [
     {
       "matchPackageNames": ["@ampcode/plugin"],
