@@ -57,6 +57,9 @@ Left out on purpose:
 - Never run on this Mac: `sysup`, `./setup.sh`, `rotm update`, `claude-config restore` or `save` outside a test's fake `HOME`. The owner runs them (Task 9).
 - A self-check that fakes `HOME` or `MISE_DATA_DIR` takes mise's shims off `PATH` first.
 - A setup behavior change updates `setup/README.md` in the same commit. A `sysup` change updates `docs/updating.md` and, where a constraint changes, `.claude/rules/sysup.md`.
+- `bin/lib/test-conventions` caps the instruction files: a file under `.claude/rules/` holds at most 6,000 bytes and no line over 1,000. `.claude/rules/sysup.md` is 4,749 bytes, and its Claude Code bullet (line 18) is 754, so Task 3's sentence goes in a bullet of its own. `CLAUDE.md` is 11,951 of 12,000 bytes: add nothing to it.
+- The menu bar app runs `rotm update -y` and reads no line of the output (`app/Sources/RotmCore/ConsoleSession.swift:16`), so no task touches `app/`. `app/Tests/RotmTestSupport/Fixtures/update-console.raw` is a recorded sample for the color renderer and stays as it is.
+- `sysup` calls a `bin/` script by name and a `bin/lib/` helper by path, resolved before its `cd "$HOME"` (`bin/sysup:21-23`).
 - Commit subjects are short, imperative, sentence case, no prefix. On `main`, commit and push once `pnpm check` passes.
 - Comments say only a non-obvious why. Prose in docs and messages uses no long dash.
 
@@ -155,7 +158,7 @@ Change `"installed copy: not saved into it"` to `"installed copy, nothing to sav
 
 - [ ] **Step 7: Docs**
 
-`setup/README.md:73` says `sysup` "reports `installed copy: run rotm update`". Replace with: it checks the copy against its branch with `rotm update --check` and reports how many updates are waiting. Same in `docs/updating.md`.
+`setup/README.md:73` becomes: "`sysup` does not pull. It asks `rotm update --check` whether the copy is behind its branch and reports how many updates are waiting. It does not run `claude-config save`, which writes `agents/` inside the copy." Say the same under "On an installed copy" in `docs/updating.md`.
 
 - [ ] **Step 8: `pnpm check`, then commit: "Have sysup check whether the installed copy is behind"**
 
@@ -187,9 +190,11 @@ check_true "plugins: every fetch is told to use HTTPS for github.com" [ "$(sort 
 
 - [ ] **Step 5: Run `bash bin/lib/test-sysup`. Expected: PASS.**
 
-- [ ] **Step 6: Add to the Claude Code bullet of `.claude/rules/sysup.md`**
+- [ ] **Step 6: Add a bullet of its own to `.claude/rules/sysup.md`, after the Claude Code one**
 
-"The marketplace clones have `git@github.com:` remotes, and a fetch through the 1Password SSH agent asks for approval with no line to announce it, so both plugin commands run with a `url.https://github.com/.insteadOf` rewrite in their environment."
+"**Plugin fetches**: the marketplace clones have `git@github.com:` remotes, and a fetch through the 1Password SSH agent asks for approval with no line to announce it, so both plugin commands run with a `url.https://github.com/.insteadOf` rewrite in their environment."
+
+Then `bash bin/lib/test-conventions`. Expected: PASS (the size caps).
 
 - [ ] **Step 7: `pnpm check`, then commit: "Fetch plugin marketplaces over HTTPS in sysup"**
 
@@ -278,41 +283,52 @@ Expected: one `unlink  share/man/man1/README.md` line and `0 kegs, 0 links repoi
 
 **Interfaces:**
 
-- Consumes: `brew-keg-cleanup --apply` and its last line from Task 4.
+- Consumes: `brew-keg-cleanup --apply` and its last line from Task 4. `sysup` finds it by path, as it finds `rotm-modules`, so the self-check runs the real helper against a fake prefix. No stub.
 
-- [ ] **Step 1: Add a stub and three cases to `bin/lib/test-sysup`**
+- [ ] **Step 1: Add the cases to `bin/lib/test-sysup`**
 
-```bash
-stub brew-keg-cleanup 'echo "$*" >> "$STATE/keg-cleanup.log"
-[ ! -e "$STATE/kegs-fail" ] || { echo "rm: Cellar/foo/1.0: Permission denied"; exit 1; }
-if [ -e "$STATE/kegs" ]; then printf "remove  Cellar/foo/1.0\n2 kegs, 1 links repointed, 3 links removed\n"; else echo "nothing superseded"; fi'
-```
-
-The default runs keep `HOMEBREW_PREFIX="$tmp/nobrew"`, so add first:
+The default runs keep `HOMEBREW_PREFIX="$tmp/nobrew"`, which does not exist, so add first:
 
 ```bash
 check_true "no Homebrew prefix: the cleanup step does not appear" lacks 'packages cleanup'
 ```
 
-Then a block that creates `$HOMEBREW_PREFIX/Cellar` and runs three times:
+Then a block that builds a prefix under `$HOMEBREW_PREFIX` and runs `sysup` three times, with `rm -rf "$DOTFILES/logs"` before each run:
 
 ```bash
+# an empty Cellar
+mkdir -p "$HOMEBREW_PREFIX/Cellar" "$HOMEBREW_PREFIX/opt" "$HOMEBREW_PREFIX/lib"
+run
 check_true "kegs: nothing superseded is an ok line" has '^✔ packages cleanup +nothing superseded$'
-check_true "kegs: the helper is asked to apply" grep -qx -- '--apply' "$STATE/keg-cleanup.log"
 check_true "kegs: it runs before the upgrade" grep -q 'packages cleanup.*packages ' <<< "$(grep -oE '^== packages( cleanup)? ==' "$DOTFILES"/logs/sysup-*.log | tr '\n' ' ')"
-# with $STATE/kegs
-check_true "kegs: a removal is a changed line with both counts" has '^↻ packages cleanup +2 old versions removed, 4 links fixed$'
-# with $STATE/kegs-fail
+# foo 1.0 replaced by 2.0, one link to repoint and one to drop
+mkdir -p "$HOMEBREW_PREFIX/Cellar/foo/1.0/lib" "$HOMEBREW_PREFIX/Cellar/foo/2.0/lib"
+touch "$HOMEBREW_PREFIX/Cellar/foo/1.0/lib/a" "$HOMEBREW_PREFIX/Cellar/foo/1.0/lib/b" "$HOMEBREW_PREFIX/Cellar/foo/2.0/lib/a"
+touch -t 202601010000 "$HOMEBREW_PREFIX/Cellar/foo/1.0"
+ln -s ../Cellar/foo/2.0 "$HOMEBREW_PREFIX/opt/foo"
+ln -s ../Cellar/foo/1.0/lib/a "$HOMEBREW_PREFIX/lib/a"
+ln -s ../Cellar/foo/1.0/lib/b "$HOMEBREW_PREFIX/lib/b"
+run
+check_true "kegs: a removal is a changed line with both counts" has '^↻ packages cleanup +1 old version removed, 2 links fixed$'
+check_true "kegs: the old version is gone and the current one stays" [ ! -e "$HOMEBREW_PREFIX/Cellar/foo/1.0" ] && check_true "…" [ -d "$HOMEBREW_PREFIX/Cellar/foo/2.0" ]
+# a keg that cannot be removed
+mkdir -p "$HOMEBREW_PREFIX/Cellar/foo/1.5"
+touch -t 202601010000 "$HOMEBREW_PREFIX/Cellar/foo/1.5"
+chmod 555 "$HOMEBREW_PREFIX/Cellar/foo"
+run
+# before the check: a failed check exits, and the trap cannot delete a read-only rack
+chmod 755 "$HOMEBREW_PREFIX/Cellar/foo"
+rm -rf "$HOMEBREW_PREFIX"
 check_true "kegs: a failure names the command" has '^✖ packages cleanup +run: brew-keg-cleanup$'
 ```
 
-Remove `$HOMEBREW_PREFIX/Cellar` at the end of the block, because the rustup and mise stubs rely on the prefix pointing nowhere.
+`sysup` uses the rustup stub only while `$HOMEBREW_PREFIX/opt/rustup/bin/rustup` is missing, which this block keeps true. If another step's assertion changes once the prefix exists, that step reads the prefix too: fix the fixture, not the step.
 
 - [ ] **Step 2: Run `bash bin/lib/test-sysup`. Expected: FAIL naming "nothing superseded is an ok line".**
 
 - [ ] **Step 3: Add the step**
 
-Only when `${HOMEBREW_PREFIX:-/opt/homebrew}/Cellar` is a directory: `step "packages cleanup"`, then `capture brew-keg-cleanup --apply`. Parse the last line of `$out` with one `sed -nE 's/^([0-9]+) kegs, ([0-9]+) links repointed, ([0-9]+) links removed$/\1 \2 \3/p'`. No match, or three zeros, is `status ok "packages cleanup" "nothing superseded"`. Otherwise `status changed "packages cleanup" "$(plural "$kegs" "old version") removed, $((repointed + removed)) links fixed"`. A non-zero exit is `status fail "packages cleanup" "run: brew-keg-cleanup"` followed by `show`.
+Beside the `modules=` line at `bin/sysup:23`, resolve `keg_cleanup="$(cd "$(dirname "$0")/lib" && pwd -P)/brew-keg-cleanup"`. Only when `${HOMEBREW_PREFIX:-/opt/homebrew}/Cellar` is a directory: `step "packages cleanup"`, then `capture "$keg_cleanup" --apply`. Parse the last line of `$out` with one `sed -nE 's/^([0-9]+) kegs, ([0-9]+) links repointed, ([0-9]+) links removed$/\1 \2 \3/p'`. No match, or three zeros, is `status ok "packages cleanup" "nothing superseded"`. Otherwise `status changed "packages cleanup" "$(plural "$kegs" "old version") removed, $((repointed + removed)) links fixed"`. A non-zero exit is `status fail "packages cleanup" "run: brew-keg-cleanup"` followed by `show`.
 
 - [ ] **Step 4: Run `bash bin/lib/test-sysup`. Expected: PASS.**
 
@@ -351,17 +367,19 @@ check "install does not" ": > '$tmp/log'; rotm install && grep -qx 'env ROTM_UPD
 ```bash
 ROTM_UPDATE=1 run
 check_true "update: no first-install warning" lacks 'WARNING'
-check_true "update: … and no wait" lacks 'Press Enter'
-check_true "update: one line names the copy" has "^Updating $fix\$"
+check_true "update: … and no wait or its stand-in" lacks 'Press Enter|Non-interactive shell'
+check_true "update: one line names the copy" has '^Updating /' 
 run
 check_true "install: the warning still shows" has 'WARNING'
 ```
+
+The self-check has no terminal, so `setup.sh` prints "Non-interactive shell — continuing without confirmation." where a terminal would get "Press Enter". The second check covers both.
 
 - [ ] **Step 3: Run both self-checks. Expected: FAIL naming the first new check in each.**
 
 - [ ] **Step 4: Implement**
 
-`bin/rotm`: `export ROTM_UPDATE=1` on the line before `exec "$DOTFILES/setup.sh" "$@"` in `update`. `setup.sh`: when `ROTM_UPDATE` is set, print `Updating $DOTFILES_DIR` and skip the four warning lines and the Enter wait. Nothing else in `setup.sh` reads the variable.
+`bin/rotm`: `export ROTM_UPDATE=1` on the line before `exec "$DOTFILES/setup.sh" "$@"` in `update`. `setup.sh`: when `ROTM_UPDATE` is set, print `Updating $DOTFILES_DIR` and skip the four warning lines, the Enter wait and its non-interactive stand-in. Nothing else in `setup.sh` reads the variable.
 
 - [ ] **Step 5: Run both self-checks. Expected: PASS.**
 
@@ -387,6 +405,8 @@ check_true "restore with nothing to do says so" has '^  nothing to restore$'
 check_true "PowerShell: the heading does not claim an install" has 'Checking PowerShell' && check_true "…" lacks 'Installing PowerShell'
 ```
 
+The harness facts these rest on (`bin/lib/test-bootstrap:715-750`): `misc` runs with `DOTFILES_YES=1`, no terminal and `PATH="$tmp/mbin:/usr/bin:/bin"`; the `claude-config` stub prints nothing; `fresh` stubs no `codegraph`, so the CodeGraph step runs only in a case that adds one.
+
 And three cases with their own stub output (`mstub` writes a stub, as at line 807):
 
 ```bash
@@ -406,14 +426,15 @@ The existing rtk checks at lines 807-815 (`Hook installed` kept, `rtk init faile
 For the font menu, the `misc` cases run without a terminal, so `asks` is false in all of them. Add a static check in the style of line 233:
 
 ```bash
-check_true "the font menu is only for a Mac with no saved preset" eval 'grep -q "asks && \[ ! -f \"\${VSCODE_SETTINGS_ENV:-\$HOME/.config/dotfiles/vscode.env}\" \]" "$repo/setup/misc.sh"'
+want='if asks && [ ! -f "${VSCODE_SETTINGS_ENV:-$HOME/.config/dotfiles/vscode.env}" ]; then'
+check_true "the font menu is only for a Mac with no saved preset" grep -qF -- "$want" "$repo/setup/misc.sh"
 ```
 
 - [ ] **Step 2: Run `bash bin/lib/test-bootstrap`. Expected: FAIL naming "permissions: one line".**
 
 - [ ] **Step 3: Implement, one edit per site**
 
-- Permissions: keep the `find … -exec chmod +x {} \;`, add `-print`, count the lines, print `<n> scripts executable` through `indent`. Drop the per-file `printf` and the `Done!` line.
+- Permissions: keep the `find … -exec chmod +x {} \;`, add `-print`, count the lines (`wc -l | tr -d ' '`, since macOS pads the count), print `<n> scripts executable` through `indent`. Drop the per-file `printf` and the `Done!` line.
 - Font menu: the condition becomes `asks && [ ! -f "${VSCODE_SETTINGS_ENV:-$HOME/.config/dotfiles/vscode.env}" ]`. That is the file `bin/vscode-settings:47` saves a choice to, and `--choose` with Enter writes it, so the menu shows once.
 - CodeGraph: capture the installer's output. When it has at least one `Claude Code:` line and every such line says `Unchanged`, print `CodeGraph already connected`. Otherwise print the output as now. The failure warning stays on a non-zero exit.
 - rtk: capture as now, with the `No RTK.md` filter. When the output contains `hook already present`, print `rtk hook already present`. Otherwise print it as now.
@@ -435,39 +456,37 @@ check_true "the font menu is only for a Mac with no saved preset" eval 'grep -q 
 - Modify: `bin/install-snippetslab-skill:33-43`
 - Modify: `agents/catalog/build_catalog.py:628-632`, `agents/catalog/test_build_catalog.py`
 - Modify: `setup/dotfiles-extras.sh:223`
-- Test: `agents/catalog/test_build_catalog.py`, `bin/lib/test-sysup:174-175` (the `claude-catalog` stub's line)
+- Test: `agents/catalog/test_build_catalog.py`
 
 **Interfaces:**
 
 - Produces: `summary_line(out, kinds, n_plugins, total_cost, flags, since=None, added=0, removed=0) -> str` in `build_catalog.py`. `kinds` maps `skill`, `command`, `agent`, `mcp` to counts, and `flags` maps `review`, `watch`, `retire` to counts.
 - `bin/sysup:786-787` reads the line with `^wrote (.*)/CATALOG\.md,.*` and `^wrote .*, since (.*): \+([0-9]+) -([0-9]+)$`. Both must still match.
 
-- [ ] **Step 1: Add to `agents/catalog/test_build_catalog.py`**
+- [ ] **Step 1: Add to `agents/catalog/test_build_catalog.py`, above the `importlib.reload` block near the end**
+
+The file is a script of top-level asserts that imports the module as `b` and ends with `print("ok")`. It has no test functions, so add plain asserts, and `import re` at the top:
 
 ```python
-def test_summary_line_reads_as_a_sentence():
-    line = summary_line("/c", {"skill": 362, "command": 42, "agent": 202, "mcp": 28}, 67, 57570,
-                        {"review": 16, "watch": 10, "retire": 0}, "2026-11-16", 0, 0)
-    assert line == ("wrote /c/CATALOG.md, CATALOG-lite.md, catalog.html: 362 skills, 42 commands, 202 agents, "
-                    "28 MCP servers, 67 plugins, 57,570 always-on tokens, 16 to review, 10 to watch, 0 to retire, "
-                    "since 2026-11-16: +0 -0")
-    assert re.match(r"^wrote (.*)/CATALOG\.md,.*", line).group(1) == "/c"
-    assert re.match(r"^wrote .*, since (.*): \+([0-9]+) -([0-9]+)$", line).groups() == ("2026-11-16", "0", "0")
-
-
-def test_summary_line_without_an_earlier_catalog():
-    line = summary_line("/c", {"skill": 1, "command": 1, "agent": 1, "mcp": 1}, 1, 0, {"review": 0, "watch": 0, "retire": 0})
-    assert line.endswith("0 to review, 0 to watch, 0 to retire")
-    assert "1 skills" in line
+# the line sysup parses: a sentence, with both of sysup's patterns still matching
+line = b.summary_line("/c", {"skill": 362, "command": 42, "agent": 202, "mcp": 28}, 67, 57570,
+                      {"review": 16, "watch": 10, "retire": 0}, "2026-11-16", 0, 0)
+assert line == ("wrote /c/CATALOG.md, CATALOG-lite.md, catalog.html: 362 skills, 42 commands, 202 agents, "
+                "28 MCP servers, 67 plugins, 57,570 always-on tokens, 16 to review, 10 to watch, 0 to retire, "
+                "since 2026-11-16: +0 -0"), line
+assert re.match(r"^wrote (.*)/CATALOG\.md,.*", line).group(1) == "/c"
+assert re.match(r"^wrote .*, since (.*): \+([0-9]+) -([0-9]+)$", line).groups() == ("2026-11-16", "0", "0")
+first = b.summary_line("/c", {"skill": 1, "command": 1, "agent": 1, "mcp": 1}, 1, 0, {"review": 0, "watch": 0, "retire": 0})
+assert first.endswith("0 to review, 0 to watch, 0 to retire"), first
 ```
 
-- [ ] **Step 2: Run the catalog tests the way `bin/lib/check` does (`grep -n test_build_catalog bin/lib/check`). Expected: FAIL, `summary_line` is not defined.**
+- [ ] **Step 2: Run `python3 agents/catalog/test_build_catalog.py`. Expected: FAIL with `AttributeError: module 'build_catalog' has no attribute 'summary_line'`.**
 
 - [ ] **Step 3: Add `summary_line` and call it from the `print` at line 630**
 
 Counts are not singularized: "1 skills" is accepted, because the line is a log line and a plural rule per noun is not worth the code.
 
-- [ ] **Step 4: Run the catalog tests. Expected: PASS. Then make the two stub lines at `bin/lib/test-sysup:174-175` carry the new middle part, and run `bash bin/lib/test-sysup`. Expected: PASS.**
+- [ ] **Step 4: Run `python3 agents/catalog/test_build_catalog.py`. Expected: `ok`. `bin/lib/test-sysup:174-175` stubs the line without its middle part and needs no change.**
 
 - [ ] **Step 5: `bin/install-snippetslab-skill`**
 
