@@ -31,7 +31,7 @@ sysup
 - runs `mise prune`, which deletes the tool versions the previous run replaced that no project's mise config still uses, and reports how much it freed. The versions this run replaces stay until the next run, so you can go back to one. The prune is skipped, with a notice, while a leftover mise rust install would make it hang
 - upgrades mise tools (Node/Python patch releases, CodeGraph, the npm CLIs, the Aspire CLI and flate); a tool mise could not reinstall is a notice
 - updates the stable Rust toolchain (`rustup update`). rustup is the `brew:rustup` package, called by path because it keeps its proxies in `/opt/homebrew/opt/rustup/bin`. A notice follows when `cargo --version` fails in that shell, or when a mise rust toolchain that no config pins shadows it
-- upgrades the uv tools (Serena and Scrapling) under the same 48 hour release hold as their install, which also gives the hold to a tool installed before it existed, then re-runs `scrapling install` so its Chromium matches
+- upgrades the uv tools (Serena, Scrapling and Browser Use) under the same 48 hour release hold as their install, which also gives the hold to a tool installed before it existed, then re-runs `scrapling install` so its Chromium matches
 - prunes the uv cache (`uv cache prune`, waiting at most 10 s for the lock) and reports how many cached environments are waiting when open Claude Code sessions keep it busy
 - updates the Google Cloud CLI with its own updater (`gcloud components update --quiet`), because mise never upgrades that cask: it is an installer, not one app
 - reinstalls the Iosevka Code font if its upstream zip changed

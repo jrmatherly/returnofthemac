@@ -228,8 +228,8 @@ tools = "make_request, fetch, stealthy_fetch, bulk_fetch, open_session, session_
 desc = "Azure MCP: 70+ tools covering nearly every Azure service (ARM, AKS, App Service, Functions, Cosmos, SQL, Key Vault, Monitor, pricing, quotas, best practices, azd/az CLI generation)."
 tools = "one tool per service, e.g. aks, appservice, cosmos, keyvault, monitor, pricing, deploy, get_azure_bestpractices, extension_cli_generate"
 [mcp.browser-use]
-desc = "Browser Use: CDP control of your Chrome (logged-in session) or a cloud browser, from Python snippets. Use it for interaction, scraping or bot-protected pages; plain fetch covers public pages."
-tools = "browser_exec, browser_screenshot"
+desc = "Browser Use (uv tool): CDP control of your Chrome (logged-in session) or a cloud browser, from Python snippets. Use it for interaction, scraping or bot-protected pages; plain fetch covers public pages."
+tools = "browser_exec, browser_screenshot, browser_login, browser_feedback"
 [mcp.chrome-devtools]
 desc = "Chrome DevTools protocol: navigate, click, fill, snapshot the DOM, and inspect console and network. Also performance traces, Lighthouse, heap snapshots. Best tool for debugging web apps."
 tools = "navigate_page, click, fill_form, take_snapshot, take_screenshot, list_console_messages, list_network_requests, performance_start/stop_trace, lighthouse_audit, take_heapsnapshot"
