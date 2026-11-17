@@ -75,7 +75,7 @@ A copy that `mise bootstrap --from` fetched lives in `~/.local/share/mise/bootst
 - `rotm settings` (`dotfiles-settings`) writes a macOS preference to mise's override file instead of `conf.d/20-macos.toml`, and a jstack model role to `~/.claude/rules/jstack-models.md`, which `config.rotm-installed.toml` seeds as your own copy instead of a link. The other settings work as on a clone.
 - `vscode-settings` renders `settings.json` into `~/Library/Application Support/Code/User`, not into the copy's `vscode/User`.
 
-`rotm update` fetches the branch the copy is on and then runs `setup.sh`. It stops before `setup.sh` when mise cannot update the copy, and lists the tracked files that differ in it.
+`rotm update` fetches the branch the copy is on and then runs `setup.sh` with `ROTM_UPDATE=1`, which makes it print one `Updating <copy>` line where a first install gets its warning and its wait for Enter. It stops before `setup.sh` when mise cannot update the copy, and lists the tracked files that differ in it.
 
 ## Releasing to `stable`
 

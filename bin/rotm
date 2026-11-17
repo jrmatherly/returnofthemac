@@ -113,6 +113,8 @@ update() {
     } >&2
     exit "$rc"
   }
+  # setup.sh skips its first-install warning and wait
+  export ROTM_UPDATE=1
   # The update may have replaced this file: bash keeps reading the one it opened
   exec "$DOTFILES/setup.sh" "$@"
 }

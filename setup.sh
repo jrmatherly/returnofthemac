@@ -236,17 +236,23 @@ if ! xcode-select -p > /dev/null 2>&1; then
   exit 1
 fi
 
-echo -e "${yellow}!!! ${red}WARNING${yellow} !!!"
-echo -e "${light_red}This script replaces your configuration files with symlinks to this repo."
-echo -e "${light_red}It stops when a file is in the way of a link. Nothing is overwritten.${reset}"
-echo -e "${yellow}Repo: ${reset}$DOTFILES_DIR"
+# rotm update sets ROTM_UPDATE: an installed copy agreed to the links at install,
+# and setup still stops when a file is in the way of one
+if [ -n "${ROTM_UPDATE:-}" ]; then
+  echo "Updating $DOTFILES_DIR"
+else
+  echo -e "${yellow}!!! ${red}WARNING${yellow} !!!"
+  echo -e "${light_red}This script replaces your configuration files with symlinks to this repo."
+  echo -e "${light_red}It stops when a file is in the way of a link. Nothing is overwritten.${reset}"
+  echo -e "${yellow}Repo: ${reset}$DOTFILES_DIR"
 
-if [ -z "$yes" ]; then
-  if [ -t 0 ]; then
-    echo -e "${yellow}Press Enter key to continue…${reset}\n"
-    read -r _ || true
-  else
-    echo -e "${yellow}Non-interactive shell — continuing without confirmation.${reset}\n"
+  if [ -z "$yes" ]; then
+    if [ -t 0 ]; then
+      echo -e "${yellow}Press Enter key to continue…${reset}\n"
+      read -r _ || true
+    else
+      echo -e "${yellow}Non-interactive shell — continuing without confirmation.${reset}\n"
+    fi
   fi
 fi
 

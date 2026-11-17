@@ -45,7 +45,7 @@ make_copy() {
   mkdir -p "$1/bin/lib"
   cp "$repo/bin/rotm" "$1/bin/rotm"
   cp "$mode" "$1/bin/lib/rotm-mode"
-  printf '#!/bin/bash\necho "setup $*" >> "%s/log"\n' "$tmp" > "$1/setup.sh"
+  printf '#!/bin/bash\necho "env ROTM_UPDATE=${ROTM_UPDATE:-}" >> "%s/log"\necho "setup $*" >> "%s/log"\n' "$tmp" "$tmp" > "$1/setup.sh"
   printf '#!/bin/bash\necho "dotfiles-settings $*" >> "%s/log"\n' "$tmp" > "$1/bin/dotfiles-settings"
   chmod +x "$1/setup.sh" "$1/bin/dotfiles-settings"
 }
@@ -72,6 +72,8 @@ check "settings profile passes through" "rotm settings profile use work && grep 
 check "update fetches the branch it is on" "rotm update && grep -q -- \"--from $origin?ref=stable --config-dir tilde/.config/mise --update --only final-hook\" '$tmp/log'"
 check "update runs mise from HOME" "grep -qx \"cwd $HOME\" '$tmp/log'"
 check "update then runs setup.sh" "[ \"\$(tail -1 '$tmp/log')\" = 'setup ' ]"
+check "update tells setup.sh it is an update" "rotm update && grep -qx 'env ROTM_UPDATE=1' '$tmp/log'"
+check "install does not" ": > '$tmp/log'; rotm install && grep -qx 'env ROTM_UPDATE=' '$tmp/log'"
 check "update without -y does not pass --yes to mise" "! grep -q -- '--yes' '$tmp/log'"
 : > "$tmp/log"
 check "update -y passes --yes to mise and -y to setup.sh" "rotm update -y && grep -q -- '--only final-hook --yes' '$tmp/log' && grep -qx 'setup -y' '$tmp/log'"

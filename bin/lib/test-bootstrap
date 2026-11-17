@@ -35,7 +35,7 @@ grep -qF "\${HOMEBREW_PREFIX:-/opt/homebrew}" "$repo/setup.sh" \
 fix="$tmp/clone"
 export STATE="$tmp/state" HOMEBREW_PREFIX="$tmp/nobrew"
 # A caller's own values would reach the mise stub and fail the assertions on its log
-unset MISE_GITHUB_TOKEN MISE_DISABLE_TOOLS DOTFILES DOTFILES_DIR DOTFILES_SKIP_CODEGRAPH DOTFILES_SETUP_LOG STUB_MISE_VERSION DOTFILES_YES MISE_DATA_DIR
+unset MISE_GITHUB_TOKEN MISE_DISABLE_TOOLS DOTFILES DOTFILES_DIR DOTFILES_SKIP_CODEGRAPH DOTFILES_SETUP_LOG STUB_MISE_VERSION DOTFILES_YES MISE_DATA_DIR ROTM_UPDATE
 mkdir -p "$fix/setup" "$fix/bin/lib" "$fix/tilde/.config/gh" "$fix/tilde/.config/mise" "$tmp/bin" "$tmp/other"
 cp "$repo/setup.sh" "$fix/setup.sh"
 cp "$repo/setup/mise-floor.sh" "$fix/setup/mise-floor.sh"
@@ -211,7 +211,12 @@ sudo_dropped_before() {
 }
 upgrade="args=bootstrap packages upgrade --yes --manager"
 
+ROTM_UPDATE=1 run
+check_true "update: no first-install warning" lacks 'WARNING'
+check_true "update: … and no wait or its stand-in" lacks 'Press Enter|Non-interactive shell'
+check_true "update: one line names the copy" has '^Updating /'
 run
+check_true "install: the warning still shows" has 'WARNING'
 check_true "a: exits 0" [ "$rc" -eq 0 ]
 check_true "a: ~/.config/mise links to the clone's" [ -L "$HOME/.config/mise" -a "$HOME/.config/mise" -ef "$fix/tilde/.config/mise" ]
 check_true "a: ~/dotfiles links to the clone" [ -L "$HOME/dotfiles" -a "$HOME/dotfiles" -ef "$fix" ]
