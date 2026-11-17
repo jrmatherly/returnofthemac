@@ -94,7 +94,11 @@ if gh api "repos/$source/git/trees/$reviewed?recursive=1" > "$cache/old" 2> /dev
     ($old[0].tree | map(select(.type == "blob") | {key: .path, value: .sha}) | from_entries) as $o
     | (if $d == "." then "" else $d + "/" end) as $p
     | ($new[0].tree | map(select(.type == "blob" and (.path | startswith($p))) | {key: .path[($p | length):], value: .sha}) | from_entries) as $n
-    | def files(f): if length == 0 then empty else "\(f): " + (map("`\(.)`") | join(", ")) end;
+    # A file name comes from the untrusted repository and this body is the
+    # review: anything that could write Markdown becomes a ?, and the count
+    # shows a name that tried to hide
+    | def files(f): if length == 0 then empty
+        else "\(f) (\(length)): " + (map("`" + gsub("[^A-Za-z0-9._/ +@=,-]"; "?") + "`") | join(", ")) end;
       ([$n | keys[] | select($o[.] == null)] | files("Added")),
       ([$o | keys[] | select($n[.] == null)] | files("Removed")),
       ([$n | keys[] | select($o[.] != null and $o[.] != $n[.])] | files("Changed"))'

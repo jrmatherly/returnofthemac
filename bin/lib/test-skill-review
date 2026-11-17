@@ -43,6 +43,7 @@ case "$*" in
     {"path":"skills/x","type":"tree","sha":"xnew"},
     {"path":"skills/x/SKILL.md","type":"blob","sha":"s2"},
     {"path":"skills/x/added.md","type":"blob","sha":"n1"},
+    {"path":"skills/x/a`b](http://evil)<c>.md","type":"blob","sha":"n2"},
     {"path":"skills/y","type":"tree","sha":"yyy"}]}' ;;
   *u/r/git/trees/xold*) echo '{"sha":"xold","tree":[{"path":"SKILL.md","type":"blob","sha":"s1"}]}' ;;
   *) exit 1 ;;
@@ -81,6 +82,7 @@ sr x > "$tmp/body" 2> "$tmp/err"
 check "the row takes the folder's new value" "[ \$? = 0 ] && grep -qx 'skill x u/r claude-code xnew skills/x' '$list'"
 check "every other row is byte-identical" "diff <(grep -v '^skill x ' '$list') <(grep -v '^skill x ' '$tmp/before') > /dev/null"
 check "the body names the changed and the added file" "grep -q 'Changed.*SKILL.md' '$tmp/body' && grep -q 'Added.*added.md' '$tmp/body' && grep -q 'xold' '$tmp/body' && grep -q 'https://github.com/u/r/commits/HEAD/skills/x' '$tmp/body'"
+check "a file name cannot write Markdown into the body" "grep -q '^Added (2): ' '$tmp/body' && grep -qF 'a?b??http?//evil??c?.md' '$tmp/body' && ! grep -q 'evil)' '$tmp/body'"
 sr --list > "$tmp/out" 2>&1
 check "a reviewed skill is no longer listed" "[ ! -s '$tmp/out' ]"
 
