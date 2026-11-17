@@ -141,6 +141,7 @@ stub gcloud 'case $1 in
   version) if [ -e "$STATE/gcloud-done" ]; then echo "Google Cloud SDK 594.0.0"; else echo "Google Cloud SDK 593.0.0"; fi ;;
   components) echo "gcloud $*" >> "$STATE/gcloud.log"
     [ ! -e "$STATE/gcloud-fails" ] || { echo "ERROR: (gcloud.components.update) no network"; exit 1; }
+    [ ! -e "$STATE/gcloud-external" ] || { echo "ERROR: (gcloud.components.update) You cannot perform this action because this Google Cloud CLI installation is managed by an external package manager."; exit 1; }
     [ ! -e "$STATE/gcloud" ] || touch "$STATE/gcloud-done"; echo "All components are up to date." ;;
 esac'
 stub install-iosevka-code 'echo "Iosevka Code is up to date"'
@@ -164,6 +165,7 @@ stub claude-config 'echo "$*" >> "$STATE/claude-config.log"
 case $1 in
   save) [ -e "$STATE/config" ] && echo "# saved" >> "$DOTFILES/agents/claude-skills.txt" ;;
   retire) [ -e "$STATE/retire-fails" ] && exit 1
+    [ ! -e "$STATE/retired-plugin" ] || echo "retired plugin x@a"
     [ -e "$STATE/settings" ] && echo "{}" > "$CLAUDE_CONFIG_DIR/settings.json" ;;
   restore) case "$*" in *--dry-run*) [ -e "$STATE/config-pending" ] && [ "$2" = settings ] && echo "merge tracked"; exit 0 ;; esac
     if [ -e "$STATE/skills-out" ]; then cat "$STATE/skills-out"; elif [ -e "$STATE/skills" ]; then printf "skill changed one\n\033[38;5;250mART\033[0m\n\033[?25l◒  Cloning…\033[1G\033[J◐  Cloning…\033[1G\033[J◇  Repository cloned\n\033[?25h\nskill same two\nskill held one\nskill unknown three\nskill held three\n"; else printf "skill same one\nskill unknown two\n"; fi
@@ -344,7 +346,12 @@ uv_envs
 touch "$STATE/pkg-broken" "$STATE/cache-busy" "$STATE/gcloud-fails"
 run
 check_true "a failed gcloud update names the command" has '^✖ gcloud +run: gcloud components update$'
-rm -f "$STATE/gcloud-fails"
+rm -f "$STATE/gcloud-fails" "$DOTFILES/logs"/*
+touch "$STATE/gcloud-external" "$STATE/retired-plugin"
+run
+check_true "a gcloud another package manager owns is not a failure" has '^✔ gcloud +its package manager updates it$'
+check_true "a removed retired plugin is named" has '^↻ Claude settings +removed x@a, a retired plugin$'
+rm -f "$STATE/gcloud-external" "$STATE/retired-plugin"
 check_true "cache: busy is ok and carries the count" has '^✔ uv cache +in use, not pruned \(25 cached environments\)$'
 check_true "warned: installer warning is the step's only line" lacks '^✔ Hindsight memory'
 check_true "warned: installer warning still a notice" has '^● Hindsight memory +installer: '

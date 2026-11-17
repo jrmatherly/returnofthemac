@@ -33,7 +33,7 @@ The launcher exists because Homebrew's `ghidra` formula depends on a versioned, 
 
 ## Engines on this Mac
 
-| Engine | Install | State (2026-10-24) |
+| Engine | Install | State (2026-10-24 unless the row says otherwise) |
 | --- | --- | --- |
 | Hopper Disassembler | `brew-cask:hopper-disassembler` package; REA finds it at its default path | Works as the free demo until licensed in the app |
 | Ghidra | `brew:ghidra` package (12.2, pulls `openjdk@25`) | Works through the launcher with REA 6.9.0: every `rea doctor --provider ghidra` check passes (version, native decompiler, JDK) and `rea analyze --provider ghidra` runs, measured 2026-11-17. REA 6.8.0 refused 12.2 ([morluto/rea#6921](https://github.com/morluto/rea/issues/6921), closed 2026-10-26). It rejects a universal Mach-O with `architecture_unsupported`: thin it to one architecture first (`lipo -thin`) |

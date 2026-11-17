@@ -260,6 +260,25 @@ ln -s "$fix" "$tmp/data/bootstrap-repo"
 check "save refuses an installed copy" "[ $? -ne 0 ] && grep -q 'installed copy' '$tmp/save.out'"
 check "save wrote nothing into it" "[ ! -e '$fix/agents' ]"
 
+# Retired plugins: left out of a save, uninstalled by retire and by restore, nothing else touched
+printf '# why\n\n x@a \n' > "$CLAUDE_CONFIG_SAVE_DIR/claude-plugins-retired.txt"
+printf '{"plugins":{"x@a":[{"scope":"user"}],"y@a":[{"scope":"user"}],"z@a":[{"scope":"local"}]}}' > "$CLAUDE_CONFIG_DIR/plugins/installed_plugins.json"
+echo '{}' > "$CLAUDE_CONFIG_DIR/settings.json"
+echo '{}' > "$CLAUDE_CONFIG_DIR/plugins/known_marketplaces.json"
+cc save plugins > /dev/null 2>&1
+check "save leaves a retired plugin out and keeps the rest" "! grep -q 'x@a' '$list' && grep -qx 'plugin y@a' '$list'"
+mkdir -p "$tmp/bin"
+printf '#!/bin/bash\necho "$*" >> "%s/claude.log"\n' "$tmp" > "$tmp/bin/claude"
+chmod +x "$tmp/bin/claude"
+PATH="$tmp/bin:$PATH" cc retire > "$tmp/out" 2>&1
+check "retire uninstalls a retired plugin and no other" "[ \"\$(cat '$tmp/claude.log')\" = 'plugin uninstall x@a' ]"
+check "retire names the plugin it removed" "grep -qx 'retired plugin x@a' '$tmp/out'"
+printf '# why\n\nz@a\nq@a\n' > "$CLAUDE_CONFIG_SAVE_DIR/claude-plugins-retired.txt"
+rm -f "$tmp/claude.log"
+PATH="$tmp/bin:$PATH" cc retire > /dev/null 2>&1
+check "retire skips a retired plugin that is absent or not at user scope" "[ ! -e '$tmp/claude.log' ]"
+rm -f "$CLAUDE_CONFIG_SAVE_DIR/claude-plugins-retired.txt"
+
 [ "$fails" -eq 0 ] || {
   echo "$fails failed" >&2
   exit 1

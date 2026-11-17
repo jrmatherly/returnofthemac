@@ -281,7 +281,6 @@ fi
 # the uv cache lock for as long as the session is open, so `sysup` cannot prune.
 # Python 3.12 is the plugin's own pin. https://github.com/browser-use/browser-use
 browser_use_bin="$HOME/.local/bin/browser-use"
-browser_use_plugin=browser-use@claude-plugins-official
 if $agents_on && command_exists uv && [ ! -x "$browser_use_bin" ]; then
   info "🌐 Installing Browser Use…"
   uv tool install --exclude-newer "48 hours" -p 3.12 browser-use | indent \
@@ -295,12 +294,6 @@ fi
 if $agents_on && [ -x "$browser_use_bin" ] && [ -x "$claude_bin" ]; then
   # No update check: after a failed call it tells the agent to install the newest release
   register_mcp browser-use "Browser Use" -e BROWSER_USE_NO_UPDATE_CHECK=1 -- "$browser_use_bin" --cli-mcp
-  # Left installed, the plugin starts a second server beside this one, through uvx
-  if command_exists jq && jq -e --arg p "$browser_use_plugin" '.plugins[$p]' "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/plugins/installed_plugins.json" > /dev/null 2>&1; then
-    info "🧹 Removing the browser-use plugin (replaced by the uv tool)…"
-    "$claude_bin" plugin uninstall "$browser_use_plugin" 2>&1 | indent \
-      || warning "Removing the browser-use plugin failed — run: claude plugin uninstall $browser_use_plugin"
-  fi
 fi
 
 # Hindsight — per-repo long-term memory for Claude Code and Codex via the vendor

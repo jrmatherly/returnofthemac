@@ -14,7 +14,7 @@
 #
 # `claude-config restore {{plugins|settings|skills}} --dry-run`
 #
-# - Drop retired allow rules from this machine's settings and change nothing else (`sysup` runs this):
+# - Drop retired allow rules from this machine's settings, uninstall retired plugins and change nothing else (`sysup` runs this):
 #
 # `claude-config retire`
 #
@@ -36,6 +36,11 @@
 #   claude-permissions-retired.txt
 #                        allow rules that save, restore and retire drop, because
 #                        the union alone would keep them on every other Mac
+#   claude-plugins-retired.txt
+#                        plugins that save leaves out and restore and retire
+#                        uninstall, because dropping a line alone would keep
+#                        the plugin on every other Mac and the next save
+#                        would write it back
 #   claude-skills.txt    user skills installed with the `skills` CLI, for
 #                        which agents (claude-code → ~/.claude/skills,
 #                        codex → ~/.agents/skills), and the reviewed folder
@@ -57,6 +62,7 @@ plugins_list="$save_dir/claude-plugins.txt"
 settings_base="$save_dir/claude-settings.json"
 skills_list="$save_dir/claude-skills.txt"
 retired_list="$save_dir/claude-permissions-retired.txt"
+retired_plugins_list="$save_dir/claude-plugins-retired.txt"
 trusted_list="$save_dir/claude-skills-trusted.txt"
 settings="$config/settings.json"
 skill_lock="$HOME/.agents/.skill-lock.json"
@@ -127,6 +133,23 @@ installed_plugins() {
   jq -r '.plugins | to_entries[] | select(any(.value[]; .scope == "user")) | .key' "$f"
 }
 
+# One plugin id per line; # starts a comment
+retired_plugins() {
+  { sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//' "$retired_plugins_list" 2> /dev/null | grep -Ev '^(#|$)' || true; }
+}
+
+# Only ever removes, as retire_settings does: a retired plugin still installed
+# at user scope is uninstalled, and nothing is installed or enabled
+retire_plugins() {
+  local id have
+  have=$(installed_plugins)
+  while read -r id; do
+    [ -n "$id" ] && grep -qxF "$id" <<< "$have" || continue
+    echo "retired plugin $id"
+    run claude plugin uninstall "$id"
+  done < <(retired_plugins)
+}
+
 # Saving must never shrink a tracked file because this machine lacks its
 # source (not set up yet, or a tool moved its files): skip with a warning
 missing_source() {
@@ -158,7 +181,7 @@ save_plugins() {
   # Read before the braces, where set -e is off: valid JSON in a changed format
   # fails here, or yields fewer lines, instead of saving a shorter list
   marketplaces=$(known_marketplaces | sort)
-  plugins=$(installed_plugins | sort)
+  plugins=$(installed_plugins | { grep -vxFf <(retired_plugins) || true; } | sort)
   if [ "$(grep -c . <<< "$marketplaces" || true)" != "$(jq length "$known")" ]; then
     echo "claude-config: $(tildify "$known") has a marketplace source this script can't read, kept $(tildify "$plugins_list")" >&2
     return 1
@@ -180,6 +203,7 @@ save_plugins() {
 
 restore_plugins() {
   local have_marketplaces have_plugins kind name arg marketplace updated=""
+  retire_plugins
   have_marketplaces=$(known_marketplaces | cut -d' ' -f1)
   have_plugins=$(installed_plugins)
   while read -r kind name arg; do
@@ -478,7 +502,11 @@ case "${1:-}" in
     fi
     exit "$failed"
     ;;
-  retire) retire_settings ;;
+  retire)
+    retire_plugins
+    retire_settings
+    exit "$failed"
+    ;;
   *)
     echo "Usage: claude-config save | retire | restore [plugins|settings|skills] [--dry-run] [--update] [--accept <skill>]" >&2
     exit 2

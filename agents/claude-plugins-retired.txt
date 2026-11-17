@@ -1,0 +1,6 @@
+# Plugins removed from claude-plugins.txt that `claude-config` uninstalls on
+# every Mac and never saves again. One id per line.
+
+# Replaced by the browser-use uv tool (setup/misc.sh): the plugin's server is
+# `uvx browser-use@latest`, outside the release hold and holding the uv cache lock
+browser-use@claude-plugins-official

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Get macOS software updates, upgrade mise and the formulae and casks it installs, mise tools (pruning versions nothing uses) and uv tools, the Iosevka Code font, dotfiles, Raycast, Claude Code and Amp; report agent skills that changed upstream, regenerate the SnippetsLab skill, record Claude Code plugins/settings/skills and rebuild their catalog.
+# Get macOS software updates, upgrade mise and the formulae and casks it installs, mise tools (pruning versions nothing uses) and uv tools, the Google Cloud CLI, the Iosevka Code font, dotfiles, Raycast, Claude Code and Amp; report agent skills that changed upstream, regenerate the SnippetsLab skill, record Claude Code plugins/settings/skills and rebuild their catalog.
 #
 # > Reads like a report: one status line per step and a summary at the end. Full tool output goes to `logs/sysup-<timestamp>.log` in the dotfiles repo, and to the screen only when a step changed something or failed.
 # > A failed step never stops the run, and sysup exits 1 at the end when any step failed.
@@ -530,7 +530,7 @@ if [ -n "$rustup_bin" ]; then
     || status notice Rust "cargo --version failed: rustup's proxies live in /opt/homebrew/opt/rustup/bin, so open a new terminal, or run: rustup default stable"
 fi
 
-# uv tools (Serena, Scrapling)
+# uv tools (Serena, Scrapling, Browser Use)
 if command -v uv > /dev/null; then
   step uv
   if ! capture uv tool upgrade --all --exclude-newer "48 hours"; then
@@ -597,8 +597,13 @@ if ! module_off cloud gcloud && command -v gcloud > /dev/null; then
   step gcloud
   gcloud_before=$(gcloud version 2> /dev/null | sed -n 's/^Google Cloud SDK //p' || true)
   if ! capture gcloud components update --quiet; then
-    status fail gcloud "run: gcloud components update"
-    show
+    # An install the SDK did not make itself has its updater off, and says so
+    if [[ $out == *"managed by an external package manager"* ]]; then
+      status ok gcloud "its package manager updates it"
+    else
+      status fail gcloud "run: gcloud components update"
+      show
+    fi
   else
     gcloud_after=$(gcloud version 2> /dev/null | sed -n 's/^Google Cloud SDK //p' || true)
     if [ "$gcloud_after" != "$gcloud_before" ]; then
@@ -812,6 +817,8 @@ if command -v claude > /dev/null; then
     if ! capture claude-config retire; then
       status fail "Claude settings" "run: claude-config retire"
       show
+    elif [[ $out == *"retired plugin "* ]]; then
+      status changed "Claude settings" "removed $(sed -n 's/^retired plugin //p' <<< "$out" | paste -sd, - | sed 's/,/, /g'), a retired plugin"
     elif [ "$(cksum "$live_settings" 2> /dev/null || true)" != "$settings_before" ]; then
       status changed "Claude settings" "dropped retired permission rules"
     fi
