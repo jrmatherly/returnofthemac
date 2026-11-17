@@ -10,6 +10,32 @@
 
 **Spec:** None of its own. The section below records the evidence and the owner's decisions this plan argues from. It comes from the audit of one `rotm update` run and one `sysup` run on the owner's Mac on 2026-11-16 (logs `private/setup-logs/20261116-210223.log` and `logs/sysup-20261116-210319.log` in the installed copy).
 
+## Outcome (2026-11-17)
+
+All nine tasks are done. Tasks 1 to 8 ran natively on `main`, each red then green, and the owner's own `rotm update` and two `sysup` runs on 2026-11-17 were the proof of Task 9.
+
+| Task | Commit | Difference from the plan |
+| --- | --- | --- |
+| 1 | `3a124a9` | None |
+| 2 | `094ee0f` | A third assertion needed the new wording (`bin/lib/test-sysup`, "installed, with a macOS update") |
+| 3 | `bc36f7d` | None |
+| 4 | `a9a5d16` | The prototype did not parse under `/bin/bash` 3.2 (a bare `)` case pattern inside `$(…)`, and a quoted `${t/"a/b"/…}` pattern), so both are written the 3.2 way. An absolute link that names the prefix by its physical path is matched too |
+| 5 | `45d716e` | The changed line counts links with a singular ("1 link fixed") |
+| 6 | `9a73d83` | None |
+| 7 | `20aa86c` | The CodeGraph stubs answer only `install`, because `misc.sh` also calls `codegraph telemetry off`. Two cases were added: a restore that prints something, and a failed CodeGraph install |
+| 8 | `941c99c` | `setup/tests/dotfiles-extras.sh` asserted the Firefox warning and now asserts the skipped line |
+| Review | `f02ffbb` | An independent reviewer reproduced four defects in `brew-keg-cleanup` on fake prefixes, none of which this Mac's prefix triggers: a `HOMEBREW_PREFIX` ending in `/` unlinked links it should have repointed, an `opt` link into another rack's keg of the same version counted as this rack's current one, a link name holding a newline and the path of a real link got that link removed, and an empty current keg still replaced the old one. Cases u to x pin them. In `sysup`, the plugin commands also get `GIT_TERMINAL_PROMPT=0`, a last line the step cannot read is a notice, and the failure hint is `brew-keg-cleanup --apply` |
+| 9, Step 1 | none | `fresh-install` run 44020041126 passed on the `clone` and the `installed` path on `f02ffbb`, with `check` green on the same commit (run 44020031224). `stable` moved from `2cbdee8` to `f02ffbb` by a fast-forward push |
+| 9, Step 2 | none | `rotm update` printed 160 lines where the audited run printed 276: `84 scripts executable`, no font menu, `CodeGraph already connected`, `rtk hook already present`, `nothing to restore`, `SnippetsLab skill unchanged`, and a catalog line with no braces. The `WARNING` block and the Enter wait still showed on this one run: the `rotm` that started it was the old one from `2cbdee8`, which bash kept reading after the update replaced the file, so it never exported `ROTM_UPDATE` |
+| 9, Step 3 | none | The first `sysup` printed `✔ dotfiles  installed copy up to date`, `↻ packages cleanup  0 old versions removed, 1 link fixed` (the dead `README.md` link, gone afterwards), and `◷ mise hold  azd 1.38.0 until 2026-11-18 13:57 EST (minimum_release_age)` with a headline of "3 changed" and no notices. It also upgraded three packages |
+| 9, Step 4 | none | The second `sysup` therefore printed `↻ packages cleanup  3 old versions removed, 2 links fixed`, the first real removal: `kubestellar-deploy` 0.9.23, `kubestellar-ops` 0.9.23 and `pkgconf` 3.0.10, with the alias links `opt/pkg-config` and `opt/pkgconfig` repointed to 3.0.11. Afterwards a dry run printed `nothing superseded`, `pkg-config --version` printed 3.0.11, and `mise bootstrap packages status` listed nothing missing |
+
+Not verified:
+
+- That the `WARNING` block is gone on a `rotm update` started by the new `rotm`. The self-checks assert it (`bin/lib/test-rotm`, `bin/lib/test-bootstrap`). The owner's next `rotm update` is the proof.
+- That Task 3 removed the 1Password prompt. The plugins step passed twice over HTTPS (`67 plugins up to date`), but whether a prompt appeared is something only the owner saw, and the session did not record an answer.
+- `✔ packages cleanup  nothing superseded` printed by `sysup` itself. Both runs had something to do. The dry run after them printed it.
+
 ## Evidence and the owner's decisions
 
 Measured on 2026-11-16, mise 2026.11.8, on the owner's Mac (an installed copy on `stable`).
@@ -85,7 +111,7 @@ Left out on purpose:
 
 - Produces: `status held <step> <detail>`, a fifth level. It prints a line and logs it, and is not collected for the summary or the headline.
 
-- [ ] **Step 1: Change the assertion at `bin/lib/test-sysup:304` and add two**
+- [x] **Step 1: Change the assertion at `bin/lib/test-sysup:304` and add two**
 
 ```bash
 check_true "changes: a held release has its own quiet line" has '^◷ mise hold +aspire 13\.6\.3 until 2026-10-24 14:17 EDT \(minimum_release_age\)$'
@@ -93,19 +119,19 @@ check_true "changes: … and is not a notice" lacks '● mise +aspire'
 check_true "changes: … and is not in the summary" lacks '^ +◷'
 ```
 
-- [ ] **Step 2: Run `bash bin/lib/test-sysup`. Expected: FAIL naming "a held release has its own quiet line".**
+- [x] **Step 2: Run `bash bin/lib/test-sysup`. Expected: FAIL naming "a held release has its own quiet line".**
 
-- [ ] **Step 3: Add the level**
+- [x] **Step 3: Add the level**
 
 In `style`, add `held) glyph=◷ color=$c_dim ;;`. In `status`, dim the detail for `held` as for `ok`, and leave `held` out of both `case` statements, so it gets no elapsed time and joins no summary array. At line 444 call `status held "mise hold" "${tool##*[:/]} $version until $until (minimum_release_age)"`.
 
-- [ ] **Step 4: Run `bash bin/lib/test-sysup`. Expected: PASS.**
+- [x] **Step 4: Run `bash bin/lib/test-sysup`. Expected: PASS.**
 
-- [ ] **Step 5: Docs**
+- [x] **Step 5: Docs**
 
 In `.claude/rules/sysup.md`, add to the Report contract bullet: "A `held` line (a release mise holds back by `minimum_release_age`) is extra to a step's status line and counts as none of the four." In `docs/updating.md`, name the `◷` line where the page lists what `sysup` prints.
 
-- [ ] **Step 6: `pnpm check`, then commit: "Show a held mise release as its own quiet line"**
+- [x] **Step 6: `pnpm check`, then commit: "Show a held mise release as its own quiet line"**
 
 ### Task 2: The dotfiles line checks an installed copy
 
@@ -119,14 +145,14 @@ In `.claude/rules/sysup.md`, add to the Report contract bullet: "A `held` line (
 
 - Consumes: `rotm update --check --json`, which prints `{"mode":"installed","branch":"<b>","behind":<n>}` and exits 0, or prints one line on stderr and exits 1 when the fetch fails (`bin/lib/test-rotm:83-98`).
 
-- [ ] **Step 1: Add a `rotm` stub beside the others in `bin/lib/test-sysup`**
+- [x] **Step 1: Add a `rotm` stub beside the others in `bin/lib/test-sysup`**
 
 ```bash
 stub rotm '[ ! -e "$STATE/rotm-fails" ] || { echo "rotm: could not fetch stable from origin" >&2; exit 1; }
 echo "{\"mode\":\"installed\",\"branch\":\"stable\",\"behind\":$(cat "$STATE/behind" 2> /dev/null || echo 0)}"'
 ```
 
-- [ ] **Step 2: Replace the two dotfiles assertions in the installed-copy case (lines 483-484) and add two runs after them**
+- [x] **Step 2: Replace the two dotfiles assertions in the installed-copy case (lines 483-484) and add two runs after them**
 
 ```bash
 check_true "installed: a level copy is up to date" has '^✔ dotfiles +installed copy up to date$'
@@ -144,23 +170,23 @@ check_true "installed, offline: … and never up to date" lacks 'dotfiles.*up to
 rm -f "$STATE/rotm-fails"
 ```
 
-- [ ] **Step 3: Run `bash bin/lib/test-sysup`. Expected: FAIL naming "a level copy is up to date".**
+- [x] **Step 3: Run `bash bin/lib/test-sysup`. Expected: FAIL naming "a level copy is up to date".**
 
-- [ ] **Step 4: Replace `bin/sysup:222`**
+- [x] **Step 4: Replace `bin/sysup:222`**
 
 `capture rotm update --check --json`, then read `.behind` with `jq -er '.behind | numbers'`. Zero is `status ok dotfiles "installed copy up to date"`. Any other number is `status notice dotfiles "$(plural "$behind" update) waiting; run: rotm update"`. A failed command or a value jq rejects is `status notice dotfiles "couldn't check the installed copy; run: rotm update --check"`.
 
-- [ ] **Step 5: Two details that read like problems**
+- [x] **Step 5: Two details that read like problems**
 
 Change `"installed copy: not saved into it"` to `"installed copy, nothing to save"`, and the catalog `ok` detail `"catalog rebuilt"` to `"rebuilt, no change"`. `grep -n 'catalog rebuilt' bin/lib/test-sysup` names the assertions to update. The `changed` detail keeps its text.
 
-- [ ] **Step 6: Run `bash bin/lib/test-sysup`. Expected: PASS.**
+- [x] **Step 6: Run `bash bin/lib/test-sysup`. Expected: PASS.**
 
-- [ ] **Step 7: Docs**
+- [x] **Step 7: Docs**
 
 `setup/README.md:73` becomes: "`sysup` does not pull. It asks `rotm update --check` whether the copy is behind its branch and reports how many updates are waiting. It does not run `claude-config save`, which writes `agents/` inside the copy." Say the same under "On an installed copy" in `docs/updating.md`.
 
-- [ ] **Step 8: `pnpm check`, then commit: "Have sysup check whether the installed copy is behind"**
+- [x] **Step 8: `pnpm check`, then commit: "Have sysup check whether the installed copy is behind"**
 
 ### Task 3: The plugins step fetches over HTTPS
 
@@ -174,29 +200,29 @@ Change `"installed copy: not saved into it"` to `"installed copy, nothing to sav
 
 - Produces: `https_git <cmd…>` in `bin/sysup`, which runs the command with `GIT_CONFIG_COUNT=1`, `GIT_CONFIG_KEY_0=url.https://github.com/.insteadOf` and `GIT_CONFIG_VALUE_0=git@github.com:` in its environment.
 
-- [ ] **Step 1: Make the `claude` stub record that environment for both plugin commands**
+- [x] **Step 1: Make the `claude` stub record that environment for both plugin commands**
 
 At the top of the stub: `case "$1 $2" in "plugin update" | "plugin marketplace") echo "${GIT_CONFIG_COUNT:-}|${GIT_CONFIG_KEY_0:-}|${GIT_CONFIG_VALUE_0:-}" >> "$STATE/plugin-git.log" ;; esac`.
 
-- [ ] **Step 2: Assert it after the default run**
+- [x] **Step 2: Assert it after the default run**
 
 ```bash
 check_true "plugins: every fetch is told to use HTTPS for github.com" [ "$(sort -u "$STATE/plugin-git.log")" = '1|url.https://github.com/.insteadOf|git@github.com:' ]
 ```
 
-- [ ] **Step 3: Run `bash bin/lib/test-sysup`. Expected: FAIL naming that check.**
+- [x] **Step 3: Run `bash bin/lib/test-sysup`. Expected: FAIL naming that check.**
 
-- [ ] **Step 4: Add `https_git` above the plugins step and put it in front of both `claude plugin` commands inside `capture`**
+- [x] **Step 4: Add `https_git` above the plugins step and put it in front of both `claude plugin` commands inside `capture`**
 
-- [ ] **Step 5: Run `bash bin/lib/test-sysup`. Expected: PASS.**
+- [x] **Step 5: Run `bash bin/lib/test-sysup`. Expected: PASS.**
 
-- [ ] **Step 6: Add a bullet of its own to `.claude/rules/sysup.md`, after the Claude Code one**
+- [x] **Step 6: Add a bullet of its own to `.claude/rules/sysup.md`, after the Claude Code one**
 
 "**Plugin fetches**: the marketplace clones have `git@github.com:` remotes, and a fetch through the 1Password SSH agent asks for approval with no line to announce it, so both plugin commands run with a `url.https://github.com/.insteadOf` rewrite in their environment."
 
 Then `bash bin/lib/test-conventions`. Expected: PASS (the size caps).
 
-- [ ] **Step 7: `pnpm check`, then commit: "Fetch plugin marketplaces over HTTPS in sysup"**
+- [x] **Step 7: `pnpm check`, then commit: "Fetch plugin marketplaces over HTTPS in sysup"**
 
 ### Task 4: `brew-keg-cleanup`
 
@@ -230,7 +256,7 @@ Then `bash bin/lib/test-conventions`. Expected: PASS (the size caps).
 - `--apply` removes a keg with `rm -rf`. The path it removes is built from the rack listing, never from a link target.
 - A second run after a complete or an interrupted one finishes the work and then prints `nothing superseded`.
 
-- [ ] **Step 1: Write `bin/lib/test-keg-cleanup`**
+- [x] **Step 1: Write `bin/lib/test-keg-cleanup`**
 
 Model it on `bin/lib/test-packages` (header, `set -euo pipefail`, a `mktemp -d` fixture, `fail` naming the first failed assertion). Each case builds a fake prefix with a helper `keg <name> <version> [file…]` that creates `Cellar/<name>/<version>/<file>` and `link <path> <target>`, sets `HOMEBREW_PREFIX`, and runs the script. Give kegs distinct mtimes with `touch -t`. The cases and what each asserts:
 
@@ -257,21 +283,21 @@ Model it on `bin/lib/test-packages` (header, `set -euo pipefail`, a `mktemp -d` 
 | s | `HOMEBREW_PREFIX` is a symlink to the fake prefix, case e's links | `lib/a` points into 2.0, `lib/b` is gone |
 | t | an absolute link into `/elsewhere/Cellar/foo/1.0/x` | the link is unchanged |
 
-- [ ] **Step 2: Run `bash bin/lib/test-keg-cleanup`. Expected: FAIL, the script does not exist.**
+- [x] **Step 2: Run `bash bin/lib/test-keg-cleanup`. Expected: FAIL, the script does not exist.**
 
-- [ ] **Step 3: Write `bin/lib/brew-keg-cleanup` to the rules above**
+- [x] **Step 3: Write `bin/lib/brew-keg-cleanup` to the rules above**
 
 Start from `private/keg-cleanup.sh`, which already has the rack loop and the link pass and ran clean on 62 kegs. The review's three defects are already fixed in it and proven on a fake prefix (cases a to e, h, m, p, q and r pass). It still differs from the rules in two ways: it moves kegs into a holding folder where the rules want `rm -rf`, and it has no dead-link pass. Read the links once into a `link<TAB>target` list: a `readlink` per link per keg took minutes on the real prefix.
 
-- [ ] **Step 4: Run `bash bin/lib/test-keg-cleanup`. Expected: PASS.**
+- [x] **Step 4: Run `bash bin/lib/test-keg-cleanup`. Expected: PASS.**
 
-- [ ] **Step 5: Run the dry run on this Mac: `brew-keg-cleanup`**
+- [x] **Step 5: Run the dry run on this Mac: `brew-keg-cleanup`**
 
 Expected: one `unlink  share/man/man1/README.md` line and `0 kegs, 0 links repointed, 1 links removed`. Any `remove` or `repoint` line means a keg was upgraded since 2026-11-16: read each one before going on. Do not pass `--apply` here: Task 9 does that through `sysup`.
 
-- [ ] **Step 6: Register the self-check in `bin/lib/check`, add the helper to the `bin/lib/` list in `bin/CLAUDE.md`, delete `private/keg-cleanup.sh`**
+- [x] **Step 6: Register the self-check in `bin/lib/check`, add the helper to the `bin/lib/` list in `bin/CLAUDE.md`, delete `private/keg-cleanup.sh`**
 
-- [ ] **Step 7: `pnpm check`, then commit: "Add a cleanup for Homebrew kegs an upgrade replaced"**
+- [x] **Step 7: `pnpm check`, then commit: "Add a cleanup for Homebrew kegs an upgrade replaced"**
 
 ### Task 5: `sysup` runs the cleanup before the package upgrade
 
@@ -285,7 +311,7 @@ Expected: one `unlink  share/man/man1/README.md` line and `0 kegs, 0 links repoi
 
 - Consumes: `brew-keg-cleanup --apply` and its last line from Task 4. `sysup` finds it by path, as it finds `rotm-modules`, so the self-check runs the real helper against a fake prefix. No stub.
 
-- [ ] **Step 1: Add the cases to `bin/lib/test-sysup`**
+- [x] **Step 1: Add the cases to `bin/lib/test-sysup`**
 
 The default runs keep `HOMEBREW_PREFIX="$tmp/nobrew"`, which does not exist, so add first:
 
@@ -324,22 +350,22 @@ check_true "kegs: a failure names the command" has '^✖ packages cleanup +run: 
 
 `sysup` uses the rustup stub only while `$HOMEBREW_PREFIX/opt/rustup/bin/rustup` is missing, which this block keeps true. If another step's assertion changes once the prefix exists, that step reads the prefix too: fix the fixture, not the step.
 
-- [ ] **Step 2: Run `bash bin/lib/test-sysup`. Expected: FAIL naming "nothing superseded is an ok line".**
+- [x] **Step 2: Run `bash bin/lib/test-sysup`. Expected: FAIL naming "nothing superseded is an ok line".**
 
-- [ ] **Step 3: Add the step**
+- [x] **Step 3: Add the step**
 
 Beside the `modules=` line at `bin/sysup:23`, resolve `keg_cleanup="$(cd "$(dirname "$0")/lib" && pwd -P)/brew-keg-cleanup"`. Only when `${HOMEBREW_PREFIX:-/opt/homebrew}/Cellar` is a directory: `step "packages cleanup"`, then `capture "$keg_cleanup" --apply`. Parse the last line of `$out` with one `sed -nE 's/^([0-9]+) kegs, ([0-9]+) links repointed, ([0-9]+) links removed$/\1 \2 \3/p'`. No match, or three zeros, is `status ok "packages cleanup" "nothing superseded"`. Otherwise `status changed "packages cleanup" "$(plural "$kegs" "old version") removed, $((repointed + removed)) links fixed"`. A non-zero exit is `status fail "packages cleanup" "run: brew-keg-cleanup"` followed by `show`.
 
-- [ ] **Step 4: Run `bash bin/lib/test-sysup`. Expected: PASS.**
+- [x] **Step 4: Run `bash bin/lib/test-sysup`. Expected: PASS.**
 
-- [ ] **Step 5: Docs**
+- [x] **Step 5: Docs**
 
 - `docs/updating.md`: one bullet beside the `packages prune` one. `sysup` removes the Homebrew versions an earlier upgrade replaced, and repoints or removes the links that still named them. It runs before the upgrade, so the version this run replaces stays until the next run.
 - `.claude/rules/sysup.md`, Packages bullet: mise leaves the previous keg and does not repoint alias links (`opt/node@26`) on upgrade, and has no command for either, so `brew-keg-cleanup` does both. It runs before the upgrade for the same reason `mise prune` does.
 - `setup/README.md:108`: keep the paragraph, and add that `sysup` removes replaced versions by itself.
 - `README.md`: `grep -n 'packages prune\|sysup' README.md` shows whether it lists `sysup`'s steps. If it does, add this one.
 
-- [ ] **Step 6: `pnpm check`, then commit: "Remove replaced Homebrew versions in sysup"**
+- [x] **Step 6: `pnpm check`, then commit: "Remove replaced Homebrew versions in sysup"**
 
 ### Task 6: `rotm update` skips the first-install warning
 
@@ -353,7 +379,7 @@ Beside the `modules=` line at `bin/sysup:23`, resolve `keg_cleanup="$(cd "$(dirn
 
 - Produces: `ROTM_UPDATE=1` in `setup.sh`'s environment when `rotm update` started it. `rotm install` leaves it unset.
 
-- [ ] **Step 1: In `bin/lib/test-rotm`, make the fixture's `setup.sh` log the variable on a line before its `setup` line**
+- [x] **Step 1: In `bin/lib/test-rotm`, make the fixture's `setup.sh` log the variable on a line before its `setup` line**
 
 The line is `env ROTM_UPDATE=${ROTM_UPDATE:-}`. The existing check that the last log line is `setup ` stays true. Add:
 
@@ -362,7 +388,7 @@ check "update tells setup.sh it is an update" "rotm update && grep -qx 'env ROTM
 check "install does not" ": > '$tmp/log'; rotm install && grep -qx 'env ROTM_UPDATE=' '$tmp/log'"
 ```
 
-- [ ] **Step 2: In `bin/lib/test-bootstrap`, add `ROTM_UPDATE` to the `unset` list and a case beside case a**
+- [x] **Step 2: In `bin/lib/test-bootstrap`, add `ROTM_UPDATE` to the `unset` list and a case beside case a**
 
 ```bash
 ROTM_UPDATE=1 run
@@ -375,19 +401,19 @@ check_true "install: the warning still shows" has 'WARNING'
 
 The self-check has no terminal, so `setup.sh` prints "Non-interactive shell — continuing without confirmation." where a terminal would get "Press Enter". The second check covers both.
 
-- [ ] **Step 3: Run both self-checks. Expected: FAIL naming the first new check in each.**
+- [x] **Step 3: Run both self-checks. Expected: FAIL naming the first new check in each.**
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 `bin/rotm`: `export ROTM_UPDATE=1` on the line before `exec "$DOTFILES/setup.sh" "$@"` in `update`. `setup.sh`: when `ROTM_UPDATE` is set, print `Updating $DOTFILES_DIR` and skip the four warning lines, the Enter wait and its non-interactive stand-in. Nothing else in `setup.sh` reads the variable.
 
-- [ ] **Step 5: Run both self-checks. Expected: PASS.**
+- [x] **Step 5: Run both self-checks. Expected: PASS.**
 
-- [ ] **Step 6: Docs**
+- [x] **Step 6: Docs**
 
 `setup/README.md` and `docs/updating.md:12`: `rotm update` runs setup without the first-install warning and its wait.
 
-- [ ] **Step 7: `pnpm check`, then commit: "Skip the first-install warning on rotm update"**
+- [x] **Step 7: `pnpm check`, then commit: "Skip the first-install warning on rotm update"**
 
 ### Task 7: `misc.sh` says one line when a step had nothing to do
 
@@ -397,7 +423,7 @@ The self-check has no terminal, so `setup.sh` prints "Non-interactive shell — 
 - Modify: `setup/README.md:32` and `:128`
 - Test: `bin/lib/test-bootstrap`, the `misc` cases from line 719
 
-- [ ] **Step 1: Add the assertions to the "all on" `misc` case**
+- [x] **Step 1: Add the assertions to the "all on" `misc` case**
 
 ```bash
 check_true "permissions: one line, not one per script" has '^  [0-9]+ scripts executable$' && check_true "… and no per-script line" lacks 'set for '
@@ -430,9 +456,9 @@ want='if asks && [ ! -f "${VSCODE_SETTINGS_ENV:-$HOME/.config/dotfiles/vscode.en
 check_true "the font menu is only for a Mac with no saved preset" grep -qF -- "$want" "$repo/setup/misc.sh"
 ```
 
-- [ ] **Step 2: Run `bash bin/lib/test-bootstrap`. Expected: FAIL naming "permissions: one line".**
+- [x] **Step 2: Run `bash bin/lib/test-bootstrap`. Expected: FAIL naming "permissions: one line".**
 
-- [ ] **Step 3: Implement, one edit per site**
+- [x] **Step 3: Implement, one edit per site**
 
 - Permissions: keep the `find … -exec chmod +x {} \;`, add `-print`, count the lines (`wc -l | tr -d ' '`, since macOS pads the count), print `<n> scripts executable` through `indent`. Drop the per-file `printf` and the `Done!` line.
 - Font menu: the condition becomes `asks && [ ! -f "${VSCODE_SETTINGS_ENV:-$HOME/.config/dotfiles/vscode.env}" ]`. That is the file `bin/vscode-settings:47` saves a choice to, and `--choose` with Enter writes it, so the menu shows once.
@@ -441,13 +467,13 @@ check_true "the font menu is only for a Mac with no saved preset" grep -qF -- "$
 - PowerShell: the heading reads `💠 Checking PowerShell (.NET global tool)…`.
 - Restore: capture `claude-config restore`'s output. Print it through `indent` when it is not empty, else print `nothing to restore`. The warning on a non-zero exit stays.
 
-- [ ] **Step 4: Run `bash bin/lib/test-bootstrap`. Expected: PASS.**
+- [x] **Step 4: Run `bash bin/lib/test-bootstrap`. Expected: PASS.**
 
-- [ ] **Step 5: Docs**
+- [x] **Step 5: Docs**
 
 `setup/README.md:32` says `DOTFILES_YES` makes `misc.sh` skip the font menu, and `:128` describes the render. Add that the menu shows only while no preset is saved, and that `vscode-settings --choose` changes it later.
 
-- [ ] **Step 6: `pnpm check`, then commit: "Print one line where setup found nothing to do"**
+- [x] **Step 6: `pnpm check`, then commit: "Print one line where setup found nothing to do"**
 
 ### Task 8: Three helpers report what happened
 
@@ -463,7 +489,7 @@ check_true "the font menu is only for a Mac with no saved preset" grep -qF -- "$
 - Produces: `summary_line(out, kinds, n_plugins, total_cost, flags, since=None, added=0, removed=0) -> str` in `build_catalog.py`. `kinds` maps `skill`, `command`, `agent`, `mcp` to counts, and `flags` maps `review`, `watch`, `retire` to counts.
 - `bin/sysup:786-787` reads the line with `^wrote (.*)/CATALOG\.md,.*` and `^wrote .*, since (.*): \+([0-9]+) -([0-9]+)$`. Both must still match.
 
-- [ ] **Step 1: Add to `agents/catalog/test_build_catalog.py`, above the `importlib.reload` block near the end**
+- [x] **Step 1: Add to `agents/catalog/test_build_catalog.py`, above the `importlib.reload` block near the end**
 
 The file is a script of top-level asserts that imports the module as `b` and ends with `print("ok")`. It has no test functions, so add plain asserts, and `import re` at the top:
 
@@ -480,44 +506,33 @@ first = b.summary_line("/c", {"skill": 1, "command": 1, "agent": 1, "mcp": 1}, 1
 assert first.endswith("0 to review, 0 to watch, 0 to retire"), first
 ```
 
-- [ ] **Step 2: Run `python3 agents/catalog/test_build_catalog.py`. Expected: FAIL with `AttributeError: module 'build_catalog' has no attribute 'summary_line'`.**
+- [x] **Step 2: Run `python3 agents/catalog/test_build_catalog.py`. Expected: FAIL with `AttributeError: module 'build_catalog' has no attribute 'summary_line'`.**
 
-- [ ] **Step 3: Add `summary_line` and call it from the `print` at line 630**
+- [x] **Step 3: Add `summary_line` and call it from the `print` at line 630**
 
 Counts are not singularized: "1 skills" is accepted, because the line is a log line and a plural rule per noun is not worth the code.
 
-- [ ] **Step 4: Run `python3 agents/catalog/test_build_catalog.py`. Expected: `ok`. `bin/lib/test-sysup:174-175` stubs the line without its middle part and needs no change.**
+- [x] **Step 4: Run `python3 agents/catalog/test_build_catalog.py`. Expected: `ok`. `bin/lib/test-sysup:174-175` stubs the line without its middle part and needs no change.**
 
-- [ ] **Step 5: `bin/install-snippetslab-skill`**
+- [x] **Step 5: `bin/install-snippetslab-skill`**
 
 Before the `mv`, when `$skill_dir/SKILL.md` exists and `cmp -s "$tmp" "$skill_dir/SKILL.md"` is true, skip the `mv`. The link check and `ln -sfn` still run. The last line is then `SnippetsLab skill unchanged`, else the current `written to` line. `sysup` compares checksums and does not read this line.
 
 Check by hand, since SnippetsLab is installed here: run `install-snippetslab-skill` twice. Expected: the second run prints `SnippetsLab skill unchanged`.
 
-- [ ] **Step 6: `setup/dotfiles-extras.sh:223`**
+- [x] **Step 6: `setup/dotfiles-extras.sh:223`**
 
 `warn "No Firefox Developer Edition profile found — skipping Firefox styles"` becomes `skipped "Firefox styles (no Firefox Developer Edition profile)"`. A Mac without that browser is not a warning.
 
-- [ ] **Step 7: `pnpm check`, then commit: "Report unchanged results plainly in three setup helpers"**
+- [x] **Step 7: `pnpm check`, then commit: "Report unchanged results plainly in three setup helpers"**
 
 ### Task 9: The owner's proof
-
-Tasks 1 to 8 are built and pushed (2026-11-16, `3a124a9` to `941c99c`). Differences from the plan as written:
-
-- Task 2: a third assertion needed the new wording (`bin/lib/test-sysup`, "installed, with a macOS update").
-- Task 4: the prototype did not parse under `/bin/bash` 3.2 (a bare `)` case pattern inside `$(…)`, and a quoted `${t/"a/b"/…}` pattern), so both are written the 3.2 way. An absolute link that names the prefix by its physical path is matched too.
-- Task 5: the changed line counts links with a singular ("1 link fixed").
-- Task 7: the CodeGraph stubs answer only `install`, because `misc.sh` also calls `codegraph telemetry off`. Two cases were added: a restore that prints something, and a failed CodeGraph install.
-- Task 8: `setup/tests/dotfiles-extras.sh` asserted the Firefox warning and now asserts the skipped line.
-- Review: an independent reviewer reproduced four defects in `brew-keg-cleanup` on fake prefixes, none of which this Mac's prefix triggers. A `HOMEBREW_PREFIX` ending in `/` unlinked links it should have repointed. An `opt` link into another rack's keg of the same version counted as this rack's current one. A link name holding a newline and the path of a real link got that link removed. An empty current keg still replaced the old one. Cases u to x pin them. In `sysup`, the plugin commands also get `GIT_TERMINAL_PROMPT=0`, a last line the step cannot read is a notice, and the failure hint is `brew-keg-cleanup --apply`.
-
-`sysup` and `rotm update` are never run by an agent on this Mac. This task is the owner's.
 
 - [x] **Step 1: Promote `main` to `stable` the way the last plan did (`docs/superpowers/plans/completed/2026-11-16-trusted-skill-sources-and-hook-pin.md`, Task 6), after `check` and a `fresh-install` run pass on the commit.**
 
 Done 2026-11-17: `fresh-install` run 44020041126 passed on the `clone` and the `installed` path on `f02ffbb`, with `check` green on the same commit (run 44020031224). `stable` moved from `2cbdee8` to `f02ffbb` by a fast-forward push.
 
-- [ ] **Step 2: The owner runs `rotm update`. Expected:**
+- [x] **Step 2: The owner runs `rotm update`. Expected:**
 
 - no `WARNING` block and no "Press Enter", one `Updating …` line
 - no font preset menu
@@ -525,13 +540,13 @@ Done 2026-11-17: `fresh-install` run 44020041126 passed on the `clone` and the `
 - `CodeGraph already connected`, `rtk hook already present`, `nothing to restore`, `SnippetsLab skill unchanged`
 - a catalog line with no braces
 
-- [ ] **Step 3: The owner runs `sysup`. Expected:**
+- [x] **Step 3: The owner runs `sysup`. Expected:**
 
 - `✔ dotfiles  installed copy up to date`
 - `↻ packages cleanup  0 old versions removed, 1 link fixed` on the first run (the dead `README.md` link), unless an upgrade since 2026-11-16 left kegs, in which case the count is theirs
 - any held release as a dim `◷ mise hold` line, and a headline that does not count it
 - no 1Password prompt during the plugins step. If one appears, Task 3's premise is wrong: say so in the outcome section and reopen it.
 
-- [ ] **Step 4: The owner runs `sysup` again. Expected: `✔ packages cleanup  nothing superseded`.**
+- [x] **Step 4: The owner runs `sysup` again. Expected: `✔ packages cleanup  nothing superseded`.**
 
-- [ ] **Step 5: Write the outcome table at the top of this plan (task, commit, difference from the plan), move the plan to `completed/`, and update `docs/superpowers/plans/README.md`.**
+- [x] **Step 5: Write the outcome table at the top of this plan (task, commit, difference from the plan), move the plan to `completed/`, and update `docs/superpowers/plans/README.md`.**
