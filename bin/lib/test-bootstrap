@@ -773,6 +773,39 @@ check_true "all on: rustup's default toolchain is set" ran 'rustup default stabl
 check_true "all on: Supabase telemetry is turned off" ran 'supabase telemetry disable'
 check_true "all on: PowerShell is installed" ran 'dotnet tool install --global PowerShell'
 check_true "all on: the Aspire certificate hint is printed" has '\[Aspire\] HTTPS dev certificate not trusted'
+check_true "permissions: one line, not one per script" has '^  [0-9]+ scripts executable$'
+check_true "permissions: … and no per-script line" lacks 'set for '
+check_true "restore with nothing to do says so" has '^  nothing to restore$'
+check_true "PowerShell: the heading does not claim an install" has 'Checking PowerShell'
+check_true "PowerShell: … in either wording" lacks 'Installing PowerShell'
+want='if asks && [ ! -f "${VSCODE_SETTINGS_ENV:-$HOME/.config/dotfiles/vscode.env}" ]; then'
+check_true "the font menu is only for a Mac with no saved preset" grep -qF -- "$want" "$repo/setup/misc.sh"
+fresh
+mstub "$mfix/bin/claude-config" "echo 'restored one plugin'"
+misc
+mstub "$mfix/bin/claude-config"
+check_true "restore that did something keeps its output" has '^  restored one plugin$'
+check_true "restore that did something: … and no nothing-to-restore line" lacks 'nothing to restore'
+fresh
+# Only for install: misc.sh also calls `codegraph telemetry off`
+mstub "$tmp/mbin/codegraph" "[ \"\$1\" != install ] || { echo '◆  Claude Code: Unchanged ~/.claude.json'; echo '◇  Next: index a project'; echo '└  Done! Restart your agent to use CodeGraph.'; }"
+misc
+check_true "CodeGraph unchanged: one line" has '^  CodeGraph already connected$'
+check_true "CodeGraph unchanged: … and no restart advice" lacks 'Restart your agent'
+fresh
+mstub "$tmp/mbin/codegraph" "[ \"\$1\" != install ] || { echo '◆  Claude Code: Updated ~/.claude.json'; echo '└  Done! Restart your agent to use CodeGraph.'; }"
+misc
+check_true "CodeGraph changed: its output is kept" has 'Restart your agent'
+fresh
+mstub "$tmp/mbin/codegraph" "echo 'boom'; [ \"\$1\" != install ]"
+misc
+check_true "CodeGraph: a failed install shows its output" has '^  boom$'
+check_true "CodeGraph: … and still warns" has 'codegraph install failed'
+fresh
+mstub "$tmp/mbin/rtk" "echo 'RTK hook registered (hook-only mode).'; echo '  settings.json: hook already present'; echo '  Restart Claude Code. Test with: git status'"
+misc
+check_true "rtk already wired: one line" has '^  rtk hook already present$'
+check_true "rtk already wired: … and no restart advice" lacks 'Restart Claude Code'
 fresh
 : > "$STATE/warnings"
 ROTM_WARNINGS_FILE="$STATE/warnings" misc

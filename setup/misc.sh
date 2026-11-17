@@ -56,11 +56,8 @@ module_on() {
 
 # Make custom binary scripts executable
 info 'Changing access permissions for binary scripts…'
-# shellcheck disable=SC2016 # ${0##*/} is for the inner bash -c, so it must stay unexpanded here
-find "$DOTFILES_DIR/bin" -type f -not -name '.DS_Store' -not -name '*.md' -exec chmod +x {} \; -exec bash -c 'printf "\r\033[2K  [ \033[00;32m✔\033[0m ] set for %s\n" "${0##*/}"' {} \;
-echo
-echo 'Done!' | indent
-echo
+# tr: macOS wc pads the count
+echo "$(find "$DOTFILES_DIR/bin" -type f -not -name '.DS_Store' -not -name '*.md' -exec chmod +x {} \; -print | wc -l | tr -d ' ') scripts executable" | indent
 
 # Iosevka Code Nerd Font — VS Code's editor and terminal font (companion of the
 # SpaceBox theme; no Homebrew cask). Installs it when missing and reinstalls it
@@ -81,7 +78,9 @@ if command_exists minijinja-cli; then
   info "🖋️ Rendering VS Code settings…"
   # The menu runs unpiped: through `| indent`, read -p's prompt (no newline)
   # stays in sed's buffer until after you answer
-  if asks; then
+  # Only while no preset is saved: the menu's answer writes that file, so it
+  # shows once, and `vscode-settings --choose` changes it later
+  if asks && [ ! -f "${VSCODE_SETTINGS_ENV:-$HOME/.config/dotfiles/vscode.env}" ]; then
     "$DOTFILES_DIR/bin/vscode-settings" --choose
   else
     "$DOTFILES_DIR/bin/vscode-settings" 2>&1 | indent
@@ -168,8 +167,15 @@ elif [ "${DOTFILES_SKIP_CODEGRAPH:-false}" = true ]; then
   echo "Skipping CodeGraph (--skip-codegraph)" | indent
 elif command_exists codegraph; then
   info "🕸️ Connecting CodeGraph to Claude Code…"
-  codegraph install --yes --target claude --location global --no-color | indent \
-    || warning "codegraph install failed — run it later: codegraph install --target claude"
+  cg_rc=0
+  cg_out=$(codegraph install --yes --target claude --location global --no-color 2>&1) || cg_rc=$?
+  # Every file it reports unchanged: its banner and restart advice say nothing new
+  if [ "$cg_rc" -eq 0 ] && grep -q 'Claude Code:' <<< "$cg_out" && ! grep 'Claude Code:' <<< "$cg_out" | grep -qv 'Unchanged'; then
+    echo "CodeGraph already connected" | indent
+  elif [ -n "$cg_out" ]; then
+    indent <<< "$cg_out"
+  fi
+  [ "$cg_rc" -eq 0 ] || warning "codegraph install failed — run it later: codegraph install --target claude"
   # Persisted opt-out: the MCP server Claude Code spawns may not inherit
   # CODEGRAPH_TELEMETRY=0 from zsh/env.zsh (e.g. GUI-launched)
   codegraph telemetry off | indent || true
@@ -383,8 +389,14 @@ fi
 # into agents/instructions.md. https://github.com/rtk-ai/rtk#auto-rewrite-hook
 if $agents_on && command_exists rtk; then
   info "✂️ Connecting rtk to Claude Code…"
-  rtk init -g --hook-only --auto-patch < /dev/null 2>&1 | { grep -v 'No RTK.md created' || true; } | indent \
-    || warning "rtk init failed — run it later: rtk init -g --hook-only"
+  rtk_rc=0
+  rtk_out=$(rtk init -g --hook-only --auto-patch < /dev/null 2>&1 | { grep -v 'No RTK.md created' || true; }) || rtk_rc=$?
+  if [ "$rtk_rc" -eq 0 ] && grep -q 'hook already present' <<< "$rtk_out"; then
+    echo "rtk hook already present" | indent
+  elif [ -n "$rtk_out" ]; then
+    indent <<< "$rtk_out"
+  fi
+  [ "$rtk_rc" -eq 0 ] || warning "rtk init failed — run it later: rtk init -g --hook-only"
 fi
 
 # Supabase CLI (a brew: package) — persisted telemetry opt-out, for runs that don't
@@ -408,7 +420,7 @@ POWERSHELL_VERSION='7.6.*'
 if ! command_exists dotnet; then
   echo "dotnet not found — skipping PowerShell (install the dotnet-sdk cask first)" | indent
 elif module_on cloud; then
-  info "💠 Installing PowerShell (.NET global tool)…"
+  info "💠 Checking PowerShell (.NET global tool)…"
   if dotnet tool list --global | grep -qi '^powershell[[:space:]]'; then
     dotnet tool update --global PowerShell --version "$POWERSHELL_VERSION" | indent || warning "PowerShell install failed; re-run: dotnet tool install --global PowerShell --version '$POWERSHELL_VERSION'"
   else
@@ -478,8 +490,14 @@ fi
 # so put its directory first for both.
 if [ -x "$claude_bin" ] && module_on claude; then
   info "🧩 Restoring Claude Code plugins, settings and skills…"
-  PATH="$(dirname "$claude_bin"):$PATH" "$DOTFILES_DIR/bin/claude-config" restore 2>&1 | indent \
-    || warning "Some of it didn't restore — re-run: claude-config restore"
+  restore_rc=0
+  restore_out=$(PATH="$(dirname "$claude_bin"):$PATH" "$DOTFILES_DIR/bin/claude-config" restore 2>&1) || restore_rc=$?
+  if [ -n "$restore_out" ]; then
+    indent <<< "$restore_out"
+  elif [ "$restore_rc" -eq 0 ]; then
+    echo "nothing to restore" | indent
+  fi
+  [ "$restore_rc" -eq 0 ] || warning "Some of it didn't restore — re-run: claude-config restore"
   info "📚 Building the Claude Code catalog…"
   # Its lint lines (stderr) say what's wrong when curated.toml is out of date
   PATH="$(dirname "$claude_bin"):$PATH" "$DOTFILES_DIR/bin/claude-catalog" 2>&1 | indent \
