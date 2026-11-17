@@ -47,6 +47,7 @@ style() {
     ok) glyph=✔ color=$c_ok ;;
     changed) glyph=↻ color=$c_changed ;;
     notice) glyph=● color=$c_notice ;;
+    held) glyph=◷ color=$c_dim ;;
     fail) glyph=✖ color=$c_fail ;;
     prompt) glyph=› color=$c_prompt ;;
   esac
@@ -77,9 +78,9 @@ status() {
       ;;
   esac
   clear_line
-  # An ok line's detail is dimmed so the lines that changed something stand out
+  # An ok or held line's detail is dimmed so the lines that changed something stand out
   local detail_color=""
-  [ "$1" != ok ] || detail_color=$c_dim
+  case $1 in ok | held) detail_color=$c_dim ;; esac
   say "$(entry "" "$1" "$2" "$3$took" "$detail_color")"
   # step<TAB>detail, for the summary's rows
   case $1 in
@@ -441,7 +442,7 @@ else
   show
 fi
 while read -r tool version until; do
-  status notice mise "${tool##*[:/]} $version held until $until by minimum_release_age"
+  status held "mise hold" "${tool##*[:/]} $version until $until (minimum_release_age)"
 done < <(sed -nE 's/.*WARN +newer ([^ ]+) release ([^ ]+) \(released [^,]*, eligible ([^)]*)\) ignored by minimum_release_age.*/\1 \2 \3/p' <<< "$out")
 # mise upgrade reports a tool it could not reinstall (a pipx tool no config
 # pins, a backend bug) as a WARN and still exits 0

@@ -301,7 +301,9 @@ check_true "changes: mise prune names each tool in a row" has '^    aspire      
 check_true "changes: a tool pruned from one backend keeps its short name" has '^    node        24\.0\.0$'
 check_true "changes: two backends of one tool stay apart" has '^    node \(npm\)  1\.0\.0, 2\.0\.0$'
 check_true "changes: prune ran before the upgrade" grep -q 'mise prune.*mise ' <<< "$(grep -oE '^== mise( prune)? ==' "$DOTFILES"/logs/sysup-*.log | tr '\n' ' ')"
-check_true "changes: mise held release is a notice" has '^● mise +aspire 13.6.3 held until 2026-10-24 14:17 EDT by minimum_release_age$'
+check_true "changes: a held release has its own quiet line" has '^◷ mise hold +aspire 13\.6\.3 until 2026-10-24 14:17 EDT \(minimum_release_age\)$'
+check_true "changes: … and is not a notice" lacks '● mise +aspire'
+check_true "changes: … and is not in the summary" lacks '^ +◷'
 check_true "changes: mise reinstall failure is a notice" has '^● mise +failed to reinstall pipx tools; the next sysup.s mise prune removes a version no config pins$'
 check_true "changes: uv failure names the command" has '^✖ uv +run: uv tool upgrade --all --exclude-newer "48 hours"$'
 check_true "changes: uv failure output shown" has '^    error: network down$'
