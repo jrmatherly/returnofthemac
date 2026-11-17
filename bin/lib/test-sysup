@@ -242,6 +242,7 @@ check_true "cache: nothing to prune is ok" has '^✔ uv cache +nothing to prune$
 check_true "cache: the wait is bounded" [ "$(cat "$STATE/lock-timeout")" = 10 ]
 check_true "up to date: nothing for mise prune" has '^✔ mise prune +nothing unused$'
 check_true "up to date: no changed, notice or failed line" lacks '^ *[↻●✖]'
+check_true "no Homebrew prefix: the cleanup step does not appear" lacks 'packages cleanup'
 check_true "plugins: every fetch is told to use HTTPS for github.com" [ "$(sort -u "$STATE/plugin-git.log")" = '1|url.https://github.com/.insteadOf|git@github.com:' ]
 rm -rf "$DOTFILES/logs"
 printf '{"plugins":{}}' > "$CLAUDE_CONFIG_DIR/plugins/installed_plugins.json"
@@ -540,6 +541,35 @@ check_true "modules off: no Claude config is saved" test ! -e "$STATE/claude-con
 check_true "modules off: the prune notice names them" has '^● packages prune +2 packages no config declares; review: mise bootstrap packages prune --dry-run \(modules off: fonts, apps, claude, agents\)$'
 check_true "a package declared absent is not a notice" has '^✔ packages status +all installed$'
 rm -f "$HOME/.config/mise/modules-off.local" "$HOME/.config/mise/miserc.local.toml" "$STATE/undeclared" "$STATE/pkg-absent"
+
+# A Homebrew prefix: the real brew-keg-cleanup against a fake one
+rm -rf "$DOTFILES/logs"
+mkdir -p "$HOMEBREW_PREFIX/Cellar" "$HOMEBREW_PREFIX/opt" "$HOMEBREW_PREFIX/lib"
+run
+check_true "kegs: nothing superseded is an ok line" has '^✔ packages cleanup +nothing superseded$'
+check_true "kegs: it runs before the upgrade" grep -q 'packages cleanup.*packages ' <<< "$(grep -oE '^== packages( cleanup)? ==' "$DOTFILES"/logs/sysup-*.log | tr '\n' ' ')"
+# foo 1.0 replaced by 2.0, one link to repoint and one to drop
+rm -rf "$DOTFILES/logs"
+mkdir -p "$HOMEBREW_PREFIX/Cellar/foo/1.0/lib" "$HOMEBREW_PREFIX/Cellar/foo/2.0/lib"
+touch "$HOMEBREW_PREFIX/Cellar/foo/1.0/lib/a" "$HOMEBREW_PREFIX/Cellar/foo/1.0/lib/b" "$HOMEBREW_PREFIX/Cellar/foo/2.0/lib/a"
+touch -t 202601010000 "$HOMEBREW_PREFIX/Cellar/foo/1.0"
+ln -s ../Cellar/foo/2.0 "$HOMEBREW_PREFIX/opt/foo"
+ln -s ../Cellar/foo/1.0/lib/a "$HOMEBREW_PREFIX/lib/a"
+ln -s ../Cellar/foo/1.0/lib/b "$HOMEBREW_PREFIX/lib/b"
+run
+check_true "kegs: a removal is a changed line with both counts" has '^↻ packages cleanup +1 old version removed, 2 links fixed$'
+check_true "kegs: the old version is gone" [ ! -e "$HOMEBREW_PREFIX/Cellar/foo/1.0" ]
+check_true "kegs: … and the current one stays" [ -d "$HOMEBREW_PREFIX/Cellar/foo/2.0" ]
+# a keg that cannot be removed
+rm -rf "$DOTFILES/logs"
+mkdir -p "$HOMEBREW_PREFIX/Cellar/foo/1.5"
+touch -t 202601010000 "$HOMEBREW_PREFIX/Cellar/foo/1.5"
+chmod 555 "$HOMEBREW_PREFIX/Cellar/foo"
+run
+# Before the check: a failed check exits, and the trap cannot delete a read-only rack
+chmod 755 "$HOMEBREW_PREFIX/Cellar/foo"
+rm -rf "$HOMEBREW_PREFIX"
+check_true "kegs: a failure names the command" has '^✖ packages cleanup +run: brew-keg-cleanup$'
 
 rm -rf "$DOTFILES/logs"
 echo cloud > "$HOME/.config/mise/modules-off.local"

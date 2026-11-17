@@ -22,6 +22,7 @@ installed=false
 # By path, as rotm-mode is, and resolved before the cd below
 modules="$(cd "$(dirname "$0")/lib" && pwd -P)/rotm-modules"
 user_layer="$(dirname "$modules")/rotm-user-layer"
+keg_cleanup="$(dirname "$modules")/brew-keg-cleanup"
 mkdir -p "$DOTFILES/logs"
 log="$DOTFILES/logs/sysup-$(date +%Y%m%d-%H%M%S).log"
 changed=() notices=() failed=() actions=()
@@ -335,6 +336,24 @@ pkg_state() {
   local json
   json=$(mise bootstrap packages status --json 2>> "$log") && jq -e 'type == "object"' <<< "$json" > /dev/null 2>&1 && printf '%s\n' "$json"
 }
+# mise links the new keg on an upgrade and leaves the old one and its alias
+# links (opt/node@26). Before the upgrade, as mise prune is: what this run
+# replaces stays until the next run, so an upgrade can be rolled back
+if [ -d "${HOMEBREW_PREFIX:-/opt/homebrew}/Cellar" ]; then
+  step "packages cleanup"
+  if capture "$keg_cleanup" --apply; then
+    read -r kegs repointed removed <<< "$(tail -n 1 <<< "$out" | sed -nE 's/^([0-9]+) kegs, ([0-9]+) links repointed, ([0-9]+) links removed$/\1 \2 \3/p')"
+    if [ $((${kegs:-0} + ${repointed:-0} + ${removed:-0})) -eq 0 ]; then
+      status ok "packages cleanup" "nothing superseded"
+    else
+      status changed "packages cleanup" "$(plural "$kegs" "old version") removed, $(plural $((repointed + removed)) link) fixed"
+    fi
+  else
+    status fail "packages cleanup" "run: brew-keg-cleanup"
+    show
+  fi
+fi
+
 step packages
 pkg_after=""
 if ! pkg_before=$(pkg_state); then

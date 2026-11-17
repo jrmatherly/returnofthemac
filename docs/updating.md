@@ -24,6 +24,7 @@ sysup
 - pulls the latest dotfiles (`git pull` in the clone)
 - installs macOS software updates (a macOS update asks for your login password: see [below](#macos-update-password-from-1password-optional)); one that needs a restart, such as a new macOS version, is only downloaded, and the summary tells you to install it from System Settings → General → Software Update → Restart Now or with `sudo softwareupdate -ia --restart`, since a plain restart doesn't install it
 - updates mise itself (`mise self-update`)
+- removes the Homebrew versions an earlier upgrade replaced, and repoints or removes the links that still named them (`brew-keg-cleanup`, since mise leaves both behind). It runs before the upgrade, so the version this run replaces stays until the next run. It also removes dead links in the Homebrew prefix
 - upgrades the formulae and casks in [`30-packages.toml`](../tilde/.config/mise/conf.d/30-packages.toml) and the [modules](modules.md) that are on, VS Code included, without asking for confirmation (`mise bootstrap packages upgrade --yes`; the pairs whose installed version moved go to the screen). VS Code updates its own extensions
 - lists any declared package that is still not installed
 - reports, as one notice, the formulae and casks installed on this Mac that no mise config declares (`mise bootstrap packages prune --dry-run`, and again with `-m brew-cask`). It never removes them; review the list and run `mise bootstrap packages prune` yourself to remove every one
