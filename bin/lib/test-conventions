@@ -69,6 +69,8 @@ jq -e '.customManagers[] | select(.depNameTemplate == "@vectorize-io/hindsight-c
 # A trusted source no row uses is a misspelling: the skill would fall back to the review gate.
 # The file test is its own line: a missing file ends the loop below with no error
 [ -f agents/claude-skills-trusted.txt ] || fail "agents/claude-skills-trusted.txt is missing"
+# trusted matches a whole line, so a trailing space would un-trust the source
+! grep -Ev '^(#|$)' agents/claude-skills-trusted.txt | grep -q '[[:space:]]' || fail "agents/claude-skills-trusted.txt: a source line holds whitespace"
 while read -r source; do
   awk -v s="$source" '$1 == "skill" && $3 == s { f = 1 } END { exit !f }' agents/claude-skills.txt || fail "trusted skill source with no skill: $source"
 done < <(grep -Ev '^[[:space:]]*(#|$)' agents/claude-skills-trusted.txt)

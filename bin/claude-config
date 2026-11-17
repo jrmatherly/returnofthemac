@@ -22,7 +22,7 @@
 #
 # `claude-config restore skills --update`
 #
-# - Reinstall one changed skill from a source that is not trusted after reviewing it, for every agent on its row, then record its new value with `claude-config save`:
+# - Reinstall one changed skill from a source that is not trusted after reviewing it, for every agent on its row, and in a clone record its new value:
 #
 # `claude-config restore skills --accept {{name}}`
 #
@@ -282,7 +282,11 @@ trusted() {
   grep -qxF -- "$1" "$trusted_list" 2> /dev/null
 }
 
+# An untrusted GitHub row (one with a folder) keeps its tracked reviewed value,
+# which a merged review may have moved ahead of this Mac's lock. Only --accept
+# moves it
 save_skills() {
+  local kept
   missing_source "$skill_lock" "$skills_list" && return 0
   valid_json "$skill_lock" "$skills_list" || return 0
   {
@@ -304,6 +308,10 @@ save_skills() {
         [ ${#agents[@]} -gt 0 ] || continue
         # A trusted row has no reviewed value, so an update changes no tracked file
         ! trusted "$source" || reviewed="" folder=""
+        if [ -n "$folder" ]; then
+          kept=$(awk -v n="$name" '$1 == "skill" && $2 == n && NF == 6 { print $5 }' "$skills_list" 2> /dev/null || true)
+          reviewed=${kept:-$reviewed}
+        fi
         echo "skill $name $source $(
           IFS=,
           echo "${agents[*]}"
@@ -402,10 +410,15 @@ restore_skills() {
     # the usual cause, and the fix is on the lock side
     before=$failed failed=0
     DO_NOT_TRACK=1 DISABLE_TELEMETRY=1 run "${npx[@]}" -y skills add "$source" -g -s "$name" -a "${missing[@]}" -y
-    [ "$updated" = false ] || [ "$failed" != 0 ] || echo "skill updated $name"
+    [ "$updated" = false ] || [ "$failed" != 0 ] || [ "$dry_run" = true ] || echo "skill updated $name"
     [ "$failed" = 0 ] || echo "claude-config: if $source no longer ships $name, drop it: npx -y skills remove -g -s $name -y, then claude-config save" >&2
     [ "$before" = 0 ] || failed=1
   done < <(grep -Ev '^\s*(#|$)' "$skills_list")
+}
+
+# save writes agents/ in the repository, which an installed copy must not
+installed_copy() {
+  [ -z "${CLAUDE_CONFIG_SAVE_DIR:-}" ] && [ "$("$(dirname "$0")/lib/rotm-mode" "$DOTFILES_DIR")" = installed ]
 }
 
 tildify() {
@@ -415,7 +428,7 @@ tildify() {
 
 case "${1:-}" in
   save)
-    if [ -z "${CLAUDE_CONFIG_SAVE_DIR:-}" ] && [ "$("$(dirname "$0")/lib/rotm-mode" "$DOTFILES_DIR")" = installed ]; then
+    if installed_copy; then
       echo "claude-config: save writes agents/ in the repository, and this is an installed copy. Run it from a clone, or set CLAUDE_CONFIG_SAVE_DIR." >&2
       exit 1
     fi
@@ -453,6 +466,16 @@ case "${1:-}" in
     if [ "$part" = all ] || [ "$part" = plugins ]; then restore_plugins; fi
     if [ "$part" = all ] || [ "$part" = settings ]; then restore_settings; fi
     if [ "$part" = all ] || [ "$part" = skills ]; then restore_skills; fi
+    # An accepted skill's row takes the value just installed, and no other row
+    # changes. An installed copy records nothing: its review arrives as a
+    # merged pull request
+    if [ -n "$accept" ] && [ "$failed" = 0 ] && [ "$dry_run" = false ] && ! installed_copy; then
+      value=$(jq -r --arg n "$accept" '.skills[$n] | .skillFolderHash // .wellKnownDigest // empty' "$skill_lock" 2> /dev/null || true)
+      [ -z "$value" ] || {
+        awk -v n="$accept" -v v="$value" '$1 == "skill" && $2 == n && NF >= 5 { $5 = v } { print }' "$skills_list" > "$skills_list.tmp" \
+          && mv "$skills_list.tmp" "$skills_list"
+      }
+    fi
     exit "$failed"
     ;;
   retire) retire_settings ;;

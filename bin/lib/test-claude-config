@@ -141,6 +141,7 @@ PATH="$tmp/bin:$PATH" cc restore skills --accept b > "$tmp/out" 2>&1
 check "--accept reinstalls the named skill only" "grep -q -- '-s b -a claude-code' '$TEST_LOG.npx' && ! grep -q -- '-s e ' '$TEST_LOG.npx'"
 PATH="$tmp/bin:$PATH" cc restore skills --accept h > "$tmp/out" 2>&1
 check "--accept installs a held skill" "grep -q -- '-s h -a claude-code' '$TEST_LOG.npx'"
+check "--accept leaves a row for a skill this Mac lacks" "grep -q '^skill i ' '$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt'"
 PATH="$tmp/bin:$PATH" cc restore skills --accept nope > "$tmp/out" 2>&1
 check "--accept refuses a name that is not tracked" "[ \$? = 2 ] && grep -q 'no tracked skill named nope' '$tmp/out'"
 cc save > /dev/null 2>&1
@@ -200,7 +201,12 @@ PATH="$tmp/bin:$PATH" cc restore skills --update > "$tmp/out" 2>&1
 check "a merged review ahead of the installed copy is installed" "grep -qx 'skill updated p' '$tmp/out' && grep -q -- '-s p -a claude-code' '$TEST_LOG.npx'"
 check "upstream past the merged review still waits" "grep -qx 'skill changed q' '$tmp/out' && ! grep -q -- '-s q ' '$TEST_LOG.npx'"
 check "a skill at its reviewed value is left alone" "grep -qx 'skill same a' '$tmp/out' && ! grep -q -- '-s a ' '$TEST_LOG.npx'"
+PATH="$tmp/bin:$PATH" cc restore skills --update --dry-run > "$tmp/out" 2>&1
+check "a dry run reports no update" "grep -q -- '-s p -a claude-code' '$tmp/out' && ! grep -qx 'skill updated p' '$tmp/out'"
 cc save > /dev/null 2>&1
+check "save keeps a merged review this Mac has not installed" "grep -qx 'skill q o/r claude-code qrev skills/q' '$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt'"
+PATH="$tmp/bin:$PATH" cc restore skills --accept q > "$tmp/out" 2>&1
+check "--accept records the value it installed" "grep -qx 'skill q o/r claude-code qold skills/q' '$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt' && grep -qx 'skill a o/r claude-code aaa skills/a' '$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt'"
 check "save writes a well-known row with an empty folder hash as four fields" "grep -qx 'skill w https://w.example claude-code' '$CLAUDE_CONFIG_SAVE_DIR/claude-skills.txt'"
 
 base="$CLAUDE_CONFIG_SAVE_DIR/claude-settings.json"
