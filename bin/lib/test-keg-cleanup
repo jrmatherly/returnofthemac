@@ -1,0 +1,206 @@
+#!/bin/bash
+#
+# Self-check for brew-keg-cleanup: which kegs count as replaced, which links are repointed, removed or left alone, and that a dry run changes nothing.
+#
+# - Run it (pnpm check does too); exits 1 naming the first failed assertion:
+#
+# `test-keg-cleanup`
+#
+# ---
+# Every case builds a fake prefix in a temp dir and points HOMEBREW_PREFIX at
+# it. Nothing under the real prefix is read or changed.
+#
+# License: MIT
+
+set -euo pipefail
+
+script="$(cd "$(dirname "$0")" && pwd -P)/brew-keg-cleanup"
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+fail() {
+  echo "FAIL: $1" >&2
+  [ -z "${out:-}" ] || printf '%s\n' "$out" >&2
+  exit 1
+}
+check() {
+  local name=$1
+  shift
+  "$@" || fail "$name"
+  echo "ok: $name"
+}
+
+# fresh: an empty prefix with a Cellar
+fresh() {
+  rm -rf "$tmp/p" "$tmp/elsewhere" "$tmp/cwd"
+  P="$tmp/p"
+  mkdir -p "$P/Cellar" "$P/opt" "$P/bin" "$P/lib"
+  export HOMEBREW_PREFIX="$P"
+}
+# keg <name> <version> [file…]: a keg holding those files
+keg() {
+  local dir="$P/Cellar/$1/$2" f
+  shift 2
+  mkdir -p "$dir"
+  for f in "$@"; do
+    mkdir -p "$dir/$(dirname "$f")"
+    touch "$dir/$f"
+  done
+}
+# old <name> <version>: after the keg's files are in, or they would reset its time
+old() { touch -t 202601010000 "$P/Cellar/$1/$2"; }
+link() {
+  mkdir -p "$(dirname "$P/$1")"
+  ln -s "$2" "$P/$1"
+}
+# foo 1.0 replaced by 2.0
+foo() {
+  fresh
+  keg foo 1.0 "$@"
+  old foo 1.0
+  keg foo 2.0 lib/a bin/tool
+  link opt/foo ../Cellar/foo/2.0
+}
+run() { out=$("$script" "$@" 2>&1); }
+has() { grep -qE -- "$1" <<< "$out"; }
+lacks() { ! has "$1"; }
+target() { [ "$(readlink "$P/$1")" = "$2" ]; }
+
+foo
+run
+check "a: the dry run names the keg" has '^remove  Cellar/foo/1\.0$'
+check "a: the dry run removes nothing" [ -d "$P/Cellar/foo/1.0" ]
+run --apply
+check "a: --apply removes the old keg" [ ! -e "$P/Cellar/foo/1.0" ]
+check "a: … and keeps the current one" [ -d "$P/Cellar/foo/2.0" ]
+run --apply
+check "l: a second run has nothing to do" [ "$out" = "nothing superseded" ]
+
+fresh
+keg foo 1.2 lib/libfoo.dylib
+old foo 1.2
+keg foo 1.2.1 lib/libfoo.dylib
+link opt/foo ../Cellar/foo/1.2.1
+link lib/libfoo.dylib ../Cellar/foo/1.2.1/lib/libfoo.dylib
+run --apply
+check "b: a version that is a prefix of the current one" target lib/libfoo.dylib ../Cellar/foo/1.2.1/lib/libfoo.dylib
+check "b: … and the old keg goes" [ ! -e "$P/Cellar/foo/1.2" ]
+
+fresh
+keg node 1 bin/node
+old node 1
+keg node 2 bin/node
+link opt/node ../Cellar/node/2
+keg node@26 1 bin/node
+link opt/node@26 ../Cellar/node@26/1
+link bin/n26 ../Cellar/node@26/1/bin/node
+run --apply
+check "c: a formula whose name starts with another's keeps its keg" [ -d "$P/Cellar/node@26/1" ]
+check "c: … and its link" target bin/n26 ../Cellar/node@26/1/bin/node
+
+foo
+link opt/foo@1 ../Cellar/foo/1.0
+run --apply
+check "d: an alias link is repointed" target opt/foo@1 ../Cellar/foo/2.0
+
+foo lib/a lib/b
+link lib/a ../Cellar/foo/1.0/lib/a
+link lib/b ../Cellar/foo/1.0/lib/b
+run --apply
+check "e: a file the current version ships is repointed" target lib/a ../Cellar/foo/2.0/lib/a
+check "e: a file it no longer ships is unlinked" [ ! -L "$P/lib/b" ]
+check "n: the last line counts all three" [ "$(tail -1 <<< "$out")" = "1 kegs, 1 links repointed, 1 links removed" ]
+
+foo
+check "f: keg-only has no linked record" [ ! -e "$P/var/homebrew/linked/foo" ]
+run --apply
+check "f: … and its old keg goes" [ ! -e "$P/Cellar/foo/1.0" ]
+
+foo
+link var/homebrew/linked/foo ../../../Cellar/foo/1.0
+run --apply
+check "g: a linked record that disagrees with opt keeps both kegs" [ -d "$P/Cellar/foo/1.0" ] && check "g: …" [ -d "$P/Cellar/foo/2.0" ]
+check "g: … and prints no line for the rack" lacks 'Cellar/foo'
+
+fresh
+keg foo 1.0 lib/a
+old foo 1.0
+keg foo 2.0 lib/a
+link opt/foo ../Cellar/foo/1.0
+run --apply
+check "h: after a downgrade the newer keg stays" [ -d "$P/Cellar/foo/2.0" ] && check "h: …" [ -d "$P/Cellar/foo/1.0" ]
+
+foo
+rm "$P/opt/foo"
+link opt/foo ../Cellar/foo/3.0
+run --apply
+check "i: opt naming a missing version keeps both kegs" [ -d "$P/Cellar/foo/1.0" ] && check "i: …" [ -d "$P/Cellar/foo/2.0" ]
+
+fresh
+mkdir -p "$P/share/man/man1"
+touch "$P/share/man/man1/real.1"
+link share/man/man1/README.md ../../../manpages/README.md
+link share/man/man1/live.1 real.1
+run
+check "j: the dry run names a dead link" has '^unlink  share/man/man1/README\.md$'
+check "j: … and leaves it" [ -L "$P/share/man/man1/README.md" ]
+run --apply
+check "j: --apply removes it" [ ! -L "$P/share/man/man1/README.md" ]
+check "j: a live link stays" [ -L "$P/share/man/man1/live.1" ]
+
+fresh
+rmdir "$P/Cellar"
+run
+check "k: a prefix with no Cellar" [ "$out" = "nothing superseded" ]
+
+foo lib/a lib/b
+link "lib/a b" ../Cellar/foo/1.0/lib/a
+link "lib/c d" ../Cellar/foo/1.0/lib/b
+run --apply
+check "m: a link with a space is repointed" target "lib/a b" ../Cellar/foo/2.0/lib/a
+check "m: … or unlinked" [ ! -L "$P/lib/c d" ]
+
+foo
+rc=0
+run --bogus || rc=$?
+check "o: an unknown argument exits 2" [ "$rc" = 2 ]
+check "o: … and changes nothing" [ -d "$P/Cellar/foo/1.0" ]
+
+foo bin/tool
+link bin/tool "$P/Cellar/foo/1.0/bin/tool"
+run --apply
+check "p: an absolute link is repointed, not removed" target bin/tool "$P/Cellar/foo/2.0/bin/tool"
+check "p: … and resolves" [ -e "$P/bin/tool" ]
+
+foo
+rm "$P/opt/foo"
+link opt/foo ../Cellar/foo/2.0/
+run --apply
+check "q: an opt target with a trailing slash keeps the current keg" [ -d "$P/Cellar/foo/2.0" ]
+check "q: … removes the old one" [ ! -e "$P/Cellar/foo/1.0" ]
+check "q: … and opt still resolves" [ -e "$P/opt/foo" ]
+
+foo bin/tool
+link $'bin/a\ndecoy' ../Cellar/foo/1.0/bin/tool
+mkdir -p "$tmp/cwd"
+touch "$tmp/cwd/decoy"
+out=$(cd "$tmp/cwd" && "$script" --apply 2>&1)
+check "r: a link name with a newline never reaches the working directory" [ -e "$tmp/cwd/decoy" ]
+
+foo lib/a lib/b
+link lib/a ../Cellar/foo/1.0/lib/a
+link lib/b ../Cellar/foo/1.0/lib/b
+ln -s "$P" "$tmp/plink"
+HOMEBREW_PREFIX="$tmp/plink" run --apply
+rm "$tmp/plink"
+check "s: a prefix that is a symlink is scanned" target lib/a ../Cellar/foo/2.0/lib/a
+check "s: … and its stale link unlinked" [ ! -L "$P/lib/b" ]
+
+foo
+mkdir -p "$tmp/elsewhere/Cellar/foo/1.0"
+touch "$tmp/elsewhere/Cellar/foo/1.0/x"
+link bin/x "$tmp/elsewhere/Cellar/foo/1.0/x"
+run --apply
+check "t: a link into another prefix's Cellar is left alone" target bin/x "$tmp/elsewhere/Cellar/foo/1.0/x"
+
+echo "keg-cleanup: all checks passed"

@@ -151,6 +151,7 @@ job quiet bash bin/lib/test-bootstrap
 job quiet bash bin/lib/test-shell
 # conf.d/30-packages.toml, config.toml and the conf.d/60-rotm-*.toml modules: key shape, taps, no pins, nothing lost in the split; the flux2 and talosctl completion hooks; the vscode plugin against a fake code
 job quiet bash bin/lib/test-packages
+job quiet bash bin/lib/test-keg-cleanup
 # mise's override layer: the version floor, the gitignored local files and zsh/override-env.zsh under a temp HOME and MISE_CONFIG_DIR
 job quiet bash bin/lib/test-override-env
 # bin/serve, bin/git-find, bin/git-tidy, bin/obsidian-vault, bin/push, bin/pull and bin/node-modules-clean under a scratch HOME and git repo

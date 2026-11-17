@@ -1,0 +1,123 @@
+#!/bin/bash
+#
+# Remove the Homebrew kegs a newer version of the same formula replaced, repoint or remove the links that still name them, and remove dead links in the prefix.
+#
+# > mise links the new keg on an upgrade and leaves the old one and its alias links (`opt/node@26`), and has no command for either.
+# > A dry run by default: it prints what it would do and changes nothing.
+#
+# - Show what would be removed:
+#
+# `brew-keg-cleanup`
+#
+# - Do it:
+#
+# `brew-keg-cleanup --apply`
+#
+# ---
+# Prefix: ${HOMEBREW_PREFIX:-/opt/homebrew}. Exit 0 on success, 1 on a failure,
+# 2 on an unknown argument. Self-check: bin/lib/test-keg-cleanup.
+#
+# License: MIT
+
+set -euo pipefail
+
+apply=""
+case ${1:-} in
+  '') ;;
+  --apply) apply=1 ;;
+  *)
+    echo "usage: brew-keg-cleanup [--apply]" >&2
+    exit 2
+    ;;
+esac
+
+P=${HOMEBREW_PREFIX:-/opt/homebrew}
+[ -d "$P/Cellar" ] || {
+  echo "nothing superseded"
+  exit 0
+}
+# An absolute link may name the prefix by either path when the prefix is a symlink
+real=$(cd "$P" && pwd -P)
+
+# name<TAB>old<TAB>current, only where opt/<name> names another, newer version
+superseded=$(
+  for rack in "$P"/Cellar/*; do
+    n=${rack##*/}
+    cur=$(readlink "$P/opt/$n" 2> /dev/null) || continue
+    # basename, so a trailing / does not empty it
+    cur=$(basename "$cur")
+    # The leading ( is for bash 3.2, which ends a $(…) at a case pattern's bare )
+    case $cur in ('' | . | ..) continue ;; esac
+    [ -d "$rack/$cur" ] || continue
+    # A keg-only formula has no linked record; one that has it must agree with opt
+    linked=$(readlink "$P/var/homebrew/linked/$n" 2> /dev/null) || linked=$cur
+    [ "$(basename "$linked")" = "$cur" ] || continue
+    for keg in "$rack"/*; do
+      v=${keg##*/}
+      # -nt: after a downgrade opt names the older keg, and the newer one stays
+      if [ -d "$keg" ] && [ ! -L "$keg" ] && [ "$v" != "$cur" ] && ! [ "$keg" -ef "$P/opt/$n" ] && [ "$rack/$cur" -nt "$keg" ]; then
+        printf '%s\t%s\t%s\n' "$n" "$v" "$cur"
+      fi
+    done
+  done
+)
+
+kegs=0 repointed=0 removed=0
+if [ -n "$superseded" ]; then
+  links=$(mktemp)
+  trap 'rm -f "$links"' EXIT
+  # link<TAB>target, read once: a readlink per link per keg took minutes. -H so
+  # a prefix that is itself a symlink is scanned; a trailing slash would do that
+  # too, but then the -prune pattern no longer matches
+  find -H "$P" -path "$P/Cellar" -prune -o -type l -lname '*Cellar/*' -print0 \
+    | xargs -0 stat -f '%N%t%Y' > "$links"
+
+  while IFS=$'\t' read -r n v cur; do
+    while IFS=$'\t' read -r l t; do
+      # A name with a tab or newline splits wrongly: act only on a real link under the prefix
+      case $l in "$P"/*) [ -L "$l" ] || continue ;; *) continue ;; esac
+      # Whole path components, so 1.2 never matches 1.2.1 or node node@26; an
+      # absolute target must be in this prefix's Cellar
+      case $t in
+        /*) case $t in "$P/Cellar/$n/$v" | "$P/Cellar/$n/$v"/* | "$real/Cellar/$n/$v" | "$real/Cellar/$n/$v"/*) ;; *) continue ;; esac ;;
+        "Cellar/$n/$v" | "Cellar/$n/$v"/* | *"/Cellar/$n/$v" | *"/Cellar/$n/$v"/*) ;;
+        *) continue ;;
+      esac
+      # Through a variable: bash 3.2 ends an inline quoted pattern at its first /
+      old="Cellar/$n/$v"
+      new=${t/"$old"/Cellar/$n/$cur}
+      case $new in /*) chk=$new ;; *) chk=$(dirname "$l")/$new ;; esac
+      if [ -e "$chk" ]; then
+        repointed=$((repointed + 1))
+        echo "repoint ${l#"$P"/} -> $new"
+        [ -z "$apply" ] || ln -sfn "$new" "$l"
+      else
+        removed=$((removed + 1))
+        echo "unlink  ${l#"$P"/}"
+        [ -z "$apply" ] || rm "$l"
+      fi
+    done < <(grep -F "Cellar/$n/$v" "$links" || true)
+    kegs=$((kegs + 1))
+    echo "remove  Cellar/$n/$v"
+    # The path comes from the rack listing, never from a link target
+    [ -z "$apply" ] || rm -rf "${P:?}/Cellar/$n/$v"
+  done <<< "$superseded"
+fi
+
+# Dead links, as brew cleanup prunes them. A link the pass above would remove
+# still resolves in a dry run, so nothing is counted twice
+for dir in bin etc include lib opt sbin share var/homebrew/linked; do
+  [ -d "$P/$dir" ] || continue
+  while IFS= read -r -d '' l; do
+    [ ! -e "$l" ] || continue
+    removed=$((removed + 1))
+    echo "unlink  ${l#"$P"/}"
+    [ -z "$apply" ] || rm "$l"
+  done < <(find -H "$P/$dir" -type l -print0)
+done
+
+if [ $((kegs + repointed + removed)) -eq 0 ]; then
+  echo "nothing superseded"
+else
+  echo "$kegs kegs, $repointed links repointed, $removed links removed"
+fi
