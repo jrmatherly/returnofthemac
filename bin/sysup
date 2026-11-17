@@ -197,6 +197,13 @@ plural() {
   printf '%s %s' "$1" "$2$([ "$1" = 1 ] || echo s)"
 }
 
+# https_git <cmd…>: the command with git told to fetch github.com over HTTPS.
+# The marketplace clones have git@github.com: remotes, and an SSH fetch through
+# the 1Password agent asks for approval with no line to announce it
+https_git() {
+  GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=url.https://github.com/.insteadOf GIT_CONFIG_VALUE_0=git@github.com: "$@"
+}
+
 # module_off <module> <step>…: true when that module is switched off, after
 # giving each of its steps its one line (bin/lib/rotm-modules)
 module_off() {
@@ -719,13 +726,13 @@ if command -v claude > /dev/null; then
     # unseen (required off a terminal); the tracked marketplaces are ones we
     # vetted, see agents/claude-plugins.txt
     step plugins
-    if ! capture claude plugin marketplace update < /dev/null; then
+    if ! capture https_git claude plugin marketplace update < /dev/null; then
       status fail marketplaces "run: claude plugin marketplace update"
       show
     fi
     plugin_count=0 plugin_updates="" plugins_blocked=0 plugins_failed=0
     while read -r id; do
-      if capture claude plugin update -y "$id" < /dev/null; then
+      if capture https_git claude plugin update -y "$id" < /dev/null; then
         # Counted only once checked: a failed one is its own fail line
         plugin_count=$((plugin_count + 1))
         plugin_updates+=$(grep -E 'Plugin "?[^" ]+"? (updated|downgraded) from ' <<< "$out" \
