@@ -513,7 +513,9 @@ Tasks 1 to 8 are built and pushed (2026-11-16, `3a124a9` to `941c99c`). Differen
 
 `sysup` and `rotm update` are never run by an agent on this Mac. This task is the owner's.
 
-- [ ] **Step 1: Promote `main` to `stable` the way the last plan did (`docs/superpowers/plans/completed/2026-11-16-trusted-skill-sources-and-hook-pin.md`, Task 6), after `check` and a `fresh-install` run pass on the commit.**
+- [x] **Step 1: Promote `main` to `stable` the way the last plan did (`docs/superpowers/plans/completed/2026-11-16-trusted-skill-sources-and-hook-pin.md`, Task 6), after `check` and a `fresh-install` run pass on the commit.**
+
+Done 2026-11-17: `fresh-install` run 44020041126 passed on the `clone` and the `installed` path on `f02ffbb`, with `check` green on the same commit (run 44020031224). `stable` moved from `2cbdee8` to `f02ffbb` by a fast-forward push.
 
 - [ ] **Step 2: The owner runs `rotm update`. Expected:**
 
