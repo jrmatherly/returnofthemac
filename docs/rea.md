@@ -8,7 +8,7 @@
 - Registered with Claude Code at user scope as the `rea` MCP server by `setup/misc.sh`. The registered command is `bin/rea-mcp`, a launcher that resolves `GHIDRA_INSTALL_DIR` and `JAVA_HOME` from `/opt/homebrew/opt/ghidra` at every start and execs `rea mcp`, so no versioned path is stored and a Ghidra upgrade that moves its JDK cannot strand the registration.
 - The `reverse-engineer-anything` skill (REA's own workflow instructions) is the copy bundled with the installed `rea-agents`, written by `rea setup --skill` into `~/.agents/skills` and `~/.claude/skills` by `setup/misc.sh` and refreshed by `sysup` after each REA upgrade, so it always describes the server that is running.
 - Permission rules for its 229 MCP tools (6.8.0) are in `agents/claude-settings.json`: static-analysis tools run without a prompt, tools that drive a live app, browser or process or write files ask first (details in [agents/README.md](../agents/README.md)).
-- Engines: Hopper (a `brew-cask:` package, free demo until licensed) works. Ghidra (a `brew:` package, 12.2) is installed and its JDK resolves, but REA 6.8.0 still refuses Ghidra 12.2 (re-measured 2026-10-26) and the formula's build has no native decompiler, so the Ghidra provider is unusable until upstream lifts those limits.
+- Engines: Hopper (a `brew-cask:` package, free demo until licensed) works. Ghidra (a `brew:` package, 12.2) works through the launcher since REA 6.9.0, which accepts Ghidra 12.x from 12.1 up and finds the formula's native decompiler (measured 2026-11-17; 6.8.0 refused 12.2).
 
 ## Commands
 
@@ -36,7 +36,7 @@ The launcher exists because Homebrew's `ghidra` formula depends on a versioned, 
 | Engine | Install | State (2026-10-24) |
 | --- | --- | --- |
 | Hopper Disassembler | `brew-cask:hopper-disassembler` package; REA finds it at its default path | Works as the free demo until licensed in the app |
-| Ghidra | `brew:ghidra` package (12.2, pulls `openjdk@25`) | JDK check passes through the launcher. REA 6.8.0 accepts only Ghidra 12.1.x, verified build 12.1.4 ([morluto/rea#6921](https://github.com/morluto/rea/issues/6921)) and the formula's build ships no native decompiler for darwin/arm64 ([#7018](https://github.com/morluto/rea/issues/7018)), so `rea analyze --provider ghidra` fails with `unsupported_version` |
+| Ghidra | `brew:ghidra` package (12.2, pulls `openjdk@25`) | Works through the launcher with REA 6.9.0: every `rea doctor --provider ghidra` check passes (version, native decompiler, JDK) and `rea analyze --provider ghidra` runs, measured 2026-11-17. REA 6.8.0 refused 12.2 ([morluto/rea#6921](https://github.com/morluto/rea/issues/6921), closed 2026-10-26). It rejects a universal Mach-O with `architecture_unsupported`: thin it to one architecture first (`lipo -thin`) |
 | IDA, JADX, Kuna, Frida, GDB, Rizin/Cutter, sigrok, adb | Not installed, or not configured | `rea doctor` lists each with the variable that would enable it (`REA_JADX_MCP_JAR`, `REA_KUNA_COMMAND`, `REA_IDA_MCP_CONFIG`) |
 
 Built-in providers that need no engine work today: native macOS inspection (Mach-O, plists, signatures, Swift demangling, AX-driven UI capture), the artifact graph (app bundles, DMGs mounted read-only, PKGs, ASAR), .NET metadata, SQLite, JavaScript and Electron static analysis, and web bundle capture through Playwright.
@@ -44,7 +44,7 @@ Built-in providers that need no engine work today: native macOS inspection (Mach
 ## When something changes
 
 - After `sysup` upgrades REA, re-run the MCP inspector command in [agents/README.md](../agents/README.md) and compare the tool list with the permission rules: a new tool arrives with no rule.
-- After a Ghidra upgrade, nothing to do for the JDK. `rea-mcp --print-env` shows the new `openjdk@N`. If REA starts accepting the installed Ghidra line, the `ghidra-version` row in `rea doctor` stops reporting `config_drift` (today: "12.2; accepted releases are 12.1.x").
+- After a Ghidra upgrade, nothing to do for the JDK. `rea-mcp --print-env` shows the new `openjdk@N`. If a Ghidra release moves past what REA accepts, the `version` check in `rea doctor --provider ghidra` says so (today: "12.2; compatible 12.x (>=12.1) release").
 - If the dotfiles clone moves, re-run `./setup.sh` (or `setup/misc.sh`; `rotm install` on an installed copy): the registration holds the launcher's absolute path and `register_mcp` warns about the old one.
 - Hopper: licence it in the app; REA notices on the next `doctor`.
 
