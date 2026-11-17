@@ -12,7 +12,8 @@
 "brew:cue" = "latest" # CUE data validation language
 "brew:findutils" = "latest" # GNU find/xargs (macOS ships outdated BSD versions)
 "brew:gnu-sed" = "latest" # GNU sed (macOS ships outdated BSD version)
-"brew:grep" = "latest" # GNU grep (macOS ships outdated BSD version)
+"brew:gnu-tar" = "latest" # GNU tar as `gtar` (macOS ships bsdtar); a project that needs it as `tar` adds the keg's libexec/gnubin to its own PATH
+"brew:grep" ="latest" # GNU grep (macOS ships outdated BSD version)
 "brew:llama.cpp" = "latest" # Run local LLMs (llama-cli, llama-server) from GGUF models
 "brew:luarocks" = "latest" # Lua package manager (brings `lua`)
 "brew:moreutils" = "latest" # Extra useful Unix utilities (sponge, vidir, etc.)
