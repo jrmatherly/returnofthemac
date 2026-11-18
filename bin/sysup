@@ -324,6 +324,9 @@ if capture mise self-update --yes; then
   else
     status ok "mise self-update" "up to date"
   fi
+elif [[ $out == *"installed via a package manager"* ]]; then
+  # Homebrew's mise, on a Mac set up before the mise-first setup: rerunning can't fix it
+  status fail "mise self-update" "a package manager owns this mise, so nothing upgrades it; see \"A Mac set up before the mise-first setup\" in docs/updating.md"
 else
   status fail "mise self-update" "run: mise self-update"
   show

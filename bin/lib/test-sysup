@@ -62,6 +62,7 @@ case $1 in
   --version) if [ -e "$STATE/self-updated" ]; then echo "2026.11.9 macos-arm64"; else echo "2026.11.8 macos-arm64"; fi ;;
   self-update) echo "self-update $*" >> "$STATE/mise-calls.log"
     [ -e "$STATE/self-update-fails" ] && { echo "mise ERROR self-update failed"; exit 1; }
+    [ -e "$STATE/self-update-managed" ] && { echo "mise ERROR mise is installed via a package manager, cannot update"; exit 1; }
     [ ! -e "$STATE/mise-newer" ] || touch "$STATE/self-updated" ;;
   bootstrap) echo "MISE_GITHUB_TOKEN=${MISE_GITHUB_TOKEN:-}" >> "$STATE/mise-env.log"
     case "$2 $3" in
@@ -347,11 +348,13 @@ touch "$STATE/pkg-broken" "$STATE/cache-busy" "$STATE/gcloud-fails"
 run
 check_true "a failed gcloud update names the command" has '^✖ gcloud +run: gcloud components update$'
 rm -f "$STATE/gcloud-fails" "$DOTFILES/logs"/*
-touch "$STATE/gcloud-external" "$STATE/retired-plugin"
+touch "$STATE/gcloud-external" "$STATE/retired-plugin" "$STATE/self-update-managed"
 run
 check_true "a gcloud another package manager owns is not a failure" has '^✔ gcloud +its package manager updates it$'
 check_true "a removed retired plugin is named" has '^↻ Claude settings +removed x@a, a retired plugin$'
-rm -f "$STATE/gcloud-external" "$STATE/retired-plugin"
+check_true "a mise a package manager owns points at the docs" has '^✖ mise self-update +a package manager owns this mise, so nothing upgrades it; see "A Mac set up before the mise-first setup" in docs/updating.md$'
+check_true "a mise a package manager owns: no rerun hint" lacks 'run: mise self-update$'
+rm -f "$STATE/gcloud-external" "$STATE/retired-plugin" "$STATE/self-update-managed"
 check_true "cache: busy is ok and carries the count" has '^✔ uv cache +in use, not pruned \(25 cached environments\)$'
 check_true "warned: installer warning is the step's only line" lacks '^✔ Hindsight memory'
 check_true "warned: installer warning still a notice" has '^● Hindsight memory +installer: '

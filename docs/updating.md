@@ -23,7 +23,7 @@ sysup
 
 - pulls the latest dotfiles (`git pull` in the clone)
 - installs macOS software updates (a macOS update asks for your login password: see [below](#macos-update-password-from-1password-optional)); one that needs a restart, such as a new macOS version, is only downloaded, and the summary tells you to install it from System Settings → General → Software Update → Restart Now or with `sudo softwareupdate -ia --restart`, since a plain restart doesn't install it
-- updates mise itself (`mise self-update`)
+- updates mise itself (`mise self-update`). A mise that a package manager installed refuses, and the step fails with a pointer to [A Mac set up before the mise-first setup](#a-mac-set-up-before-the-mise-first-setup)
 - removes the Homebrew versions an earlier upgrade replaced, and repoints or removes the links that still named them (`brew-keg-cleanup`, since mise leaves both behind). It runs before the upgrade, so the version this run replaces stays until the next run. It also removes dead links in the Homebrew prefix
 - upgrades the formulae and casks in [`30-packages.toml`](../tilde/.config/mise/conf.d/30-packages.toml) and the [modules](modules.md) that are on, VS Code included, without asking for confirmation (`mise bootstrap packages upgrade --yes`; the pairs whose installed version moved go to the screen). VS Code updates its own extensions
 - lists any declared package that is still not installed
@@ -54,6 +54,45 @@ It doesn't re-apply the dotfiles. When a pull brings new symlinks, tools or conf
 ```
 
 `setup.sh` installs what's missing but doesn't upgrade what's already there, except PowerShell (`dotnet tool update`) and the Iosevka Code font. There are two ways to upgrade. `./setup.sh -- --upgrade` upgrades what the mise config declares: the packages, one manager at a time with a warning on failure, and the tools. `sysup` upgrades everything: macOS, mise itself, the packages, the tools, Rust, the uv tools and the agent tooling.
+
+## A Mac set up before the mise-first setup
+
+A Mac set up from this repository before 2026-11-11 installed its packages with Homebrew itself, and `git pull` alone does not bring it across. You have one when `command -v mise` prints `/opt/homebrew/bin/mise`, or `sysup` fails at `mise self-update` with "installed via a package manager". On such a Mac nothing upgrades mise or the casks Homebrew installed.
+
+The script that moves it across, `migrate/legacy-to-mise`, was removed from `main` on 2026-11-11. Its last version is in the history at `498f513`, and its self-check passed against `main` at `e7e8eac` on 2026-11-18. That day it moved one Mac across with the steps below. In the clone:
+
+```shell
+git checkout 498f513 -- migrate
+migrate/legacy-to-mise --dry-run
+migrate/legacy-to-mise --step env
+migrate/legacy-to-mise --step packages
+```
+
+Open a new terminal after the `packages` step moves mise, then:
+
+```shell
+migrate/legacy-to-mise --step setup
+git reset -q HEAD migrate && rm -rf migrate && git status --short
+```
+
+Run the steps one at a time, because a step that exits non-zero stops the ones after it. Every change asks first and is backed up to `~/.dotfiles-migration-backup/<timestamp>/`, which holds a `RESTORE.txt`. `git show 498f513:migrate/README.md` describes each step. The `macos` step only reports. Run `--step dotfiles` before `--step setup` on a Mac that stays a clone, and leave it out on one that becomes an installed copy, because the move below expects the old folder links.
+
+What the 2026-11-18 run found:
+
+- **Answer no to every "Keep `<formula>`".** Nothing is removed either way. Never clear the notice that follows with `mise bootstrap packages prune`, which removes every formula no config declares.
+- **Declare a cask only when mise can read it.** A tap cask whose file uses a keyword mise does not support (`azure-cli-preview`, `aspire`) breaks `mise bootstrap packages status` for every package once declared. After declaring one, run `mise bootstrap packages status --json > /dev/null`, and delete its line from `tilde/.config/mise/config.local.toml` if that fails.
+- **Reinstall the casks that do not update themselves, and decline the ones that do.** The first list gets upgrades again. The second gains nothing and a replaced app can lose its privacy permissions. Homebrew then stays installed, which is harmless.
+- **A cask another cask depends on stops the step.** `brew uninstall` refuses it. Run `HOMEBREW_NO_ANALYTICS=1 brew uninstall --cask --ignore-dependencies <token>` and `mise bootstrap packages apply --yes brew-cask:<token>` yourself, then run the step again.
+- **The git-credential-manager installer writes to `~/.gitconfig`,** which is a link into the clone, so the last line above prints `M tilde/.gitconfig`. Add the same `credential` lines to `~/.gitconfig.local` with `git config --file ~/.gitconfig.local`, then `git checkout -- tilde/.gitconfig`.
+
+Then either run `./setup.sh` to stay a clone, or move to an installed copy by hand with [the move runbook](superpowers/specs/completed/2026-11-15-p7-move/MOVE.md). The runbook was written for one Mac, so on another:
+
+- Paste its opening block one line at a time. zsh expands aliases when it reads a pasted block, so in a block pasted whole `inclone` is defined with `find` still meaning `fd`, and it counts 0 links.
+- Skip a line of step 2 or step 5 whose file does not exist. Not every Mac has a Mole `.local` list, a `hosts.yml`, hunk's `state.json` or every VS Code folder.
+- Start setup from `~`, not from inside the clone, and add `--without <modules>` to that line to leave modules out.
+- Afterwards look for links that still resolve into the clone. `~/.config/mole/whitelist_optimize` stayed one: remove the link and run `mise dotfiles apply --yes` from `~`.
+
+Nothing in the product does the move, and no test covers this section: it records one run.
 
 ## The repository's own updates
 
