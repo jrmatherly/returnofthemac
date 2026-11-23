@@ -228,7 +228,8 @@ register_mcp() {
 register_http_mcp() {
   local name="$1" url="$2" existing
   if existing=$("$claude_bin" mcp get "$name" 2> /dev/null); then
-    if grep -qF "$url" <<< "$existing"; then
+    # The whole "URL:" line, so the same URL with a query string added is drift
+    if sed 's/^ *//' <<< "$existing" | grep -qxF "URL: $url"; then
       echo "$name MCP server already registered with Claude Code" | indent
     else
       warning "$name MCP server is registered with a different URL — expected $url"
@@ -431,8 +432,8 @@ fi
 
 # It's a Plan, the owner's own tracker, on a private host that resolves only on
 # his network, so it is a module of its own. Sign-in is OAuth through /mcp, so
-# no secret lives here. The default URL, not ?tools=catalog: Claude Code loads tool
-# definitions on demand.
+# no secret lives here. The default URL, not ?tools=catalog: Claude Code loads
+# tool definitions on demand.
 if [ -x "$claude_bin" ] && module_on itsaplan; then
   if register_http_mcp itsaplan https://plan.matherly.net/api/mcp; then
     echo "Sign in once on this Mac: run /mcp in Claude Code and pick itsaplan" | indent

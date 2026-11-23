@@ -762,6 +762,8 @@ check_true "all on: the font step runs" ran install-iosevka-code
 check_true "all on: Claude's config is restored" ran 'claude-config restore'
 check_true "all on: the catalog is built" ran claude-catalog
 check_true "all on: an MCP server is registered" ran 'mcp add'
+check_true "all on: the owner's tracker is registered" ran 'mcp add --scope user --transport http itsaplan https://plan.matherly.net/api/mcp'
+check_true "all on: … with the sign-in reminder" has 'Sign in once on this Mac'
 check_true "all on: a uv tool is installed" ran 'uv tool install'
 check_true "all on: Hindsight is set up" ran 'hindsight-memory init'
 check_true "all on: … with rustup's cargo on PATH" grep -qF ":$HOMEBREW_PREFIX/opt/rustup/bin:" "$STATE/hindsight-path"
@@ -826,6 +828,12 @@ check_true "and so does the font step" has 'skipped: the fonts module is off'
 check_true "and the itsaplan step" has 'skipped: the itsaplan module is off'
 check_true "the agents steps say it once" [ "$(grep -c 'skipped: the agents module is off' <<< "$out")" = 1 ]
 check_true "no TypeScript warning with apps off" lacks 'npm:typescript is not installed'
+
+fresh
+printf 'agents\n' > "$HOME/.config/mise/modules-off.local"
+misc
+check_true "agents off: the itsaplan module still registers its server" ran 'http itsaplan https://plan.matherly.net/api/mcp'
+check_true "agents off: the docs servers are not registered" eval '! ran astro-docs'
 
 fresh
 printf 'devops\ncloud\n' > "$HOME/.config/mise/modules-off.local"
