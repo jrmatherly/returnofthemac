@@ -222,6 +222,26 @@ register_mcp() {
   fi
 }
 
+# Registers a remote (HTTP) MCP server with Claude Code at user scope, once,
+# and returns 0 only when this call registered it.
+# Usage: register_http_mcp <name> <url>
+register_http_mcp() {
+  local name="$1" url="$2" existing
+  if existing=$("$claude_bin" mcp get "$name" 2> /dev/null); then
+    if grep -qF "$url" <<< "$existing"; then
+      echo "$name MCP server already registered with Claude Code" | indent
+    else
+      warning "$name MCP server is registered with a different URL — expected $url"
+    fi
+    return 1
+  fi
+  info "🔌 Registering the $name MCP server with Claude Code…"
+  # stdin may be a caller's loop list: keep claude from reading it
+  "$claude_bin" mcp add --scope user --transport http "$name" "$url" < /dev/null | indent && return 0
+  warning "Registering $name failed — run: claude mcp add --scope user --transport http $name $url"
+  return 1
+}
+
 # mise's MCP server for Claude Code (user scope — serves whichever project
 # Claude runs in): exposes tools, tasks, env and config, and can run tasks.
 # Note `mise://env` shows real environment values, secrets included, to the
@@ -380,18 +400,7 @@ fi
 # https://docs.siderolabs.com/talos/v1.14/learn-more/ai-agent-integration
 if $agents_on && [ -x "$claude_bin" ]; then
   while read -r name url; do
-    if existing=$("$claude_bin" mcp get "$name" 2> /dev/null); then
-      if grep -qF "$url" <<< "$existing"; then
-        echo "$name MCP server already registered with Claude Code" | indent
-      else
-        warning "$name MCP server is registered with a different URL — expected $url"
-      fi
-    else
-      info "🔌 Registering the $name MCP server with Claude Code…"
-      # stdin is the loop's list: keep claude from reading it
-      "$claude_bin" mcp add --scope user --transport http "$name" "$url" < /dev/null | indent \
-        || warning "Registering $name failed — run: claude mcp add --scope user --transport http $name $url"
-    fi
+    register_http_mcp "$name" "$url" || true
   done << 'EOF'
 astro-docs https://mcp.docs.astro.build/mcp
 better-auth https://mcp.better-auth.com/mcp
@@ -418,6 +427,16 @@ if $agents_on && command_exists rtk; then
     indent <<< "$rtk_out"
   fi
   [ "$rtk_rc" -eq 0 ] || warning "rtk init failed — run it later: rtk init -g --hook-only"
+fi
+
+# It's a Plan, the owner's own tracker, on a private host that resolves only on
+# his network, so it is a module of its own. Sign-in is OAuth through /mcp, so
+# no secret lives here. The default URL, not ?tools=catalog: Claude Code loads tool
+# definitions on demand.
+if [ -x "$claude_bin" ] && module_on itsaplan; then
+  if register_http_mcp itsaplan https://plan.matherly.net/api/mcp; then
+    echo "Sign in once on this Mac: run /mcp in Claude Code and pick itsaplan" | indent
+  fi
 fi
 
 # Supabase CLI (a brew: package) — persisted telemetry opt-out, for runs that don't

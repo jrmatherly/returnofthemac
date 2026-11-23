@@ -815,7 +815,7 @@ ROTM_WARNINGS_FILE="$STATE/removed" misc
 check_true "misc.sh does not recreate a warnings file setup.sh removed" [ ! -e "$STATE/removed" ]
 
 fresh
-printf 'claude\nagents\nfonts\napps\nmenubar\n' > "$HOME/.config/mise/modules-off.local"
+printf 'claude\nagents\nfonts\napps\nmenubar\nitsaplan\n' > "$HOME/.config/mise/modules-off.local"
 misc
 check_true "modules off: misc.sh still exits 0" [ "$rc" -eq 0 ]
 for call in install-iosevka-code 'claude-config restore' claude-catalog 'mcp add' 'uv tool install' hindsight-memory 'init -g' menubar-open.sh; do
@@ -823,6 +823,7 @@ for call in install-iosevka-code 'claude-config restore' claude-catalog 'mcp add
 done
 check_true "a gated step says why it was skipped" has 'skipped: the claude module is off'
 check_true "and so does the font step" has 'skipped: the fonts module is off'
+check_true "and the itsaplan step" has 'skipped: the itsaplan module is off'
 check_true "the agents steps say it once" [ "$(grep -c 'skipped: the agents module is off' <<< "$out")" = 1 ]
 check_true "no TypeScript warning with apps off" lacks 'npm:typescript is not installed'
 

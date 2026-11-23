@@ -1,0 +1,6 @@
+# returnofthemac module `itsaplan`: the MCP server of the owner's own tracker,
+# It's a Plan at plan.matherly.net, which answers only on his network.
+# A Claude Code registration, not a package: setup/misc.sh adds it.
+#
+# Switch it off with `rotm settings set modules.itsaplan off` (on again with `on`).
+# The registration stays. Remove it with `claude mcp remove itsaplan -s user`.

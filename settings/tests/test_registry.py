@@ -111,6 +111,8 @@ menubar = by_id["modules.menubar"]
 assert (menubar.kind, menubar.key, menubar.default) == ("module", "menubar", "on"), menubar
 multipass = by_id["modules.multipass"]
 assert (multipass.kind, multipass.key, multipass.default) == ("module", "multipass", "on"), multipass
+itsaplan = by_id["modules.itsaplan"]
+assert (itsaplan.kind, itsaplan.key, itsaplan.default) == ("module", "itsaplan", "on"), itsaplan
 touchid = by_id["modules.touchid"]
 assert (touchid.kind, touchid.key, touchid.default) == ("module", "touchid", "on"), touchid
 loginshell = by_id["modules.loginshell"]

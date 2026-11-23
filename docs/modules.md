@@ -1,6 +1,6 @@
 # Modules: leaving parts out
 
-Everything outside the base is grouped into sixteen modules, and each one can be switched off. All of them are on by default, and a module added in a later update is on too. The base is what the dotfiles themselves run: Git, Zsh, mise, uv, jq, the shell tools, the terminals and VS Code.
+Everything outside the base is grouped into seventeen modules, and each one can be switched off. All of them are on by default, and a module added in a later update is on too. The base is what the dotfiles themselves run: Git, Zsh, mise, uv, jq, the shell tools, the terminals and VS Code.
 
 | Module | What it holds | Leans on |
 | --- | --- | --- |
@@ -18,6 +18,7 @@ Everything outside the base is grouped into sixteen modules, and each one can be
 | `media` | File, text and image processing formulae, Mole among them |  |
 | `menubar` | Return of the Mac, the menu bar app over `rotm settings`, which setup opens once it is installed |  |
 | `multipass` | Claude Multipass, the owner's tool that switches Claude Desktop between accounts, and its menu bar app |  |
+| `itsaplan` | A registration, not a package: the MCP server of It's a Plan, the owner's tracker at `plan.matherly.net`, which answers only on his network. Off leaves the registration in place | `claude` |
 | `touchid` | A system change, not a package: `/etc/pam.d/sudo_local`, which lets `sudo` accept Touch ID. Off leaves the file as it is |  |
 | `loginshell` | A system change, not a package: Homebrew's zsh as the login shell. Off leaves the account's shell as it is |  |
 

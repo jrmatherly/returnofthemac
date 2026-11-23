@@ -208,6 +208,9 @@ tools = "search_docs, get_doc"
 [mcp.siderolabs-docs]
 desc = "Search the Sidero Labs docs (Talos Linux, Omni); pairs with the siderolabs skill."
 tools = "search_sidero_documentation, query_docs_filesystem_sidero_documentation"
+[mcp.itsaplan]
+desc = "It's a Plan project tracker at plan.matherly.net (LAN or VPN only, OAuth sign-in through /mcp): projects, issues, comments, cycles, documents."
+tools = "get_current_user, list_projects, get_project, get_issue_by_number, search_issues, list_issues, create_issue, update_issue, add_comment"
 [mcp.coolify]
 desc = "Self-hosted Coolify PaaS at deploy.matherly.net. Only loaded inside ~/dev/coolify."
 [mcp.reactive-resume]

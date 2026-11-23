@@ -1092,6 +1092,18 @@ default = "on"
 access = "rw"
 
 [[setting]]
+id = "modules.itsaplan"
+section = "Modules"
+label = "It's a Plan tracker"
+help = "Registers the owner's It's a Plan tracker with Claude Code. It answers only on his network. Off leaves the registration in place."
+kind = "module"
+key = "itsaplan"
+type = "bool"
+true_value = "on"
+default = "on"
+access = "rw"
+
+[[setting]]
 id = "modules.touchid"
 section = "Modules"
 label = "Touch ID for sudo"
