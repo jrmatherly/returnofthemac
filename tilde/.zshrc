@@ -43,9 +43,11 @@ source $DOTFILES/zsh/override-env.zsh
 # Add GPG key
 export GPG_TTY=$(tty)
 
-# LLM Router's desktop app appends a PATH block here on launch unless this file
-# already mentions $HOME/.llm-router/bin (its string check as of the 2026-10
-# rebrand release); zsh/path.zsh adds the real entry.
+# LLM Router's desktop app appends a PATH block to ~/.zshrc on launch unless
+# that file already mentions $HOME/.llm-router/bin (its string check, read at
+# 9.0.0). On a clone install ~/.zshrc links here, so this comment stops it. An
+# installed copy's ~/.zshrc is its own file and takes the block. zsh/path.zsh
+# adds the real entry.
 
 # iTerm2's "Install Shell Integration" appends its source line here unless this
 # file already mentions iterm2_shell_integration (its string check). Sourced
