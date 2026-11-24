@@ -40,8 +40,8 @@ prepend "$homebrew_path/opt/trash-cli/bin"
 # tilde/.zprofile for shims and zsh/init.zsh for full shell activation).
 # See https://mise.jdx.dev
 
-# LLM Router desktop CLI (ccr-app). The app writes its own PATH block into
-# ~/.zshrc unless that file names this path; tilde/.zshrc carries the marker.
+# LLM Router desktop CLI (llmr). The app writes its own PATH block into
+# ~/.zshrc unless that file names this path (see tilde/.zshrc).
 prepend "$HOME/.llm-router/bin"
 
 # Custom dotfiles binaries
