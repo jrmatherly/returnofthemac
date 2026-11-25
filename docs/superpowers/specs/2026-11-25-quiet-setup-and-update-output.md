@@ -102,7 +102,7 @@ Today `setup.sh` re-executes itself under `script -q`, which records only what r
 
 ### `rotm update`
 
-Capture git's output to the log. Print one line: `✔ returnofthemac  stable 2df15c2 → b3111ca, 2 files`, or `✔ returnofthemac  stable up to date`.
+Capture the update's output and print one line: `↻ returnofthemac  stable 2df15c2 → b3111ca, 2 files`, or `✔ returnofthemac  stable up to date`. A failed update prints the captured output. On success it is dropped for now, because setup starts its log only afterwards; unit 3 has `rotm` hand the text to setup, which writes it at the top of the log.
 
 ### Hindsight pin (S2)
 

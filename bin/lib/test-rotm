@@ -60,7 +60,7 @@ git -C "$fix" remote add origin "$origin"
 touch "$fix/untracked"
 mkdir "$tmp/stubs"
 # shellcheck disable=SC2016 # the stub expands these when it runs
-printf '#!/bin/bash\n{ echo "cwd $PWD"; echo "mise $*"; } >> "%s/log"\nexit "${STUB_MISE_RC:-0}"\n' "$tmp" > "$tmp/stubs/mise"
+printf '#!/bin/bash\n{ echo "cwd $PWD"; echo "mise $*"; } >> "%s/log"\neval "${STUB_MISE_DO:-}"\nexit "${STUB_MISE_RC:-0}"\n' "$tmp" > "$tmp/stubs/mise"
 chmod +x "$tmp/stubs/mise"
 PATH="$tmp/stubs:$PATH"
 rotm() { bash "$fix/bin/rotm" "$@"; }
@@ -69,16 +69,16 @@ check "install passes its arguments to setup.sh" "rotm install -y -- --upgrade &
 check "settings passes through" "rotm settings list && grep -qx 'dotfiles-settings list' '$tmp/log'"
 check "settings profile passes through" "rotm settings profile use work && grep -qx 'dotfiles-settings profile use work' '$tmp/log'"
 : > "$tmp/log"
-check "update fetches the branch it is on" "rotm update && grep -q -- \"--from $origin?ref=stable --config-dir tilde/.config/mise --update --only final-hook\" '$tmp/log'"
+check "update fetches the branch it is on" "rotm update > /dev/null && grep -q -- \"--from $origin?ref=stable --config-dir tilde/.config/mise --update --only final-hook\" '$tmp/log'"
 check "update runs mise from HOME" "grep -qx \"cwd $HOME\" '$tmp/log'"
 check "update then runs setup.sh" "[ \"\$(tail -1 '$tmp/log')\" = 'setup ' ]"
-check "update tells setup.sh it is an update" "rotm update && grep -qx 'env ROTM_UPDATE=1' '$tmp/log'"
+check "update tells setup.sh it is an update" "rotm update > /dev/null && grep -qx 'env ROTM_UPDATE=1' '$tmp/log'"
 check "install does not" ": > '$tmp/log'; rotm install && grep -qx 'env ROTM_UPDATE=' '$tmp/log'"
 check "update without -y does not pass --yes to mise" "! grep -q -- '--yes' '$tmp/log'"
 : > "$tmp/log"
-check "update -y passes --yes to mise and -y to setup.sh" "rotm update -y && grep -q -- '--only final-hook --yes' '$tmp/log' && grep -qx 'setup -y' '$tmp/log'"
+check "update -y passes --yes to mise and -y to setup.sh" "rotm update -y > /dev/null && grep -q -- '--only final-hook --yes' '$tmp/log' && grep -qx 'setup -y' '$tmp/log'"
 : > "$tmp/log"
-check "a -y after -- is for mise bootstrap, not this update" "rotm update -- -y && ! grep -q -- '--yes' '$tmp/log'"
+check "a -y after -- is for mise bootstrap, not this update" "rotm update -- -y > /dev/null && ! grep -q -- '--yes' '$tmp/log'"
 git -C "$fix" push -q origin stable
 git clone -q -b stable "$origin" "$tmp/up"
 push_one() { git -C "$tmp/up" -c user.name=t -c user.email=t@example.com commit -q --allow-empty -m "$1" && git -C "$tmp/up" push -q origin stable; }
@@ -99,6 +99,18 @@ check "--check runs no mise and no setup.sh" "[ ! -s '$tmp/log' ]"
 git -C "$fix" remote set-url origin "$tmp/nowhere.git"
 check "--check exits 1 with one line when the fetch fails" "rotm update --check 2> '$tmp/err'; [ \$? -eq 1 ] && [ \"\$(wc -l < '$tmp/err')\" -eq 1 ]"
 git -C "$fix" remote set-url origin "$origin"
+echo new > "$tmp/up/new-file"
+git -C "$tmp/up" add new-file
+git -C "$tmp/up" -c user.name=t -c user.email=t@example.com commit -q -m file
+git -C "$tmp/up" push -q origin stable
+old=$(git -C "$fix" rev-parse --short HEAD)
+new=$(git -C "$tmp/up" rev-parse --short HEAD)
+# What mise --update does to the copy, with git's chatter on both streams
+pull='echo "remote: Enumerating objects: 5, done." >&2; git -C "$DOTFILES" pull -q --ff-only origin stable; echo " 1 file changed"'
+export DOTFILES="$fix"
+check "a moved update prints one line with the commits and the file count" "[ \"\$(STUB_MISE_DO='$pull' rotm update 2>&1)\" = \"↻ returnofthemac     stable $old → $new, 1 file\" ]"
+check "an update with nothing new says up to date" "[ \"\$(STUB_MISE_DO='echo Already up to date.' rotm update 2>&1)\" = '✔ returnofthemac     stable up to date' ]"
+unset DOTFILES
 git -C "$tmp/dev" init -q -b main
 check "--check in a dev clone exits 0" "[ \"\$(bash '$tmp/dev/bin/rotm' update --check --json)\" = '{\"mode\":\"clone\",\"branch\":\"main\",\"behind\":null}' ] && [ \"\$(bash '$tmp/dev/bin/rotm' update --check)\" = 'This is a development clone. Pull it yourself.' ]"
 git -C "$tmp/dev" checkout -q -b 'a"b'
@@ -106,7 +118,9 @@ check "a quote in the branch name is escaped" "[ \"\$(bash '$tmp/dev/bin/rotm' u
 check "a folder that is no repository prints no git error" "[ -z \"\$(DOTFILES='$tmp/empty-dir' bash '$tmp/dev/bin/rotm' update --check 2>&1 > /dev/null)\" ]"
 : > "$tmp/log"
 echo edit >> "$fix/setup.sh"
-check "a refused update exits with mise's code" "STUB_MISE_RC=1 rotm update > '$tmp/out' 2>&1; [ \$? -eq 1 ]"
+check "a refused update exits with mise's code" "STUB_MISE_RC=1 STUB_MISE_DO='echo remote: counting; echo fatal: Not possible to fast-forward, aborting. >&2; echo mise ERROR Version: 2026.11.12 >&2; echo mise ERROR Run with --verbose or MISE_VERBOSE=1 for more information >&2' rotm update > '$tmp/out' 2>&1; [ \$? -eq 1 ]"
+check "a refused update names the error, not mise's closing lines, on a ✖ line" "grep -qx '✖ returnofthemac     fatal: Not possible to fast-forward, aborting.' '$tmp/out'"
+check "a refused update shows the captured output" "grep -qx 'remote: counting' '$tmp/out'"
 check "a refused update does not run setup.sh" "! grep -q '^setup' '$tmp/log'"
 check "a refused update names the tracked files that differ" "grep -q 'setup.sh' '$tmp/out' && ! grep -q '??' '$tmp/out'"
 git -C "$fix" checkout -q -- setup.sh

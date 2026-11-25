@@ -68,9 +68,11 @@ elapsed() {
   if [ "$1" -lt 60 ]; then echo "${1}s"; else echo "$(($1 / 60))m $(($1 % 60))s"; fi
 }
 
-# status <level> <step> <detail>: print the line, log it, collect it for the
-# summary. A step's result line names its time when it took SYSUP_SLOW (10)
-# seconds or more; the summary leaves the time out
+# status <level> <step> <detail> [<rows>]: print the line, log it, collect it
+# for the summary. <rows> ("name<TAB>value" lines, as rows reads them) show
+# only in the summary, under that line: the items behind a count. A step's
+# result line names its time when it took SYSUP_SLOW (10) seconds or more; the
+# summary leaves the time out
 status() {
   local took=""
   case $1 in
@@ -83,11 +85,12 @@ status() {
   local detail_color=""
   case $1 in ok | held) detail_color=$c_dim ;; esac
   say "$(entry "" "$1" "$2" "$3$took" "$detail_color")"
-  # step<TAB>detail, for the summary's rows
+  # step<TAB>detail, then any rows on the lines after it
+  local item="$2"$'\t'"$3${4:+$'\n'$4}"
   case $1 in
-    changed) changed+=("$2"$'\t'"$3") ;;
-    notice) notices+=("$2"$'\t'"$3") ;;
-    fail) failed+=("$2"$'\t'"$3") ;;
+    changed) changed+=("$item") ;;
+    notice) notices+=("$item") ;;
+    fail) failed+=("$item") ;;
   esac
 }
 
@@ -351,7 +354,8 @@ if [ -d "${HOMEBREW_PREFIX:-/opt/homebrew}/Cellar" ]; then
     if [ "$(tail -n 1 <<< "$out")" = "nothing superseded" ]; then
       status ok "packages cleanup" "nothing superseded"
     elif [ -n "$kegs" ]; then
-      status changed "packages cleanup" "$(plural "$kegs" "old version") removed, $(plural $((repointed + removed)) link) fixed"
+      status changed "packages cleanup" "$(plural "$kegs" "old version") removed, $(plural $((repointed + removed)) link) fixed" \
+        "$(sed -nE $'s#^remove  Cellar/([^/]+)/(.*)#removed\t\\1 \\2#p; s#^repoint (.*) -> .*#repointed\t\\1#p; s#^unlink  (.*)#unlinked\t\\1#p' <<< "$out")"
     else
       status notice "packages cleanup" "unrecognized output; see the log"
     fi
@@ -758,7 +762,7 @@ if command -v claude > /dev/null; then
       # fail it, but each one means the daemon can't cold-start from this shell
       warned=$(sed -n 's/^│  ▲ \(..*\)/\1/p' <<< "$out")
       newer=$(grep -o 'newer release [^;]*' <<< "$out" || true)
-      [ -z "$newer" ] || status notice "Hindsight memory" "$newer; bump CODING_AGENTS_VERSION in bin/hindsight-memory"
+      [ -z "$newer" ] || status notice "Hindsight memory" "$newer; merge the Renovate PR that bumps CODING_AGENTS_VERSION"
       [ -z "$warned" ] || status notice "Hindsight memory" "installer: ${warned%%$'\n'*}; see the log"
       ! grep -q 'daemon did not stop' <<< "$out" || status notice "Hindsight memory" "the daemon did not stop and still runs the old environment; see the log"
       # hindsight-memory exits 0 here and the hook is back on uvx; the removed lock is not an update
@@ -885,9 +889,9 @@ if command -v claude > /dev/null; then
     else
       status fail catalog "claude-catalog failed; agents/catalog/curated.toml may name something no longer installed; run: claude-catalog"
     fi
-    while read -r lint; do
-      status notice catalog "$lint"
-    done < <(sed -n 's/^  lint: /lint: /p' <<< "$out")
+    # kind<TAB>item from "  lint: <kind>: <item>"; a line with no kind still counts
+    lints=$(sed -n $'s/^  lint: \\([^:]*\\): /\\1\t/p;t\ns/^  lint: //p' <<< "$out")
+    [ -z "$lints" ] || status notice catalog "$(plural "$(wc -l <<< "$lints" | tr -d ' ')" "lint note")" "$lints"
   fi
   # mise's MCP server (setup/misc.sh registers it). A down user-scope entry
   # with another command (the retired mcp-cache-hints wrapper, a moved
@@ -952,12 +956,14 @@ step summary
 # summary <title> <level> <step<TAB>detail…>: a colored title, then one row per
 # line, laid out as the status lines are
 summary() {
-  local title=$1 level=$2 line
+  local title=$1 level=$2 line head
   style "$level"
   shift 2
   say "$c_bold$color$title$c_reset"
   for line in "$@"; do
-    say "$(entry "  " "$level" "${line%%$'\t'*}" "${line#*$'\t'}")"
+    head=${line%%$'\n'*}
+    say "$(entry "  " "$level" "${head%%$'\t'*}" "${head#*$'\t'}")"
+    [ "$head" = "$line" ] || rows <<< "${line#*$'\n'}"
   done
 }
 # link <label> <path>: on a terminal the path as ~/… and clickable (OSC 8),

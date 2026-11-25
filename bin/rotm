@@ -48,8 +48,23 @@ usage() {
   awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); if ($0 == "---") exit; print; next } NR > 1 { exit }' "$0"
 }
 
+# result ok|changed|fail <message>: one line in setup's and sysup's shape
+result() {
+  local glyph n color="" reset=""
+  case "$1" in
+    ok) glyph=✔ n=2 ;;
+    changed) glyph=↻ n=6 ;;
+    fail) glyph=✖ n=1 ;;
+  esac
+  # tput guard: with TERM unset it prints an error per call
+  if [ -t 1 ] && [ -z "${NO_COLOR:-}" ] && tput setaf 1 > /dev/null 2>&1; then
+    color=$(tput setaf "$n") reset=$(tput sgr0)
+  fi
+  printf '%s%s%s %-18s %s\n' "$color" "$glyph" "$reset" returnofthemac "$2"
+}
+
 update() {
-  local branch quoted url arg rc mode behind err yes="" check="" json=""
+  local branch quoted url arg rc mode behind err out old new files yes="" check="" json=""
   for arg in "$@"; do
     case "$arg" in
       --) break ;;
@@ -102,17 +117,31 @@ update() {
   fi
   # mise refuses a URL that differs from the checkout's origin, so it is read
   url=$(git -C "$DOTFILES" remote get-url origin)
+  old=$(git -C "$DOTFILES" rev-parse --short HEAD)
   cd "$HOME"
   # --only final-hook: fetch and link, apply nothing (probes 11 and 13). setup.sh does the installing.
-  mise bootstrap --from "$url?ref=$branch" --config-dir tilde/.config/mise --update --only final-hook ${yes:+"$yes"} || {
+  # Captured: it is git's fetch and pull chatter, shown only when the update fails.
+  # No stdin, so mise cannot ask a question nobody would see: without a terminal it does not ask
+  out=$(mise bootstrap --from "$url?ref=$branch" --config-dir tilde/.config/mise --update --only final-hook ${yes:+"$yes"} 2>&1 < /dev/null) || {
     rc=$?
     {
+      # mise ends a failure with its version and a --verbose hint, which are not the reason
+      result fail "$(awk 'NF && !/^mise ERROR +(Version:|Run with)/ { l = $0 } END { print l }' <<< "$out")"
+      printf '%s\n' "$out"
       echo "rotm: mise refused or failed to update the installed copy. Tracked files that differ in it:"
       git -C "$DOTFILES" status --short --untracked-files=no
       echo "Nothing was installed."
     } >&2
     exit "$rc"
   }
+  new=$(git -C "$DOTFILES" rev-parse --short HEAD)
+  if [ "$old" = "$new" ]; then
+    result ok "$branch up to date"
+  else
+    files=$(git -C "$DOTFILES" diff --name-only "$old" "$new" | wc -l | tr -d ' ')
+    [ "$files" = 1 ] && files="1 file" || files="$files files"
+    result changed "$branch $old → $new, $files"
+  fi
   # setup.sh skips its first-install warning and wait
   export ROTM_UPDATE=1
   # The update may have replaced this file: bash keeps reading the one it opened
