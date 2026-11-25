@@ -158,6 +158,8 @@ case "$1 $2" in
       echo "✔ Plugin \"alpha@m\" updated from 1.0.0 to 1.1.0 for scope user. Restart to apply changes."
     else echo "$4 is already at the latest version"; fi ;;
   "mcp get") echo "  Status: ✔ Connected" ;;
+  "auth status") [ -e "$STATE/auth" ] || { echo "{\"loggedIn\":true,\"authMethod\":\"oauth_token\",\"loginExpiresAt\":null}"; exit 0; }
+    cat "$STATE/auth" ;;
   "--version ") if [ -e "$STATE/claude-done" ]; then echo "2.1.311 (Claude Code)"; else echo "2.1.310 (Claude Code)"; fi ;;
   "update ") [ -e "$STATE/claude-fails" ] && { echo "Error: update failed"; exit 1; }
     [ -e "$STATE/claude" ] && touch "$STATE/claude-done"; echo "Checking for updates to latest version..." ;;
@@ -200,6 +202,13 @@ stub cargo '[ -e "$STATE/no-cargo" ] && exit 1; echo "cargo 1.99.1"'
 export PATH="$tmp/bin:$PATH"
 export HINDSIGHT_CONFIG="$STATE/coding-agent.json"
 echo '{}' > "$HINDSIGHT_CONFIG"
+
+# signed_in <days>: a claude.ai login whose latest end is <days> from now, as auth status prints it
+signed_in() {
+  printf '{"loggedIn":true,"authMethod":"claude.ai","loginExpiresAt":"%s"}\n' \
+    "$(jq -nr --argjson d "$1" 'now + $d * 86400 | floor | todate | sub("Z$"; ".000Z")')" > "$STATE/auth"
+  login_ends=$(jq -r '.loginExpiresAt[:10]' "$STATE/auth")
+}
 
 check_true() {
   local name=$1
@@ -244,6 +253,7 @@ check_true "retired rules go before save" retire_then_save
 check_true "sysup never merges settings unasked" lacks_settings_restore
 check_true "up to date: no settings line when nothing was retired" lacks 'Claude settings'
 check_true "up to date: plugins counted" has '^✔ plugins +2 plugins up to date$'
+check_true "another credential: an ok line" has '^✔ Claude sign-in +no claude\.ai sign-in end date$'
 check_true "up to date: Claude Code version" has '^✔ Claude Code +2\.1\.310 up to date$'
 check_true "up to date: skills checked, the uncheckable one named" has '^✔ agent skills +1 unchanged, could not check: two$'
 check_true "up to date: REA skill matches" has '^✔ REA skill +matches rea-agents 6\.8\.0$'
@@ -284,7 +294,9 @@ touch "$STATE/gcloud" "$STATE/settings" "$STATE/skills" "$STATE/hindsight-change
 uv_envs
 mkdir -p "$CLAUDE_CONFIG_DIR/skills"
 ln -s /nonexistent "$CLAUDE_CONFIG_DIR/skills/reverse-engineer-anything"
+signed_in 3
 run
+check_true "sign-in within 10 days: a notice with the date and the command" has "^● Claude sign-in +ends by $login_ends, up to 3 days sooner; run: claude auth login\$"
 check_true "stale REA skill symlink removed in the scratch config dir" test ! -L "$CLAUDE_CONFIG_DIR/skills/reverse-engineer-anything"
 check_true "changes: REA skill reinstalled" has '^↻ REA skill +reinstalled for rea-agents 6\.8\.0$'
 check_true "changes: newer Hindsight release is a notice" has '^● Hindsight memory +newer release 0.9.0 on npm; bump CODING_AGENTS_VERSION in bin/hindsight-memory$'
@@ -345,11 +357,15 @@ check_true "changes: log keeps the status lines and the table" grep -q -e '^↻ 
 rm -rf "$DOTFILES/logs" "$STATE/hindsight-newer" "$STATE/skills" "$STATE/hindsight-change" "$STATE/snippetslab" "$STATE/catalog-delta" "$STATE/pkg" "$STATE/pkg-upgraded" "$STATE/mise-newer" "$STATE/self-updated" "$STATE/cache-stale"
 uv_envs
 touch "$STATE/pkg-broken" "$STATE/cache-busy" "$STATE/gcloud-fails"
+signed_in -1
 run
+check_true "sign-in past its end: a notice with the command" has "^● Claude sign-in +may have ended \\($login_ends\\); run: claude auth login\$"
 check_true "a failed gcloud update names the command" has '^✖ gcloud +run: gcloud components update$'
 rm -f "$STATE/gcloud-fails" "$DOTFILES/logs"/*
 touch "$STATE/gcloud-external" "$STATE/retired-plugin" "$STATE/self-update-managed"
+echo '{"loggedIn":true,"authMethod":"claude.ai"}' > "$STATE/auth"
 run
+check_true "a CLI without loginExpiresAt: an ok line" has '^✔ Claude sign-in +no claude\.ai sign-in end date$'
 check_true "a gcloud another package manager owns is not a failure" has '^✔ gcloud +its package manager updates it$'
 check_true "a removed retired plugin is named" has '^↻ Claude settings +removed x@a, a retired plugin$'
 check_true "a mise a package manager owns points at the docs" has '^✖ mise self-update +a package manager owns this mise, so nothing upgrades it; see "A Mac set up before the mise-first setup" in docs/updating.md$'
@@ -361,7 +377,9 @@ check_true "warned: installer warning still a notice" has '^● Hindsight memory
 check_true "package needs repair: a notice naming it" has '^● packages status +brew:jq needs_repair; run: mise bootstrap packages apply$'
 rm -rf "$DOTFILES/logs" "$STATE/pkg-broken"
 touch "$STATE/pkg-no-code" "$STATE/hindsight-unbuilt"
+echo 'Error: keychain locked' > "$STATE/auth"
 run
+check_true "unreadable auth status: an ok line, not a failure" has '^✔ Claude sign-in +no claude\.ai sign-in end date$'
 check_true "unbuilt: a daemon environment that did not build is a notice" has '^● Hindsight memory +daemon environment did not build; run: hindsight-memory upgrade$'
 check_true "unbuilt: the removed lock is not reported as an update" lacks '^↻ Hindsight memory'
 check_true "no code: the manager is one notice" has '^● packages status +vscode is not available \(1 packages? skipped\)$'
@@ -398,7 +416,11 @@ rm -rf "$DOTFILES/logs" "$STATE/pkg-status-fails" "$STATE/mise-calls.log"
 
 rm -rf "$DOTFILES/logs" "$STATE/claude-fails" "$STATE/cache-busy"
 touch "$STATE/claude" "$STATE/hindsight-fails" "$STATE/uv" "$STATE/rust" "$STATE/no-cargo" "$STATE/rea-fails" "$STATE/prune" "$STATE/prune-fails" "$STATE/cache-fails"
+signed_in 60
 run
+check_true "sign-in far off: an ok line with the date" has "^✔ Claude sign-in +ends by $login_ends\$"
+check_true "sign-in far off: no notice" lacks '^● Claude sign-in'
+rm -f "$STATE/auth"
 check_true "update: mise prune failure names the command" has '^✖ mise prune +run: mise prune --yes$'
 check_true "update: mise prune failure output shown" has '^    mise ERROR uninstall failed$'
 check_true "cache: another failure names the command" has '^✖ uv cache +run: uv cache prune$'
@@ -421,7 +443,10 @@ check_true "update: Hindsight failure output shown" has '^    installer failed$'
 
 rm -rf "$DOTFILES/logs" "$STATE/rea-fails"
 touch "$STATE/macos" "$STATE/macos-fails" "$STATE/rea" "$STATE/cache-files"
+echo '{"loggedIn":false,"authMethod":"none","loginExpiresAt":null}' > "$STATE/auth"
 run
+check_true "signed out or ended: a notice with the command" has '^● Claude sign-in +not signed in, or the sign-in ended; run: claude auth login$'
+rm -f "$STATE/auth"
 check_true "cache: removed files outside archive-v0 are a change" has '^↻ uv cache +removed 29 files \(100\.0KiB\)$'
 check_true "macOS: failed install reports fail only" has '^✖ macOS'
 check_true "macOS: failed install does not also say changed" lacks '^↻ macOS'
@@ -555,7 +580,7 @@ rm -rf "$DOTFILES/logs" "$STATE/claude-config.log"
 printf 'claude\nagents\nfonts\napps\n' > "$HOME/.config/mise/modules-off.local"
 touch "$STATE/undeclared" "$STATE/pkg-absent"
 run
-for pair in 'Iosevka:fonts' 'Claude Code:claude' 'agent skills:claude' 'plugins:claude' 'Claude config:claude' 'catalog:claude' 'REA skill:agents' 'Hindsight memory:agents' 'SnippetsLab skill:agents' 'mise MCP:agents' 'Scrapling:agents' 'Raycast:apps'; do
+for pair in 'Iosevka:fonts' 'Claude Code:claude' 'Claude sign-in:claude' 'agent skills:claude' 'plugins:claude' 'Claude config:claude' 'catalog:claude' 'REA skill:agents' 'Hindsight memory:agents' 'SnippetsLab skill:agents' 'mise MCP:agents' 'Scrapling:agents' 'Raycast:apps'; do
   check_true "modules off: ${pair%%:*} is left out" has "^✔ ${pair%%:*} +the ${pair##*:} module is off\$"
 done
 check_true "modules off: no Claude config is saved" test ! -e "$STATE/claude-config.log"
