@@ -6,8 +6,11 @@ marketplace claude-code-docs costiash/claude-code-docs
 marketplace claude-code-warp warpdotdev/claude-code-warp
 marketplace claude-plugins-official anthropics/claude-plugins-official
 marketplace cole-medin coleam00/skills
+marketplace foreman myrheimb/foreman
 marketplace impeccable pbakaus/impeccable
 marketplace jrmatherly-skills jrmatherly/skills
+marketplace jtbd-base yulldesign/jtbd-base
+marketplace knowledge-work-plugins anthropics/knowledge-work-plugins
 marketplace ponytail DietrichGebert/ponytail
 marketplace severity1-marketplace severity1/severity1-marketplace
 marketplace ui-ux-pro-max-skill nextlevelbuilder/ui-ux-pro-max-skill
@@ -27,7 +30,11 @@ plugin code-review@claude-plugins-official
 plugin code-simplifier@claude-plugins-official
 plugin coderabbit@claude-plugins-official
 plugin commit-commands@claude-plugins-official
+plugin cowork-plugin-management@knowledge-work-plugins
+plugin design@knowledge-work-plugins
+plugin engineering@knowledge-work-plugins
 plugin feature-dev@claude-plugins-official
+plugin foreman@foreman
 plugin frontend-design@claude-plugins-official
 plugin github@claude-plugins-official disabled
 plugin gopls-lsp@claude-plugins-official
@@ -35,6 +42,7 @@ plugin grafana-mcp@claude-plugins-official disabled
 plugin hookify@claude-plugins-official disabled
 plugin impeccable@impeccable
 plugin jstack@jrmatherly-skills
+plugin jtbd-base@jtbd-base
 plugin langfuse-observability@claude-plugins-official
 plugin langfuse@claude-plugins-official
 plugin logfire@claude-plugins-official
@@ -42,10 +50,12 @@ plugin lua-lsp@claude-plugins-official
 plugin mcp-server-dev@claude-plugins-official
 plugin microsoft-docs@claude-plugins-official
 plugin modern-web-guidance@claude-plugins-official
+plugin operations@knowledge-work-plugins
 plugin plugin-dev@claude-plugins-official
 plugin ponytail@ponytail
 plugin pr-review-toolkit@claude-plugins-official
 plugin preset-cli-skills@claude-plugins-official
+plugin productivity@knowledge-work-plugins
 plugin prompt-improver@severity1-marketplace
 plugin pydantic-ai@claude-plugins-official
 plugin pyright-lsp@claude-plugins-official
@@ -64,6 +74,7 @@ plugin supabase@claude-plugins-official disabled
 plugin superdesign@claude-plugins-official
 plugin superpowers@claude-plugins-official
 plugin swift-lsp@claude-plugins-official
+plugin theme-examples@claude-plugins-official
 plugin typescript-lsp@claude-plugins-official
 plugin ui-ux-pro-max@ui-ux-pro-max-skill
 plugin voltagent-biz@voltagent-subagents
