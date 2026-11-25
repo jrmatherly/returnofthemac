@@ -15,20 +15,26 @@ command=$(jq -r '.tool_input.command // empty' <<< "$input")
 cwd=$(jq -r '.cwd // empty' <<< "$input")
 cwd=${cwd:-${CLAUDE_PROJECT_DIR:-$(pwd -P)}}
 
-# Resolve $1 against $2 into dir, as cd and git -C would (no quotes, so no
-# spaces; a leading ~ is the one expansion a bare word gets)
+# Resolve $1 against $2 into dir, as cd and git -C would. One pair of quotes
+# around a whole word is dropped (Code Mode writes `cd 'app' && git commit`);
+# a leading ~ is the one expansion a bare word gets, and a quoted one gets none
 enter() {
-  case $1 in
-    /*) dir=$1 ;;
-    [~] | [~]/*) dir=$HOME${1:1} ;;
-    *) dir=$2/$1 ;;
+  local p=$1
+  case $p in
+    \'*\' | \"*\") p=${p:1:${#p}-2} ;;
+    [~] | [~]/*) p=$HOME${p:1} ;;
+  esac
+  case $p in
+    /*) dir=$p ;;
+    *) dir=$2/$p ;;
   esac
 }
 
 # A segment is a commit when its command word (after NAME=value prefixes,
 # env, time, exec, command and the keywords that open a group or branch) is
-# git and a later word is `commit`; quoted text is not parsed. dir follows
-# each `cd <dir>` segment before it and the commit's own `git -C <dir>`
+# git and a later word is `commit`; quoted text is not parsed beyond the one
+# pair of quotes enter drops. dir follows each `cd <dir>` segment before it
+# and the commit's own `git -C <dir>`
 is_commit() {
   local seg w first prev gitdir
   dir=$cwd

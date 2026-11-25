@@ -88,11 +88,16 @@ touch_path setup/README.md
 run 'git commit -m "x"'
 [ "$rc" -eq 0 ] && [ -z "$out" ] || fail "warning printed with README changed"
 # 7. from outside, a leading cd (absolute or relative) or git -C targets the repo
-for c in "cd $proj && git commit -m x" 'cd proj; git commit -m x' "git -C $proj commit -m x" '(cd proj && git commit -m x)'; do
+for c in "cd $proj && git commit -m x" 'cd proj; git commit -m x' "git -C $proj commit -m x" '(cd proj && git commit -m x)' \
+  "cd 'proj' && git commit -m x" 'cd "proj" && git commit -m x' "git -C '$proj' commit -m x"; do
   rm -f "$STATE/check-ran"
   run "$c" "$tmp"
   [ -e "$STATE/check-ran" ] || fail "not gated from outside: $c"
 done
+# 7b. a target that is no directory yet is another repo's commit, not this one's
+rm -f "$STATE/check-ran"
+run 'git init new && cd new && git commit -m x'
+[ ! -e "$STATE/check-ran" ] || fail "wrongly gated: commit in a repo the command creates"
 # 8. git -C into a repo without the hook copy is not gated, even from this repo
 rm -f "$STATE/check-ran"
 run "git -C $other commit -m x"
