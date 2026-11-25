@@ -257,6 +257,32 @@ tools = "search_issues, search_events, get_sentry_resource, analyze_issue_with_s
 [mcp.supabase]
 desc = "Supabase's hosted MCP (supabase plugin): projects, SQL, migrations, Edge Functions, advisors, docs. Needs OAuth sign-in via /mcp, then reaches every project in the organization picked there, read-write. The `supabase` CLI covers local development from Bash."
 tools = "execute_sql, apply_migration, get_advisors"
+[mcp.asana]
+desc = "Asana's hosted MCP (https://mcp.asana.com/v2/mcp), declared by the design, engineering, operations and productivity plugins. OAuth sign-in through /mcp."
+[mcp.atlassian]
+desc = "Atlassian's hosted MCP for Jira and Confluence (https://mcp.atlassian.com/v1/mcp), declared by the design, engineering, operations and productivity plugins. OAuth sign-in through /mcp."
+[mcp.clickup]
+desc = "ClickUp's hosted MCP (https://mcp.clickup.com/mcp), declared by the productivity plugin. OAuth sign-in through /mcp."
+[mcp.datadog]
+desc = "Datadog's hosted MCP (https://mcp.datadoghq.com/api/unstable/mcp-server/mcp), declared by the engineering plugin. OAuth sign-in through /mcp."
+[mcp.figma]
+desc = "Figma's hosted MCP (https://mcp.figma.com/mcp), declared by the design plugin. OAuth sign-in through /mcp."
+[mcp.gmail]
+desc = "Placeholder the design, engineering, operations and productivity plugins declare with no URL or command, so it connects to nothing. The claude.ai Gmail connector is the working route."
+[mcp."google calendar"]
+desc = "Placeholder the design, engineering, operations and productivity plugins declare with no URL or command, so it connects to nothing. The claude.ai Google Calendar connector is the working route."
+[mcp.intercom]
+desc = "Intercom's hosted MCP (https://mcp.intercom.com/mcp), declared by the design plugin. OAuth sign-in through /mcp."
+[mcp.linear]
+desc = "Linear's hosted MCP (https://mcp.linear.app/mcp), declared by the design, engineering and productivity plugins. OAuth sign-in through /mcp."
+[mcp.monday]
+desc = "monday.com's hosted MCP (https://mcp.monday.com/mcp), declared by the productivity plugin. OAuth sign-in through /mcp."
+[mcp.notion]
+desc = "Notion's hosted MCP (https://mcp.notion.com/mcp), declared by the design, engineering, operations and productivity plugins. OAuth sign-in through /mcp."
+[mcp.pagerduty]
+desc = "PagerDuty's hosted MCP (https://mcp.pagerduty.com/mcp), declared by the engineering plugin. OAuth sign-in through /mcp."
+[mcp.slack]
+desc = "Slack's hosted MCP (https://mcp.slack.com/mcp), declared by the design, engineering, operations and productivity plugins. OAuth sign-in through /mcp."
 
 [mcp.jean]
 desc = "Jean desktop app's MCP server (registered by Jean in ~/.claude.json): its projects, worktrees and chat sessions, plus GitHub/Linear issues, PRs, reviews and merges driven through Jean."
