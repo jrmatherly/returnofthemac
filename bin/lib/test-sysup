@@ -333,7 +333,7 @@ for section in Changed Notices Failed; do
   check_true "changes: summary has $section" has "^$section\$"
 done
 check_true "changes: summary lists the failure" has '^  ✖ uv +run: uv tool upgrade --all --exclude-newer "48 hours"$'
-check_true "changes: restart action" has '^  › Restart Claude Code to apply plugin updates$'
+check_true "changes: restart action" has '^  › Run /reload-plugins in open Claude Code sessions to apply plugin updates$'
 check_true "changes: new terminal action" has '^  › Open a new terminal: dotfiles changed$'
 check_true "changes: action banner counts the items" has '^ ▶ ACTION NEEDED \([0-9]+ items\) $'
 check_true "changes: headline counts each kind" has '^Done in [0-9]+s · [0-9]+ changed · [0-9]+ notices · [0-9]+ failed · [0-9]+ actions$'

@@ -1,6 +1,6 @@
 # Verify first
 
-NEVER assume. NEVER guess. ALWAYS research. ALWAYS investigate. ALWAYS validate. ALWAYS confirm. ASK questions when unclear or uncertain.
+Check before you state, and ask when the request is unclear.
 
 - Before stating a fact about code, a tool, a version or a machine, check it: read the file, run the command, open the current docs. Memory, training data, earlier messages, recalled Hindsight memory and its knowledge pages are leads, not evidence.
 - A claim from a subagent, a summary or a doc page is unverified until you've checked the source it rests on. When two sources disagree, find out which is right before building on either.

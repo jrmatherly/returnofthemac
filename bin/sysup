@@ -802,7 +802,7 @@ if command -v claude > /dev/null; then
     if [ -n "$plugin_updates" ]; then
       status changed plugins "$(plural "$(wc -l <<< "$plugin_updates" | tr -d ' ')" plugin) updated"
       rows <<< "$plugin_updates"
-      actions+=("Restart Claude Code to apply plugin updates")
+      actions+=("Run /reload-plugins in open Claude Code sessions to apply plugin updates")
     elif [ "$plugin_count" -gt 0 ]; then
       status ok plugins "$(plural "$plugin_count" plugin) up to date"
     elif [ "$plugins_blocked" -eq 0 ] && [ "$plugins_failed" -eq 0 ]; then
