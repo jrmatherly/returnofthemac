@@ -2,7 +2,8 @@
 # Claude Code status line — three-row layout
 # Documented in agents/README.md (linked by conf.d/40-dotfiles.toml)
 # Constraints (verified May 2026):
-#   - No TTY: $COLUMNS is unset, tput cols returns 80, /dev/tty unavailable
+#   - No TTY: tput cols returns 80 and /dev/tty is unavailable (Claude Code
+#     passes the width in $COLUMNS; this layout does not use it)
 #   - Leading whitespace stripped from each row by Claude Code renderer
 #   - rate_limits.{five_hour,seven_day} may be independently absent
 #   - context_window.used_percentage may be null before first API response
@@ -13,24 +14,31 @@ set -u
 # ---- Read JSON from stdin ----
 input=$(cat)
 
-# ---- Single-pass jq extraction ----
-read_jq() {
-  jq -r "$1 // empty" <<< "$input" 2> /dev/null
-}
-
-cwd=$(read_jq '.workspace.current_dir // .cwd')
-session_id=$(read_jq '.session_id')
-model_name=$(read_jq '.model.display_name')
-# Strip "(...context)" suffix — redundant with the separate 1M badge
-model_name=$(printf '%s' "$model_name" | sed -E 's/[[:space:]]*\([^)]*context\)[[:space:]]*$//')
-ctx_pct=$(read_jq '.context_window.used_percentage')
-ctx_size=$(read_jq '.context_window.context_window_size')
-effort=$(read_jq '.effort.level')
-git_worktree=$(read_jq '.workspace.git_worktree')
-fh_pct=$(read_jq '.rate_limits.five_hour.used_percentage')
-fh_resets=$(read_jq '.rate_limits.five_hour.resets_at')
-sd_pct=$(read_jq '.rate_limits.seven_day.used_percentage')
-sd_resets=$(read_jq '.rate_limits.seven_day.resets_at')
+# ---- One jq pass: one value per line, an empty line when absent ----
+# one() turns a field of an unexpected type into an empty line, so it costs
+# only itself, and a newline inside a value cannot shift the fields after it
+{
+  IFS= read -r cwd
+  IFS= read -r session_id
+  IFS= read -r model_name
+  IFS= read -r ctx_pct
+  IFS= read -r ctx_size
+  IFS= read -r effort
+  IFS= read -r git_worktree
+  IFS= read -r fh_pct
+  IFS= read -r fh_resets
+  IFS= read -r sd_pct
+  IFS= read -r sd_resets
+} < <(jq -r '
+  def one(f): try f catch null;
+  (one(.workspace.current_dir) // one(.cwd)), one(.session_id),
+  # the "(...context)" suffix repeats the separate 1M badge
+  (one(.model.display_name) // "" | tostring | sub("\\s*\\([^)]*context\\)\\s*$"; "")),
+  one(.context_window.used_percentage), one(.context_window.context_window_size),
+  one(.effort.level), one(.workspace.git_worktree),
+  one(.rate_limits.five_hour.used_percentage), one(.rate_limits.five_hour.resets_at),
+  one(.rate_limits.seven_day.used_percentage), one(.rate_limits.seven_day.resets_at)
+  | . // "" | tostring | gsub("\n"; " ")' <<< "$input" 2> /dev/null)
 
 ctx_pct_int=${ctx_pct%.*}
 ctx_pct_int=${ctx_pct_int:-0}
