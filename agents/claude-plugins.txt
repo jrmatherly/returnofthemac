@@ -31,8 +31,8 @@ plugin code-simplifier@claude-plugins-official
 plugin coderabbit@claude-plugins-official
 plugin commit-commands@claude-plugins-official
 plugin cowork-plugin-management@knowledge-work-plugins
-plugin design@knowledge-work-plugins
-plugin engineering@knowledge-work-plugins
+plugin design@knowledge-work-plugins disabled
+plugin engineering@knowledge-work-plugins disabled
 plugin feature-dev@claude-plugins-official
 plugin foreman@foreman
 plugin frontend-design@claude-plugins-official
@@ -55,7 +55,7 @@ plugin plugin-dev@claude-plugins-official
 plugin ponytail@ponytail
 plugin pr-review-toolkit@claude-plugins-official
 plugin preset-cli-skills@claude-plugins-official
-plugin productivity@knowledge-work-plugins
+plugin productivity@knowledge-work-plugins disabled
 plugin prompt-improver@severity1-marketplace
 plugin pydantic-ai@claude-plugins-official
 plugin pyright-lsp@claude-plugins-official
