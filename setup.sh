@@ -648,6 +648,10 @@ packages_for() {
       # With --manager mise fails an installed package that a local config declares { state = "absent" }.
       # Nothing is missing, so that choice is not a problem
       line ok "$2" "Nothing is missing: mise stopped at $2 that are installed and declared absent, and they stay as they are"
+    elif [ -n "$states" ] && ! grep -qv '^installed' <<< "$states"; then
+      # mise reported one of 184 extensions failed and its status then listed it
+      # installed (fresh-install run 45851050327): nothing to rerun for
+      warning "$2" "mise reported an error, and all of the $2 are installed"
     else
       bad=true
       failed "$2" "Some $2 failed to install. See the output below, then rerun $self"

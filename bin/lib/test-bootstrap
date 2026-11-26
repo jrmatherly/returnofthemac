@@ -388,11 +388,13 @@ check_true "f1: … and says to rerun" has 'rerun \./setup\.sh'
 
 prepare() {
   touch "$STATE/casks-fail"
+  echo utm > "$STATE/missing-casks"
+  echo utm > "$STATE/bad-casks"
   stub code 'exit 0'
 }
 run
 check_true "f2: a failed cask exits 2" [ "$rc" -eq 2 ]
-check_true "f2: warns that casks failed" has 'Some casks failed to install'
+check_true "f2: warns that the cask failed" has 'brew-cask:utm failed to install'
 check_true "f2: the bootstrap and then the extensions still run" in_order "$apply brew-cask disable=" "args=bootstrap --skip" "$apply vscode disable="
 check_true "f2: the extras script runs" extras_ran 1
 
@@ -514,6 +516,8 @@ check_true "i: … without the warning" lacks 'No GitHub token'
 
 prepare() {
   touch "$STATE/casks-fail"
+  echo utm > "$STATE/missing-casks"
+  echo utm > "$STATE/bad-casks"
   mkdir -p "$HOME/.config/keep"
   ln -s "$copy/tilde/.config/gh" "$HOME/.config/gh"
   ln -s "$tmp/other" "$HOME/.config/elsewhere"
@@ -548,6 +552,8 @@ for own in .zshrc .gitconfig; do
 done
 prepare() {
   touch "$STATE/casks-fail"
+  echo utm > "$STATE/missing-casks"
+  echo utm > "$STATE/bad-casks"
   mkdir -p "$HOME/.config/keep"
   ln -s "$copy/tilde/.config/gh" "$HOME/.config/gh"
 }
@@ -600,6 +606,15 @@ prepare() {
 }
 run -y
 check_true "a package that is missing beside it still is a problem" has ' · 1 failed$'
+# mise can fail an apply that leaves every package installed
+prepare() {
+  touch "$STATE/casks-fail"
+  echo utm > "$STATE/new-casks"
+}
+run -y
+check_true "an apply that errors with everything installed is a notice" has '^● casks +mise reported an error, and all of the casks are installed$'
+check_true "… not a failure" lacks '^Failed$' && check_true "… and setup exits 0" [ "$rc" -eq 0 ]
+check_true "… and what it installed is still reported" has '^↻ casks +1 installed'
 prepare() { :; }
 
 # Saved settings (rotm settings sync): gh is signed in as octo, who has a settings repository.
