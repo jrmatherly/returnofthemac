@@ -144,7 +144,7 @@ entry() {
   printf '%s%s\n' "$(printf '%s\n' "$4" | wrap "$1$color$glyph$c_reset $(printf '%-18s' "$3") ${5:-}" $((${#1} + 21)))" "$c_reset"
 }
 
-# rows: stdin "name<TAB>value" lines → a two-column table under the status
+# rows: stdin "name<TAB>value" lines → a two-column table under a summary
 # line, names padded to the longest, dimmed on a terminal and plain in the log.
 # A name loses its backend or tap (github:microsoft/aspire, user/tap/gh) unless
 # another name would then read the same: "markdownlint-cli2 (npm)"
@@ -385,8 +385,7 @@ else
       | select($old[$k] != null and $old[$k] != .installed_version)
       | "\($k)\t\($old[$k]) → \(.installed_version)"')
     if [ -n "$upgraded" ]; then
-      status changed packages "$(plural "$(wc -l <<< "$upgraded" | tr -d ' ')" package) upgraded"
-      rows <<< "$upgraded"
+      status changed packages "$(plural "$(wc -l <<< "$upgraded" | tr -d ' ')" package) upgraded" "$upgraded"
     else
       status ok packages "up to date"
     fi
@@ -461,8 +460,8 @@ else
     prune=(mise prune --yes)
     ! command -v timeout > /dev/null || prune=(timeout 600 "${prune[@]}")
     if capture "${prune[@]}"; then
-      status changed "mise prune" "$(plural "$(wc -l <<< "$paths" | tr -d ' ')" version) removed, $(awk -v k="$kb" 'BEGIN { if (k >= 1048576) printf "%.1fGB", k / 1048576; else if (k >= 1024) printf "%.0fMB", k / 1024; else printf "%dKB", k }') freed"
-      jq -r 'to_entries[] | .key + "\t" + ([.value[].version] | join(", "))' <<< "$prunable" | rows
+      status changed "mise prune" "$(plural "$(wc -l <<< "$paths" | tr -d ' ')" version) removed, $(awk -v k="$kb" 'BEGIN { if (k >= 1048576) printf "%.1fGB", k / 1048576; else if (k >= 1024) printf "%.0fMB", k / 1024; else printf "%dKB", k }') freed" \
+        "$(jq -r 'to_entries[] | .key + "\t" + ([.value[].version] | join(", "))' <<< "$prunable")"
     else
       status fail "mise prune" "run: mise prune --yes"
       show
@@ -477,8 +476,7 @@ if capture env MISE_LOG_LEVEL=warn mise upgrade; then
   # shows each pair
   upgraded=$(sed -nE $'s/^ +([^ ]+) ([^ ]+) → ([^ ]+)$/\\1\t\\2 → \\3/p' <<< "$out")
   if [ -n "$upgraded" ]; then
-    status changed mise "$(plural "$(wc -l <<< "$upgraded" | tr -d ' ')" version) upgraded"
-    rows <<< "$upgraded"
+    status changed mise "$(plural "$(wc -l <<< "$upgraded" | tr -d ' ')" version) upgraded" "$upgraded"
   else
     status ok mise "up to date"
   fi
@@ -548,12 +546,11 @@ if command -v uv > /dev/null; then
   # "Updated <tool> vA -> vB" when the tool moved, "Modified <tool> environment"
   # when only its dependencies did; both count as a change
   elif uv_updated=$(sed -n 's/^Updated //p; s/^Modified \(.*\) environment$/\1 dependencies/p' <<< "$out") && [ -n "$uv_updated" ]; then
-    status changed uv "$(list <<< "$uv_updated")"
     # uv prints " - name==old" then " + name==new" under each tool's line
-    awk '
+    status changed uv "$(list <<< "$uv_updated")" "$(awk '
       /^(Updated|Modified) / { tool = $2; delete old; next }
       /^ - / { split($2, dep, "=="); old[dep[1]] = dep[2]; next }
-      /^ \+ / { split($2, dep, "=="); print tool "\t" dep[1] " " (dep[1] in old ? old[dep[1]] " → " : "") dep[2] }' <<< "$out" | rows
+      /^ \+ / { split($2, dep, "=="); print tool "\t" dep[1] " " (dep[1] in old ? old[dep[1]] " → " : "") dep[2] }' <<< "$out")"
   else
     status notice uv "unrecognized output, see the log"
   fi
@@ -762,7 +759,7 @@ if command -v claude > /dev/null; then
       # fail it, but each one means the daemon can't cold-start from this shell
       warned=$(sed -n 's/^│  ▲ \(..*\)/\1/p' <<< "$out")
       newer=$(grep -o 'newer release [^;]*' <<< "$out" || true)
-      [ -z "$newer" ] || status notice "Hindsight memory" "$newer; merge the Renovate PR that bumps CODING_AGENTS_VERSION"
+      [ -z "$newer" ] || status notice "Hindsight memory" "$newer"
       [ -z "$warned" ] || status notice "Hindsight memory" "installer: ${warned%%$'\n'*}; see the log"
       ! grep -q 'daemon did not stop' <<< "$out" || status notice "Hindsight memory" "the daemon did not stop and still runs the old environment; see the log"
       # hindsight-memory exits 0 here and the hook is back on uvx; the removed lock is not an update
@@ -827,8 +824,7 @@ if command -v claude > /dev/null; then
       || status notice plugins "$(plural "$plugins_blocked" plugin) skipped: marketplace blocked by your organization's policy"
     plugin_updates=$(sed '/^$/d' <<< "$plugin_updates")
     if [ -n "$plugin_updates" ]; then
-      status changed plugins "$(plural "$(wc -l <<< "$plugin_updates" | tr -d ' ')" plugin) updated"
-      rows <<< "$plugin_updates"
+      status changed plugins "$(plural "$(wc -l <<< "$plugin_updates" | tr -d ' ')" plugin) updated" "$plugin_updates"
       actions+=("Run /reload-plugins in open Claude Code sessions to apply plugin updates")
     elif [ "$plugin_count" -gt 0 ]; then
       status ok plugins "$(plural "$plugin_count" plugin) up to date"
@@ -881,8 +877,8 @@ if command -v claude > /dev/null; then
       since=$(sed -nE 's/^wrote .*, since (.*): \+([0-9]+) -([0-9]+)$/\1 \2 \3/p' <<< "$out")
       read -r since_date added removed <<< "${since:-none 0 0}"
       if [ "$added$removed" != 00 ]; then
-        status changed catalog "catalog rebuilt, +$added -$removed since $since_date"
-        sed -nE $'s/^  (added|removed): /\\1\t/p' <<< "$out" | rows
+        status changed catalog "catalog rebuilt, +$added -$removed since $since_date" \
+          "$(sed -nE $'s/^  (added|removed): /\\1\t/p' <<< "$out")"
       else
         status ok catalog "rebuilt, no change"
       fi
