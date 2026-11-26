@@ -653,3 +653,26 @@ check_true "terminal: the log link is an OSC 8 hyperlink" has $'\x1b]8;;file://'
 check_true "terminal: action banner colored" has $'\x1b\\[[0-9;]*m ▶ ACTION NEEDED'
 check_true "terminal: log has no color codes" log_lacks $'\x1b'
 check_true "no run called brew or code" test ! -e "$STATE/forbidden.log"
+
+# A TERM (the path Ctrl-C takes) ends the command a step is running, even one
+# that ignores both signals, and whatever it started. The three functions run
+# on their own: a whole sysup has no step that can be held open
+fn() { sed -n "/^$1() {/,/^}/p" "$script"; }
+cat > "$tmp/interrupt.sh" << EOS
+log=/dev/null; clear_line() { :; }; log_clean() { cat; }
+$(fn kill_tree)
+$(fn interrupted)
+$(fn capture)
+capture_pid=""; capture_file=$tmp/captured
+trap interrupted INT TERM
+capture bash -c 'trap "" INT TERM; echo \$\$ > $tmp/child; sleep 30 & echo \$! > $tmp/grandchild; wait'
+EOS
+bash "$tmp/interrupt.sh" &
+runner=$!
+for _ in $(seq 20); do [ -s "$tmp/grandchild" ] && break || sleep 0.2; done
+kill -TERM "$runner"
+rc=0
+wait "$runner" || rc=$?
+check_true "interrupted: the run exits 130" [ "$rc" -eq 130 ]
+check_true "interrupted: the running command is stopped" eval '! kill -0 "$(cat "$tmp/child")" 2> /dev/null'
+check_true "interrupted: … and what it started" eval '! kill -0 "$(cat "$tmp/grandchild")" 2> /dev/null'

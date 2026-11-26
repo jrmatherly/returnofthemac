@@ -101,10 +101,41 @@ step() {
   working "$1"
 }
 
-# capture <cmd…>: the output lands in $out and the log; returns the command's status
+# kill_tree <pid> <signal>: the process and everything under it, children first
+kill_tree() {
+  local child
+  for child in $(pgrep -P "$1" 2> /dev/null); do kill_tree "$child" "$2"; done
+  kill -"$2" "$1" 2> /dev/null || true
+}
+# Ctrl-C or a TERM: stop the command a step is running too. mise 2026.11.14 sat
+# in a lock wait that ignored Ctrl-C, outlived the run and held its locks
+# against the next one.
+interrupted() {
+  trap - INT TERM
+  clear_line
+  if [ -n "$capture_pid" ]; then
+    kill_tree "$capture_pid" TERM
+    sleep 1
+    kill_tree "$capture_pid" KILL
+  fi
+  exit 130
+}
+capture_pid=""
+capture_file=$(mktemp)
+trap 'rm -f "$capture_file"' EXIT
+trap interrupted INT TERM
+
+# capture <cmd…>: the output lands in $out and the log; returns the command's status.
+# The command runs in the background because bash holds a trap until a
+# foreground command ends, which a stuck one never does; <&0 keeps the stdin a
+# background job would lose.
 capture() {
   local rc
-  out=$("$@" 2>&1) && rc=0 || rc=$?
+  "$@" <&0 > "$capture_file" 2>&1 &
+  capture_pid=$!
+  wait "$capture_pid" && rc=0 || rc=$?
+  capture_pid=""
+  out=$(< "$capture_file")
   # A byte that isn't UTF-8 would abort the sed and awk parsers reading $out
   out=$(iconv -c -f UTF-8 -t UTF-8 <<< "$out" 2> /dev/null || true)
   [ -z "$out" ] || printf '%s\n' "$out" | log_clean >> "$log"
