@@ -67,10 +67,11 @@ base="$CLAUDE_CONFIG_SAVE_DIR/claude-settings.json"
 cp "$base" "$tmp/base.keep"
 cp "$CLAUDE_CONFIG_DIR/settings.json" "$tmp/live.keep"
 printf '{"model":"opus","theme":"dark"}' > "$base"
-printf '{"model":"fable","theme":"light","modelSettings":{"claude-fable-5-2":{"effortLevel":"high"}}}' > "$CLAUDE_CONFIG_DIR/settings.json"
+printf '{"model":"fable","theme":"light","modelSettings":{"claude-fable-5-2":{"effortLevel":"high"}},"autoMode":{"environment":["Source control: a private repository"]}}' > "$CLAUDE_CONFIG_DIR/settings.json"
 cc save settings > /dev/null 2>&1
 check "save keeps the tracked model" "[ \"\$(jq -r .model '$base')\" = opus ]"
 check "save drops the per-model effort" "jq -e 'has(\"modelSettings\") | not' '$base' > /dev/null"
+check "save drops the auto mode rules" "jq -e 'has(\"autoMode\") | not' '$base' > /dev/null"
 check "save still records other settings" "[ \"\$(jq -r .theme '$base')\" = light ]"
 printf '{"theme":"light"}' > "$CLAUDE_CONFIG_DIR/settings.json"
 cc save settings > /dev/null 2>&1
