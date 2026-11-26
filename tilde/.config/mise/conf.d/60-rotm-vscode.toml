@@ -126,7 +126,7 @@
 "vscode:eamodio.gitlens" = "latest"
 "vscode:flyfly6.terminal-in-status-bar" = "latest"
 "vscode:github.remotehub" = "latest"
-"vscode:github.vscode-codeql" = "latest"
+"vscode:github.vscode-codeql" = "latest" # downloads and updates its own CodeQL CLI; not a mise tool, because under `mise activate` the CLI's folder puts a `ruby/` directory on PATH that mise takes for Ruby
 "vscode:github.vscode-github-actions" = "latest"
 "vscode:github.vscode-pull-request-github" = "latest"
 "vscode:gruntfuggly.todo-tree" = "latest"
@@ -210,11 +210,3 @@
 "vscode:vadimcn.vscode-lldb" = "latest"
 "vscode:wholroyd.jinja" = "latest"
 "vscode:yzhang.markdown-all-in-one" = "latest"
-
-[tools]
-# The CodeQL CLI for the vscode-codeql extension above. Without it the
-# extension downloads its own copy, which only its "Restart and Upgrade" prompt
-# updates; this one upgrades with `mise upgrade` (sysup). The extension prefers
-# a copy it already downloaded over PATH, so vscode/User/settings.json.j2 names
-# the shim in `codeQL.cli.executablePath`.
-codeql = "latest"

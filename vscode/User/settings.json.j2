@@ -555,9 +555,6 @@
   // check until Compose ships PR 14325 (bin/docker-devcontainer has the why).
   // Application-scoped, so a workspace .vscode/settings.json can't set it.
   "dev.containers.dockerPath": {{ dotfiles ~ "/bin/docker-devcontainer" }},
-  // CodeQL: the CLI mise installs (60-rotm-vscode.toml), so sysup upgrades it.
-  // Left empty, the extension keeps its own download and asks to upgrade it.
-  "codeQL.cli.executablePath": {{ home ~ "/.local/share/mise/shims/codeql" }},
   /**
    * Azure
    */
