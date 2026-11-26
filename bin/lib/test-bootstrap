@@ -1129,7 +1129,11 @@ quiet_misc
 check_true "unchanged: exits 0" [ "$rc" -eq 0 ]
 check_true "unchanged: every line is a step's result, none a change or a failure" [ -z "$(grep -vE '^(✔|●) [A-Za-z][A-Za-z ]{17} [^ ]' <<< "$out")" ]
 check_true "unchanged: one line per step" [ -z "$(grep '^✔' <<< "$out" | cut -c5-22 | sort | uniq -d)" ]
-check_true "unchanged: the registrations are one line with a count" has '^✔ MCP servers +8 registered$'
+# SnippetsLab's helper has a fixed path under /Applications, so its registration
+# counts only on a Mac that has the app: CI's runner does not
+mcp_n=7
+[ ! -x /Applications/SnippetsLab.app/Contents/Helpers/lab ] || mcp_n=8
+check_true "unchanged: the registrations are one line with a count" has "^✔ MCP servers +$mcp_n registered\$"
 check_true "unchanged: the catalog is its counts" has '^✔ catalog +411 skills, 45 commands, 216 agents, 43 MCP servers, 74 plugins$'
 check_true "unchanged: … and one line for its lint notes" has '^● catalog +2 lint notes \(listed in the log\)$'
 check_true "unchanged: no tool's own output" lacks 'already registered|Done in|Checked 206|Telemetry|already installed\.|^ *[{}]|lint:|wrote '
@@ -1139,13 +1143,13 @@ for kept in 'Checked 206 packages in 34ms' '"enabled": false' 'Done in 85ms' 'Te
 done
 rm "$STATE/mcp/mise"
 quiet_misc
-check_true "a new registration: one changed line" has '^↻ MCP servers +7 registered, 1 added$'
+check_true "a new registration: one changed line" has "^↻ MCP servers +$((mcp_n - 1)) registered, 1 added\$"
 check_true "a new registration: … under its own heading in the log" grep -qxF '== MCP servers: mise ==' "$STATE/setup.log"
 check_true "a new registration: … and one mcp record" [ "$(cat "$STATE/changes")" = "mcp	mise	registered with Claude Code" ]
 echo 'Command: /elsewhere/serena' > "$STATE/mcp/serena"
 : > "$STATE/warnings"
 ROTM_WARNINGS_FILE="$STATE/warnings" quiet_misc
-check_true "a registration that differs: counted" has '^● MCP servers +8 registered, 1 registered differently$'
+check_true "a registration that differs: counted" has "^● MCP servers +$mcp_n registered, 1 registered differently\$"
 check_true "a registration that differs: … with the command to fix it" has '^● MCP servers +Serena MCP server is registered differently .* claude mcp remove serena'
 check_true "a registration that differs: … listed for setup.sh" grep -q '^Serena MCP server is registered differently' "$STATE/warnings"
 settled
