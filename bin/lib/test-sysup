@@ -462,10 +462,12 @@ check_true "cache: removed files outside archive-v0 are a change" has '^↻ uv c
 check_true "macOS: failed install reports fail only" has '^✖ macOS'
 check_true "macOS: failed install does not also say changed" lacks '^↻ macOS'
 check_true "REA skill change seen despite stderr noise" has '^↻ REA skill'
-rm -rf "$DOTFILES/logs" "$STATE/macos-fails" "$STATE/cache-files"
+rm -rf "$DOTFILES/logs" "$STATE/macos-fails"
 touch "$STATE/macos-os" "$STATE/prune" "$STATE/rust-odd"
-mkdir -p "$HOME/.local/share/mise/installs/rust"
+mkdir -p "$HOME/.local/share/mise/installs/rust" "$HOME/.cache/uv/environments-v2/hook-1"
 run
+rm -rf "$STATE/cache-files" "$HOME/.cache/uv/environments-v2"
+check_true "cache: a prune that only cleared script environments is ok" has '^✔ uv cache +cleared 1 script environment, rebuilt on use \(29 files \(100\.0KiB\)\)$'
 check_true "macOS: a restart update is downloaded, not installed" has '^↻ macOS +Safari 99\.1 installed; macOS 27\.2-26B123 downloaded, not installed yet$'
 check_true "macOS: the install is an action naming what installs it" has "^  › Install macOS 27\\.2-26B123: System Settings → General → Software Update → Restart Now, or run: sudo softwareupdate -ia --restart \\(a plain restart doesn't install it\\)\$"
 check_true "macOS: off a terminal without a stored password the install stays in the log" lacks '^Downloaded:'

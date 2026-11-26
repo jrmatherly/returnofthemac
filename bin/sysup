@@ -562,13 +562,20 @@ if command -v uv > /dev/null; then
     status fail "uv cache" "run: uv cache dir"
   else
     uv_before=$({ find "$uv_cache/archive-v0" -mindepth 1 -maxdepth 1 2> /dev/null || true; } | wc -l | tr -d ' ')
+    # A prune always removes the environments uv run --script builds, and the
+    # script's next run rebuilds them (a Claude Code hook's, at every turn end)
+    uv_scripts=$({ find "$uv_cache/environments-v2" -mindepth 1 -maxdepth 1 2> /dev/null || true; } | wc -l | tr -d ' ')
     if UV_LOCK_TIMEOUT=10 capture uv cache prune; then
       uv_after=$({ find "$uv_cache/archive-v0" -mindepth 1 -maxdepth 1 2> /dev/null || true; } | wc -l | tr -d ' ')
       if [ "$uv_after" -lt "$uv_before" ]; then
         status changed "uv cache" "pruned $((uv_before - uv_after)) entries"
       # uv's own line covers what the entry count misses: files it removed outside archive-v0
       elif uv_removed=$(grep -o 'Removed [0-9].*' <<< "$out"); then
-        status changed "uv cache" "removed ${uv_removed#Removed }"
+        if [ "$uv_scripts" -gt 0 ]; then
+          status ok "uv cache" "cleared $(plural "$uv_scripts" "script environment"), rebuilt on use (${uv_removed#Removed })"
+        else
+          status changed "uv cache" "removed ${uv_removed#Removed }"
+        fi
       else
         status ok "uv cache" "nothing to prune"
       fi
