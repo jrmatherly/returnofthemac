@@ -574,7 +574,7 @@ if command -v uv > /dev/null; then
       # uv's own line covers what the entry count misses: files it removed outside archive-v0
       elif uv_removed=$(grep -o 'Removed [0-9].*' <<< "$out"); then
         if [ "$uv_scripts" -gt 0 ]; then
-          status ok "uv cache" "cleared $(plural "$uv_scripts" "script environment"), rebuilt on use ($(sed 's/ (\(.*\))$/, \1/' <<< "${uv_removed#Removed }"))"
+          status ok "uv cache" "cleared $(plural "$uv_scripts" "script environment") ($(sed 's/ (\(.*\))$/, \1/' <<< "${uv_removed#Removed }"))"
         else
           status changed "uv cache" "removed ${uv_removed#Removed }"
         fi
