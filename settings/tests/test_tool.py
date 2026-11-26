@@ -281,14 +281,14 @@ def test_claude_model_refuses_invalid_json():
     assert not live.exists()
 
 
-RULE = "# header\n# budget: small (medium)\nfeature, refactoring: opus medium\nbug-fix: opus\n# my note\nreflect judgment, divergent, synthesizer: fable medium\narena runners: fable medium, opus medium"   # no final newline
+RULE = "# header\n# budget: small (medium)\nfeature, refactoring: opus medium\nbug-fix: opus\n# my note\njudgment and prose: fable medium\narena runners: fable medium, opus medium"   # no final newline
 
 
 def test_jstack_read():
     tracked.write_text(RULE)
     assert A.read(by_id("jstack.feature_refactoring")).value == "opus medium"
     assert A.read(by_id("jstack.bug_fix")).value == "opus"          # model-only, shown as written
-    assert A.read(by_id("jstack.reflect_judgment_divergent_synthesizer")).value == "fable medium"
+    assert A.read(by_id("jstack.judgment_and_prose")).value == "fable medium"
     v = A.read(by_id("jstack.hillclimb"))
     assert (v.value, v.source, v.drift) == (None, Source.UNSET, False)
     assert A.read(by_id("jstack.arena_runners")).source is Source.SEED
@@ -299,9 +299,9 @@ def test_jstack_read():
 def test_seat_fields_for_a_gui():
     def row(id):
         return cli.to_json(by_id(id), Value(id, None, Source.UNSET, None, False))
-    one, many, codex = row("jstack.bug_fix"), row("jstack.architect_runners"), row("jstack.reflect_tooling")
+    one, many, codex = row("jstack.bug_fix"), row("jstack.arena_runners"), row("jstack.arena_cross_judge_pool")
     assert one["seat_models"] == [*tool.MODELS, "inherit"] and one["seat_efforts"] == list(tool.EFFORTS)
-    assert (one["seat_list"], many["seat_list"], codex["seat_list"]) == (False, True, False)
+    assert (one["seat_list"], many["seat_list"], codex["seat_list"]) == (False, True, True)
     assert many["seat_models"] == one["seat_models"] and codex["seat_models"] == [*tool.MODELS, "inherit", "codex"]
     plain = row("claude.model")
     assert (plain["seat_models"], plain["seat_efforts"], plain["seat_list"]) == ([], [], False)
@@ -359,7 +359,7 @@ def test_tracked_rule_roles_are_known_and_parse():
     assert set(held) <= known, set(held) - known      # a subset: Reset deletes a line
     for role, value in held.items():
         tool.parse_seats(role, value)                 # every line the file holds is valid
-    assert len(known) == 13
+    assert len(known) == 9
 
 
 def test_write_note_only_for_jstack_roles():

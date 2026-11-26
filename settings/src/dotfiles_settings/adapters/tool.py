@@ -173,8 +173,8 @@ def _reset_claude(name: str, s: Setting) -> None:
 
 MODELS = ("opus", "sonnet", "haiku", "fable")
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
-LIST_ROLES = frozenset({"arena runners", "arena cross-judge pool", "architect runners", "interrogate reviewers"})
-CODEX_ROLES = frozenset({"arena cross-judge pool", "reflect tooling"})
+LIST_ROLES = frozenset({"arena runners", "arena cross-judge pool", "interrogate reviewers"})
+CODEX_ROLES = frozenset({"arena cross-judge pool"})
 FULL_MODEL = re.compile(r"claude-[a-z0-9.-]+")
 
 
