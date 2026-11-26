@@ -210,3 +210,11 @@
 "vscode:vadimcn.vscode-lldb" = "latest"
 "vscode:wholroyd.jinja" = "latest"
 "vscode:yzhang.markdown-all-in-one" = "latest"
+
+[tools]
+# The CodeQL CLI for the vscode-codeql extension above. Without it the
+# extension downloads its own copy, which only its "Restart and Upgrade" prompt
+# updates; this one upgrades with `mise upgrade` (sysup). The extension prefers
+# a copy it already downloaded over PATH, so vscode/User/settings.json.j2 names
+# the shim in `codeQL.cli.executablePath`.
+codeql = "latest"
