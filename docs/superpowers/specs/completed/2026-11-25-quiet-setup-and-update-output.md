@@ -1,6 +1,6 @@
 # Quiet, summarised output for setup, `rotm update` and `sysup`
 
-Date: 2026-11-25. Status: decided, not built.
+Date: 2026-11-25. Status: built the same day, with no plan. What shipped is in [Built](#built-2026-11-25).
 
 ## Goal
 
@@ -143,3 +143,20 @@ Docs that describe the output change with it: `setup/README.md`, `docs/updating.
 - Whether the dotfile edits and the login shell parts ask before they apply (system files and dotfiles do, measured). The dry run read covers them either way. The words mise prints when it changes the login shell are not known either: `chsh` is not run for a test.
 - The words mise prints when a package or tool installs. The count lines do not depend on them, but the `mise bootstrap` part lines quote mise's last line for a part that changed.
 - How a first install reads. Only an unchanged re-run was measured. The disposable VM is the place to look.
+
+## Built (2026-11-25)
+
+All four units shipped, and `stable` is at `9a9ead1`.
+
+| Commit | What it did |
+| --- | --- |
+| `a41ce44` | Units 1 and 4: `sysup` collapses repeated notices and details `packages cleanup`; `rotm update` prints one line for the fetch. |
+| `7e366fb` | Units 2 and 3: `setup/misc.sh`, `setup/dotfiles-extras.sh` and `setup.sh` print one line per step and end in a summary. |
+| `1b885b9` | `bin/lib/test-bootstrap` counts MCP registrations by what the Mac has, which CI needed. |
+| `9a9ead1` | `sysup`'s summary lists the items behind every count under Changed, and they no longer print during the run. |
+
+Measured on the owner's Mac from the installed copy: an unchanged `rotm update` printed about 55 lines where it had printed 176, and the 21:25 run ended `Done in 27s · nothing changed`. That run also settled two things this spec left open: `rotm` hands git's fetch output to setup, which writes it at the top of the log, and the capture rule holds on mise 2026.11.13 (`✔ mise bootstrap  4 parts already applied`).
+
+One decision changed after the design. The owner did not want the Hindsight notice to name the Renovate pull request, so it reads `newer release 0.8.8 on npm` and nothing more, which replaces the wording in [Hindsight pin](#hindsight-pin-s2).
+
+Still not seen on a real machine: everything under [What is not verified](#what-is-not-verified), and the summary's rows for upgraded packages, mise versions and plugins, because no run since `9a9ead1` upgraded any.
