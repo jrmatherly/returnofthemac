@@ -506,7 +506,17 @@
   // warnings. Projects that lint with flake8 opt in via their workspace
   // settings (.vscode/settings.json): "flake8.enabled": true
   "flake8.enabled": false,
-  "python.testing.pytestEnabled": true,
+  // mise's Python, which follows a project's .python-version or mise.toml.
+  // Unset, the extension picked Homebrew's python@3.x, a dependency of other
+  // formulae that no project should run on.
+  "python.defaultInterpreterPath": {{ home ~ "/.local/share/mise/shims/python3" }},
+  // One interpreter picker: the Python extension defers to Python Environments
+  // (ms-python.vscode-python-envs). With both choosing, a new folder got two
+  // different interpreters and an "Invalid Python interpreter" notice.
+  "python.useEnvironmentsExtension": true,
+  // No python.testing.pytestEnabled here: it ran pytest discovery in every
+  // folder, Python or not. A project that uses pytest sets it in its own
+  // .vscode/settings.json.
   "python-envs.terminal.showActivateButton": true,
   "python.terminal.useEnvFile": true,
   // The Python extension writes this default back whenever it's missing
