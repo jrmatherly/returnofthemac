@@ -87,7 +87,6 @@ line() {
 }
 ok() { line ok "$1"; }
 changed() { line changed "$1"; }
-notice() { line notice "$1"; }
 
 # record_change <type> <name> <detail>: setup.sh groups ROTM_CHANGES_FILE's
 # lines by type in its end summary. Types: package tool extension link mcp
@@ -100,6 +99,12 @@ record_change() {
 record_warning() {
   # An app that setup opened inherits the path after setup removed the file, and >> would make a new one
   [ ! -e "${ROTM_WARNINGS_FILE:-}" ] || { echo "$1" >> "$ROTM_WARNINGS_FILE"; } 2> /dev/null || true
+}
+# notice <message>: a ● line, listed again at the end under its step's name,
+# which a short message ("6 lint notes") needs to make sense there
+notice() {
+  line notice "$1"
+  record_warning "$step_name: $1"
 }
 warning() {
   line notice "$1"
@@ -340,12 +345,13 @@ mcp_summary() {
   elif [ "$mcp_added" -gt 0 ]; then
     changed "$message"
   elif [ "$mcp_differ" -gt 0 ]; then
-    notice "$message"
+    # Not notice: mcp_warning recorded each server that differs
+    line notice "$message"
   else
     ok "$message"
   fi
   for note in ${mcp_notes[@]+"${mcp_notes[@]}"}; do
-    notice "$note"
+    line notice "$note"
   done
 }
 
@@ -688,7 +694,7 @@ fi
 # tool definitions on demand.
 if [ -x "$claude_bin" ] && module_on itsaplan 'itsaplan'; then
   if register_http_mcp itsaplan https://plan.matherly.net/api/mcp; then
-    mcp_notes+=("Sign in once on this Mac: run /mcp in Claude Code and pick itsaplan")
+    mcp_warning "Sign in once on this Mac: run /mcp in Claude Code and pick itsaplan"
   fi
 fi
 mcp_summary

@@ -51,6 +51,12 @@ line() {
   printf '%s %-18s %s\n' "$glyph" "$2" "$3" >> "$log"
 }
 
+# notice <step> <message>: a ● line, listed again in setup.sh's end summary
+notice() {
+  line notice "$1" "$2"
+  [ ! -e "${ROTM_WARNINGS_FILE:-}" ] || { echo "$1: $2" >> "$ROTM_WARNINGS_FILE"; } 2> /dev/null || true
+}
+
 # record_change <type> <name> <detail>: for setup.sh's end summary. Types:
 # package tool extension link mcp plugin skill setting file other
 record_change() {
@@ -121,13 +127,13 @@ configure_git_identity() {
   # Signing through a program that is not there would fail every commit and tag
   # (the 1password cask is in the apps module, which can be switched off)
   if [ "$sign_method" = "ssh" ] && [ ! -x "$op_sign" ]; then
-    line notice "git identity" "1Password's op-ssh-sign is not installed, so commit signing is left off. Install 1Password, delete $(tildify "$gitconfig_local") and rerun to turn it on"
+    notice "git identity" "1Password's op-ssh-sign is not installed, so commit signing is left off. Install 1Password, delete $(tildify "$gitconfig_local") and rerun to turn it on"
     sign_method="none"
     signing_key=""
   fi
 
   if [ -z "$name" ] || [ -z "$email" ]; then
-    line notice "git identity" "$(tildify "$gitconfig_local") not written: no name or email — set DOTFILES_GIT_NAME/DOTFILES_GIT_EMAIL, or create it manually"
+    notice "git identity" "$(tildify "$gitconfig_local") not written: no name or email — set DOTFILES_GIT_NAME/DOTFILES_GIT_EMAIL, or create it manually"
     return
   fi
 
@@ -188,11 +194,11 @@ link_cli() {
     return
   fi
   if [ ! -x "$src" ]; then
-    line notice "$name CLI" "$app not installed, so no $name command"
+    notice "$name CLI" "$app not installed, so no $name command"
     return
   fi
   if [ -e "$dst" ] || [ -L "$dst" ]; then
-    line notice "$name CLI" "$(tildify "$dst") exists and is not the $name CLI, leaving it"
+    notice "$name CLI" "$(tildify "$dst") exists and is not the $name CLI, leaving it"
     return
   fi
   if [ ! -d "$bin_dir" ] || [ ! -w "$bin_dir" ]; then
@@ -228,7 +234,7 @@ configure_git_identity
 if [ -f "$HOME/.ssh/github_personal.pub" ]; then
   line ok "GitHub SSH key" "$(tildify "$HOME/.ssh")/github_personal.pub found"
 elif [ -e "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock" ]; then
-  line notice "GitHub SSH key" "$(tildify "$HOME/.ssh")/github_personal.pub not found — GitHub SSH needs it to pick your 1Password key (see tilde/.ssh/config)"
+  notice "GitHub SSH key" "$(tildify "$HOME/.ssh")/github_personal.pub not found — GitHub SSH needs it to pick your 1Password key (see tilde/.ssh/config)"
 else
   line ok "GitHub SSH key" "skipped: no 1Password SSH agent"
 fi
@@ -246,7 +252,7 @@ if [ -n "$ff_dev_profile_dir" ] && [ -d "$ff_dev_profile_dir" ]; then
   for file in user.js chrome/userContent.css chrome/userChrome.css; do
     dst="$ff_dev_profile_dir/$file"
     if [ "$file" = user.js ] && [ -e "$dst" ] && [ ! "$dst" -ef "$DOTFILES_DIR/firefox/$file" ] && ! ours "$dst"; then
-      line notice Firefox "$(tildify "$ff_dev_profile_dir")/user.js is your own, so the tracked preferences were not linked. They turn off Firefox Sync and password saving. Move it aside and rerun to use them."
+      notice Firefox "$(tildify "$ff_dev_profile_dir")/user.js is your own, so the tracked preferences were not linked. They turn off Firefox Sync and password saving. Move it aside and rerun to use them."
       firefox_said=true
       continue
     fi

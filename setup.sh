@@ -729,7 +729,7 @@ load_saved_settings() {
     && [ "$(gh repo view "$repo" --json visibility --jq .visibility 2> /dev/null)" = PRIVATE ] \
     && gh api "repos/$repo/contents/.mise-history/format.toml" > /dev/null 2>&1 || return 0
   if [ ! -t 0 ] || [ -n "$yes" ]; then
-    line notice "saved settings" "Your saved settings are in $repo. Run \`rotm settings sync on\` after setup to load them."
+    warning "saved settings" "Your saved settings are in $repo. Run \`rotm settings sync on\` after setup to load them."
     return 0
   fi
   folder=$("$DOTFILES_DIR/bin/lib/rotm-user-layer" dir)

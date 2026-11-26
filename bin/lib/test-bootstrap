@@ -1080,6 +1080,8 @@ fresh
 : > "$STATE/warnings"
 ROTM_WARNINGS_FILE="$STATE/warnings" misc
 check_true "misc.sh's warnings reach setup.sh's file" grep -qxF 'npm:typescript is not installed — typescript-language-server will only see a project'"'"'s own TypeScript' "$STATE/warnings"
+check_true "misc.sh's notice lines reach it too, under their step's name" grep -qxF 'Aspire certificate: HTTPS dev certificate not trusted — run: aspire certs trust' "$STATE/warnings"
+check_true "… and a note the MCP step recorded is there once" [ "$(grep -c 'Sign in once on this Mac' "$STATE/warnings")" = 1 ]
 fresh
 ROTM_WARNINGS_FILE="$STATE/removed" misc
 check_true "misc.sh does not recreate a warnings file setup.sh removed" [ ! -e "$STATE/removed" ]
@@ -1284,11 +1286,12 @@ check_true "claude off: the installer is not fetched" eval '! ran "claude.ai/ins
 # setup/dotfiles-extras.sh in a scratch HOME, with its apps and bin folders pointed away from this Mac's
 fresh
 : > "$STATE/changes"
+: > "$STATE/extras-warnings"
 mkdir -p "$tmp/apps/CotEditor.app/Contents/SharedSupport/bin" "$tmp/xbin"
 mstub "$tmp/apps/CotEditor.app/Contents/SharedSupport/bin/cot"
 extras() {
   rc=0
-  out=$(PATH="/usr/bin:/bin" DOTFILES_EXTRAS_APPS="$tmp/apps" DOTFILES_EXTRAS_BIN="$tmp/xbin" ROTM_CHANGES_FILE="$STATE/changes" \
+  out=$(PATH="/usr/bin:/bin" DOTFILES_EXTRAS_APPS="$tmp/apps" DOTFILES_EXTRAS_BIN="$tmp/xbin" ROTM_CHANGES_FILE="$STATE/changes" ROTM_WARNINGS_FILE="$STATE/extras-warnings" \
     DOTFILES_GIT_NAME=Octo DOTFILES_GIT_EMAIL=octo@example.com DOTFILES_GIT_SIGN_METHOD=none "$repo/setup/dotfiles-extras.sh" 2>&1 < /dev/null) || rc=$?
 }
 extras
@@ -1296,6 +1299,7 @@ check_true "extras: exits 0" [ "$rc" -eq 0 ]
 check_true "extras: the identity file is a change" has '^↻ git identity +wrote ~/\.gitconfig\.local$'
 check_true "extras: a linked CLI is a change" has "^↻ cot CLI +linked $tmp/xbin/cot$"
 check_true "extras: a missing app is a notice" has '^● code CLI +Visual Studio Code not installed'
+check_true "extras: … that setup.sh lists at the end" grep -q '^code CLI: Visual Studio Code not installed' "$STATE/extras-warnings"
 check_true "extras: no Firefox profile is a line that needs nothing" has '^✔ Firefox +skipped: no Firefox Developer Edition profile$'
 check_true "extras: both changes are recorded" [ "$(cut -f1,2 "$STATE/changes" | tr '\t\n' ' |')" = "file ~/.gitconfig.local|link $tmp/xbin/cot|" ]
 : > "$STATE/changes"
