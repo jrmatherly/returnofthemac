@@ -338,8 +338,8 @@ def test_jstack_append_and_reset():
 def test_parse_seats():
     assert tool.parse_seats("bug-fix", "opus high") == [("opus", "high")]
     assert tool.parse_seats("arena cross-judge pool", "fable medium, codex") == [("fable", "medium"), ("codex", "")]
-    assert tool.parse_seats("swarm workers", "claude-opus-5-5 max") == [("claude-opus-5-5", "max")]
-    for role, bad in (("bug-fix", "opus"), ("bug-fix", "opus huge"), ("bug-fix", "gpt medium"),
+    assert tool.parse_seats("swarm workers", "claude-opus-5-5 xhigh") == [("claude-opus-5-5", "xhigh")]
+    for role, bad in (("bug-fix", "opus"), ("bug-fix", "opus max"), ("bug-fix", "opus huge"), ("bug-fix", "gpt medium"),
                       ("bug-fix", "opus medium, sonnet medium"), ("bug-fix", "codex"), ("arena runners", ""),
                       ("arena runners", "fable medium,opus medium")):
         assert raises_type(lambda: tool.parse_seats(role, bad), InvalidValue)
@@ -389,7 +389,7 @@ def test_writes_through_the_adapter_are_recorded():
     before = sync.tools_path().read_bytes()
     assert raises_type(lambda: A.write(by_id("jstack.bug_fix"), "nonsense"), InvalidValue)
     tracked.unlink()
-    assert raises(lambda: A.write(by_id("jstack.bug_fix"), "opus max"), "setup-jstack")
+    assert raises(lambda: A.write(by_id("jstack.bug_fix"), "opus xhigh"), "setup-jstack")
     assert sync.tools_path().read_bytes() == before
     tracked.write_text(RULE)
     A.reset(by_id("claude.model")); A.reset(by_id("jstack.bug_fix"))

@@ -118,9 +118,9 @@ async def test_seats_editor_saves_through_the_app():
     fake = FakeAdapter({"jstack.bug_fix": "opus medium"})
     app = SettingsApp(settings=[bug_fix_setting], adapters={"tool": fake})
     async with app.run_test() as pilot:
-        app.query_one("#w-jstack-bug_fix #effort-0", Select).value = "max"
+        app.query_one("#w-jstack-bug_fix #effort-0", Select).value = "xhigh"
         await pilot.pause()
-        assert fake.writes == [("jstack.bug_fix", "opus max")]
+        assert fake.writes == [("jstack.bug_fix", "opus xhigh")]
         fake.values["jstack.bug_fix"] = "opus"; app.refresh_values(); await pilot.pause()
         e = app.query_one("#w-jstack-bug_fix", SeatsEditor)
         assert e.value == "opus" and e.query_one("#effort-0", Select).value == "medium"

@@ -172,7 +172,8 @@ def _reset_claude(name: str, s: Setting) -> None:
 
 
 MODELS = ("opus", "sonnet", "haiku", "fable")
-EFFORTS = ("low", "medium", "high", "xhigh", "max")
+# No max: jstack runs no role above xhigh, and /jstack:setup-jstack rewrites a max to xhigh
+EFFORTS = ("low", "medium", "high", "xhigh")
 LIST_ROLES = frozenset({"arena runners", "arena cross-judge pool", "interrogate reviewers"})
 CODEX_ROLES = frozenset({"arena cross-judge pool"})
 FULL_MODEL = re.compile(r"claude-[a-z0-9.-]+")

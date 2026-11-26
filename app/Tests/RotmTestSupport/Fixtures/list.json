@@ -148,7 +148,7 @@
     "kind": "tool",
     "scope": "user",
     "seat_models": ["opus", "sonnet", "haiku", "fable", "inherit"],
-    "seat_efforts": ["low", "medium", "high", "xhigh", "max"],
+    "seat_efforts": ["low", "medium", "high", "xhigh"],
     "seat_list": false
   },
   {
@@ -167,7 +167,7 @@
     "kind": "tool",
     "scope": "user",
     "seat_models": ["opus", "sonnet", "haiku", "fable", "inherit"],
-    "seat_efforts": ["low", "medium", "high", "xhigh", "max"],
+    "seat_efforts": ["low", "medium", "high", "xhigh"],
     "seat_list": true
   }
 ]
