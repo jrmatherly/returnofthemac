@@ -47,6 +47,8 @@ jobs:
           if command -v mise; then exit 1; fi
           df -h /
           du -sh ~/Library/Caches/mise/system-brew/bottles ~/Library/Caches/mise/system-brew/casks 2> /dev/null || true
+          # The run ends near 3 GiB free of the 42 it starts with. Measured, not yet deleted: what the image carries that a run could free
+          sudo du -sh /Applications/Xcode*.app /Library/Developer/CoreSimulator ~/Library/Developer/CoreSimulator ~/Library/Android /usr/local/lib/android 2> /dev/null || true
       # A file here that conf.d/40-dotfiles.toml links would stop setup's dotfiles apply
       - name: Home before setup
         run: ls -la ~

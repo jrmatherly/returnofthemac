@@ -247,7 +247,7 @@ upgrade="args=bootstrap packages upgrade --yes --manager"
 ROTM_UPDATE=1 run
 check_true "update: no first-install warning" lacks 'WARNING'
 check_true "update: … and no wait or its stand-in" lacks 'Press Enter|Non-interactive shell'
-check_true "update: one line names the copy" has '^Updating /'
+check_true "update: rotm's result line names the copy, so setup prints no banner" lacks '^Updating /'
 run
 check_true "install: the warning still shows" has 'WARNING'
 check_true "a: exits 0" [ "$rc" -eq 0 ]
@@ -270,7 +270,7 @@ check_true "a: without a terminal gh is not installed ahead to ask for a login" 
 check_true "a: the GitHub warning comes before the packages" [ "$(grep -n 'No GitHub token' <<< "$out" | head -1 | cut -d: -f1)" -lt "$(grep -n 'Installing formulae' <<< "$out" | head -1 | cut -d: -f1)" ]
 check_true "the bootstrap task no longer asks for the GitHub login" eval '! grep -q "read -rp.*gh auth login" "$repo/setup/misc.sh"'
 check_true "setup.sh offers the GitHub login before the first package list" [ "$(grep -n '^github_login$' "$repo/setup.sh" | cut -d: -f1)" -lt "$(grep -n '^  packages_for brew formulae' "$repo/setup.sh" | cut -d: -f1)" ]
-check_true "a: a free-space line per manager" [ "$(grep -cE '^✔ free space +[0-9]+ GiB free on /$' <<< "$out")" = 2 ]
+check_true "a: one free-space line when no phase installed anything" [ "$(grep -cE '^✔ free space +[0-9]+ GiB free on /$' <<< "$out")" = 1 ]
 check_true "a: the extras script runs once" extras_ran 1
 check_true "a: no sudo prompt without a terminal" [ -z "$(grep -e '-v' "$STATE/sudo.log")" ]
 check_true "a: the GitHub warning is listed again at the end" has '^  ● No GitHub token'
@@ -353,6 +353,7 @@ prepare() { mv "$tmp/bin/mise" "$STATE/mise-stub"; }
 run
 check_true "d: without mise exits 0" [ "$rc" -eq 0 ]
 check_true "d: installs mise from mise.run" grep -q 'https://mise.run' "$STATE/curl.log"
+check_true "d: … as one step line" has '^↻ mise +installed'
 check_true "d: the installed mise runs the bootstrap" boot_has "--skip macos-defaults,packages,tools,task"
 prepare() { :; }
 
@@ -843,6 +844,26 @@ check_true "changed: the task's record is listed" has '^    ↻ Serena  added$'
 check_true "changed: a record of an unknown type is listed under Other" has '^    ↻ thing  new$'
 check_true "changed: nothing is listed twice" [ "$(count '^    ↻ ')" = 7 ]
 check_true "changed: the summary is in the log" in_log '    ↻ npm:typescript@6.0.2  installed'
+ROTM_SUMMARY_ROWS=0 run
+check_true "a long type: a count on the screen" has '^  Packages  1, listed in the log$'
+check_true "a long type: … and no rows there" lacks '^    ↻ utm'
+check_true "a long type: … which the log has" grep -qE '^    ↻ utm  installed 1\.0$' "$(ls -t "$copy"/private/setup-logs/*.log | head -1)"
+# The two helpers below are run on their own: their inputs are hard to stage through a whole run
+fn() { sed -n "/^$1() {/,/^}/p" "$repo/setup.sh"; }
+reason=$(bash -c "$(fn problem)"'
+  problems=""; problem cask royal-tsx "mise ERROR command [\"hdiutil\", \"attach\", \"-quiet\", \"/tmp/x.dmg\"] exited with code 1"; printf %s "$problems"')
+check_true "a failed command is named by its program and exit code" [ "$reason" = $'cask\troyal-tsx\thdiutil attach exited with code 1' ]
+space() {
+  # The system jq: a mise shim cannot start under the scratch HOME
+  PATH=/usr/bin:/bin bash -c "$(fn space_before_install)"'
+    warning() { echo "$2"; }; say() { :; }
+    stub_gib=$1; free_gib() { echo "$stub_gib"; }
+    pkg_json=$(jq -n --argjson n "$2" "{brew: {packages: [range(\$n) | {state: \"missing\"}]}}")
+    space_before_install' _ "$1" "$2"
+}
+check_true "space before a full install: a notice when the disk is short" [ "$(space 30 60)" = "30 GiB free on / with 60 packages to install: a full install needs about 39 GB" ]
+check_true "… none with room" [ -z "$(space 80 60)" ]
+check_true "… none when little is left to install" [ -z "$(space 30 3)" ]
 
 # On a terminal mise asks before it applies, and only while its stderr is one. So it is captured
 # there only when a dry run shows nothing to apply, and what it applied is read afterwards
@@ -1117,7 +1138,7 @@ esac'
   mstub "$mfix/bin/vscode-settings" "echo 'rendered settings.json (preset iosevka)'"
   mstub "$mfix/bin/hindsight-memory" "echo 'Checked 206 packages in 34ms'"
   mstub "$mfix/bin/install-snippetslab-skill" "echo 'SnippetsLab skill unchanged'"
-  mstub "$mfix/bin/claude-catalog" "echo '  lint: no description: mcp slack' >&2; echo '  lint: no description: mcp figma' >&2; echo 'wrote /c/CATALOG.md, CATALOG-lite.md, catalog.html: 411 skills, 45 commands, 216 agents, 43 MCP servers, 74 plugins, 61,588 always-on tokens, 15 to review, 9 to watch, 0 to retire, since 2026-11-16: +0 -0'"
+  mstub "$mfix/bin/claude-catalog" "echo '  lint: no description: mcp slack' >&2; echo '  lint: no description: mcp figma' >&2; echo '  lint: mcp server not registered on this machine: ghost' >&2; echo 'wrote /c/CATALOG.md, CATALOG-lite.md, catalog.html: 411 skills, 45 commands, 216 agents, 43 MCP servers, 74 plugins, 61,588 always-on tokens, 15 to review, 9 to watch, 0 to retire, since 2026-11-16: +0 -0'"
   mstub "$mfix/setup/menubar-open.sh" "echo 'skipped: setup opened the app before (delete /marker to open it on the next run)'"
   : > "$STATE/changes"
   : > "$STATE/setup.log"
@@ -1171,7 +1192,7 @@ quiet_misc
 check_true "the TypeScript link has a line when it is made" has '^✔ TypeScript link +linked to npm:typescript$'
 DOTFILES_SETUP_VERBOSE=1 quiet_misc
 check_true "setup.sh --verbose: a step's own output is on screen too" has '^Checked 206 packages in 34ms$'
-check_true "setup.sh --verbose: … with the step's line" has '^✔ Hindsight memory +set up$'
+check_true "setup.sh --verbose: … with the step's line" has '^✔ Hindsight memory +already set up$'
 # The one step whose failure ends the task says so first
 mstub "$tmp/mbin/mise" 'case $1 in where) echo "$HOME/ts" ;; reshim) echo "mise ERROR no shims directory"; exit 4 ;; esac'
 DOTFILES_SKIP_CODEGRAPH=true quiet_misc
@@ -1194,11 +1215,11 @@ check_true "REA, a skill it wrote: … recorded" grep -qxF "skill	reverse-engine
 mstub "$mfix/bin/hindsight-memory" 'echo 2 > "$HOME/.hindsight/daemon-env/.synced"'
 quiet_misc
 check_true "Hindsight, a rebuilt daemon environment: a change" has '^↻ Hindsight memory +set up, daemon environment updated$'
-check_true "Scrapling, nothing downloaded: no change" has '^✔ Scrapling +installed, browser ready$'
+check_true "Scrapling, nothing downloaded: no change" has '^✔ Scrapling +already installed, browser ready$'
 check_true "REA, the same skill: no change" has '^✔ REA +skill in place$'
 mstub "$mfix/bin/hindsight-memory"
 quiet_misc
-check_true "Hindsight, nothing new: no change" has '^✔ Hindsight memory +set up$'
+check_true "Hindsight, nothing new: no change" has '^✔ Hindsight memory +already set up$'
 # A failed registration: the end of its output and the log, as any failed step
 fresh
 mstub "$tmp/mbin/claude" 'case "$1 $2" in "mcp get") exit 1 ;; "mcp add") [ "$5" != mise ] || echo "add refused"; exit 1 ;; esac'

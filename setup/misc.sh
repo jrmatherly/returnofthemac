@@ -447,7 +447,7 @@ if $agents_on && command_exists uv && [ ! -x "$serena_bin" ]; then
   fi
 elif $agents_on && [ -x "$serena_bin" ]; then
   step_name=Serena
-  ok "installed"
+  ok "already installed"
 fi
 if $agents_on && [ -x "$serena_bin" ] && [ -x "$claude_bin" ]; then
   register_mcp serena Serena -- serena start-mcp-server --context claude-code --project-from-cwd
@@ -485,7 +485,7 @@ if $agents_on && [ -x "$scrapling_bin" ]; then
     changed "browser downloaded"
     record_change tool scrapling "browser downloaded"
   else
-    ok "installed, browser ready"
+    ok "already installed, browser ready"
   fi
 fi
 # The entry point exists even for an install without the `ai` extra, and
@@ -525,7 +525,7 @@ if $agents_on && [ -x "$browser_use_bin" ]; then
   elif $browser_use_new; then
     changed "installed, telemetry off"
   else
-    ok "installed, telemetry off"
+    ok "already installed, telemetry off"
   fi
 fi
 if $agents_on && [ -x "$browser_use_bin" ] && [ -x "$claude_bin" ]; then
@@ -560,7 +560,7 @@ elif command_exists npx && command_exists uvx && command_exists jq && [ -x "$cla
     changed "set up, daemon environment updated"
     record_change setting "Hindsight memory" "daemon environment updated"
   else
-    ok "set up"
+    ok "already set up"
   fi
 else
   step_name='Hindsight memory'
@@ -737,9 +737,11 @@ elif module_on cloud PowerShell; then
   elif grep -q 'already installed' <<< "$out"; then
     ok "$(sed -n "s/.*(version '\([^']*\)').*/\1 /p" <<< "$out" | head -n 1)already installed"
   else
-    powershell_result=$(sed '/^[[:space:]]*$/d' <<< "$out" | tail -n 1)
-    changed "${powershell_result:-$powershell_done}"
-    record_change tool PowerShell "${powershell_result:-$powershell_done}"
+    # "Tool 'powershell' (version '7.6.10') was successfully installed." or
+    # "… was successfully updated from version '7.6.9' to version '7.6.10'."
+    powershell_result="$powershell_done$(sed -n "s/.*(version '\([^']*\)').*/ \1/p; s/.* to version '\([^']*\)'.*/ \1/p" <<< "$out" | head -n 1)"
+    changed "$powershell_result"
+    record_change tool PowerShell "$powershell_result"
   fi
 fi
 
@@ -793,7 +795,7 @@ if command_exists npm; then
 
   # This repo's own dependencies: `prettier` (+ prettier-plugin-sh) for `pnpm
   # format`, and `avif`, which bin/optimize-image expects at node_modules/.bin
-  ok "configured"
+  ok "config in place"
   if command_exists pnpm; then
     step 'repo dependencies'
     if ! capture pnpm install --dir "$DOTFILES_DIR"; then
@@ -859,7 +861,9 @@ if [ -x "$claude_bin" ] && module_on claude 'Claude Code config'; then
   # "wrote <paths>: 411 skills, 45 commands, 216 agents, 43 MCP servers, 74 plugins, <tokens and flags>"
   catalog_counts=$(sed -n 's/^wrote [^:]*: \(.* plugins\),.*/\1/p' <<< "$out" | head -n 1)
   # Its lint lines say what's wrong when curated.toml is out of date
-  catalog_lint=$(grep -c '^ *lint:' <<< "$out" || true)
+  # Two kinds describe this Mac, not curated.toml, and an installed copy has no curated.toml to edit
+  catalog_lint=$(grep '^ *lint:' <<< "$out" | grep -vc -e 'mcp server not registered on this machine' -e 'claude.ai skills not synced' || true)
+  [ "$("$DOTFILES_DIR/bin/lib/rotm-mode" "$DOTFILES_DIR" 2> /dev/null)" != installed ] || catalog_lint=0
   if [ "$catalog_rc" -ne 0 ]; then
     failed "Catalog built with problems — fix agents/catalog/curated.toml, then run: claude-catalog"
   else

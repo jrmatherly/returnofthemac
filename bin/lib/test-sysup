@@ -185,7 +185,7 @@ esac'
 stub claude-catalog 'if [ -e "$STATE/catalog-delta" ]; then
   printf "wrote /tmp/cat/CATALOG.md, CATALOG-lite.md, catalog.html, since 2026-10-20: +1 -2\n  added: p:new\n  removed: p:one, p:two\n"
 else echo "wrote /tmp/cat/CATALOG.md, CATALOG-lite.md, catalog.html, since 2026-10-20: +0 -0"; fi
-[ ! -e "$STATE/catalog-lint" ] || printf "  lint: no description: mcp slack\n  lint: no description: mcp jira\n  lint: curated entry for unknown item: x:y\n" >&2'
+[ ! -e "$STATE/catalog-lint" ] || printf "  lint: no description: mcp slack\n  lint: no description: mcp jira\n  lint: curated entry for unknown item: x:y\n  lint: mcp server not registered on this machine: ghost\n" >&2'
 stub open 'exit 0'
 stub amp 'echo "Amp is already up to date"'
 stub nyan 'exit 0'
@@ -316,6 +316,7 @@ check_true "changes: catalog names what it lost" has '^    removed  p:one, p:two
 check_true "lint: one counted line for the step" has '^● catalog +3 lint notes$'
 check_true "lint: no line per item" lacks '● catalog +lint:'
 check_true "lint: the summary keeps the counted line" has '^  ● catalog +3 lint notes$'
+check_true "lint: a note about this Mac, not curated.toml, is not counted or listed" lacks 'not registered on this machine'
 once() { [ "$(grep -Ec -- "$1" <<< "$screen")" = 1 ]; }
 check_true "lint: each item listed once, in the summary" once '^    no description +mcp slack$'
 check_true "lint: an item keeps the colon after its kind" once '^    curated entry for unknown item +x:y$'
@@ -341,9 +342,10 @@ check_true "changes: mise prune names each tool in a row" has '^    aspire      
 check_true "changes: a tool pruned from one backend keeps its short name" has '^    node        24\.0\.0$'
 check_true "changes: two backends of one tool stay apart" has '^    node \(npm\)  1\.0\.0, 2\.0\.0$'
 check_true "changes: prune ran before the upgrade" grep -q 'mise prune.*mise ' <<< "$(grep -oE '^== mise( prune)? ==' "$DOTFILES"/logs/sysup-*.log | tr '\n' ' ')"
-check_true "changes: a held release has its own quiet line" has '^◷ mise hold +aspire 13\.6\.3 until 2026-10-24 14:17 EDT \(minimum_release_age\)$'
-check_true "changes: … and is not a notice" lacks '● mise +aspire'
-check_true "changes: … and is not in the summary" lacks '^ +◷'
+check_true "changes: held releases get one counted line" has '^◷ mise hold +1 release held back by minimum_release_age$'
+check_true "changes: … and are not a notice" lacks '● mise +aspire'
+check_true "changes: … and are listed under Held in the summary" grep -Eq '^    aspire +13\.6\.3 until 2026-10-24 14:17 EDT$' <<< "$(sed -n '/^Held$/,$p' <<< "$screen")"
+check_true "changes: … without counting in the headline" lacks '^Done in .*held'
 check_true "changes: mise reinstall failure is a notice" has '^● mise +failed to reinstall pipx tools; the next sysup.s mise prune removes a version no config pins$'
 check_true "changes: uv failure names the command" has '^✖ uv +run: uv tool upgrade --all --exclude-newer "48 hours"$'
 check_true "changes: uv failure output shown" has '^    error: network down$'
@@ -467,7 +469,7 @@ touch "$STATE/macos-os" "$STATE/prune" "$STATE/rust-odd"
 mkdir -p "$HOME/.local/share/mise/installs/rust" "$HOME/.cache/uv/environments-v2/hook-1"
 run
 rm -rf "$STATE/cache-files" "$HOME/.cache/uv/environments-v2"
-check_true "cache: a prune that only cleared script environments is ok" has '^✔ uv cache +cleared 1 script environment, rebuilt on use \(29 files \(100\.0KiB\)\)$'
+check_true "cache: a prune that only cleared script environments is ok" has '^✔ uv cache +cleared 1 script environment, rebuilt on use \(29 files, 100\.0KiB\)$'
 check_true "macOS: a restart update is downloaded, not installed" has '^↻ macOS +Safari 99\.1 installed; macOS 27\.2-26B123 downloaded, not installed yet$'
 check_true "macOS: the install is an action naming what installs it" has "^  › Install macOS 27\\.2-26B123: System Settings → General → Software Update → Restart Now, or run: sudo softwareupdate -ia --restart \\(a plain restart doesn't install it\\)\$"
 check_true "macOS: off a terminal without a stored password the install stays in the log" lacks '^Downloaded:'
@@ -542,7 +544,10 @@ rm -rf "$DOTFILES/logs" "$STATE/claude-config.log"
 export MISE_DATA_DIR="$tmp/data"
 mkdir -p "$MISE_DATA_DIR"
 ln -s "$DOTFILES" "$MISE_DATA_DIR/bootstrap-repo"
+touch "$STATE/catalog-lint"
 run
+rm -f "$STATE/catalog-lint"
+check_true "installed: no lint notes, since the copy has no curated.toml to edit" lacks 'lint note'
 check_true "installed: claude-config save is not run" no_save
 check_true "installed: restore --dry-run still runs" grep -qx 'restore settings --dry-run' "$STATE/claude-config.log"
 check_true "installed: the Claude config line says why" has 'Claude config.*installed copy'

@@ -317,7 +317,7 @@ fi
 # rotm update sets ROTM_UPDATE: an installed copy agreed to the links at install,
 # and setup still stops when a file is in the way of one
 if [ -n "${ROTM_UPDATE:-}" ]; then
-  say "Updating $DOTFILES_DIR"
+  printf 'Updating %s\n' "$DOTFILES_DIR" >> "$log"
 else
   say "${c_notice}!!! ${c_fail}WARNING${c_notice} !!!"
   say "${c_alert}This script replaces your configuration files with symlinks to this repo."
@@ -387,9 +387,20 @@ prefix="${HOMEBREW_PREFIX:-/opt/homebrew}"
 export PATH="$HOME/.local/bin:$prefix/bin:$prefix/sbin:$PATH"
 if ! command -v mise > /dev/null; then
   title "Installing mise…"
-  # Installs to ~/.local/bin/mise and checks the archive against checksums in the script
-  # It asks nothing, so its output can go through tee into the log
-  curl -fsSL https://mise.run | sh 2>&1 | tee -a "$log"
+  # Installs to ~/.local/bin/mise and checks the archive against checksums in the script.
+  # It asks nothing, so it is captured; curl's progress bar prints even with MISE_QUIET
+  working mise
+  # The braces: curl's own error is part of what a failure shows
+  if out=$({ curl -fsSL https://mise.run | MISE_INSTALL_HELP=0 sh; } 2>&1); then
+    printf '%s\n' "$out" | log_clean >> "$log"
+    line changed mise "installed $(mise --version 2> /dev/null | awk '{ print $1; exit }')"
+    record_change tool mise installed
+  else
+    printf '%s\n' "$out" | log_clean >> "$log"
+    failed mise "the mise installer failed. See the output below, then rerun $self"
+    exit 1
+  fi
+  say ""
 fi
 floor=$(bash "$DOTFILES_DIR/setup/mise-floor.sh" 2>&1) || stop "$floor"
 
@@ -421,6 +432,7 @@ sudo_keepalive_stop() {
   if [ -n "${SUDO_KEEPALIVE_PID:-}" ]; then
     kill "$SUDO_KEEPALIVE_PID" 2> /dev/null || true
     SUDO_KEEPALIVE_PID=""
+    say ""
     line ok sudo released
   fi
   sudo -k 2> /dev/null || true
@@ -432,6 +444,8 @@ sudo_keepalive_stop() {
 if [ -t 0 ] && [ -z "$dry_run_flag" ]; then
   line wait sudo "the administrator password, for the packages, sudo_local and the login shell"
   sudo -v
+  # "Done in" times the run, not the wait at the prompt
+  SECONDS=0
   sudo_keepalive_start
   line ok sudo "active until the tools install"
   say ""
@@ -514,7 +528,8 @@ problems=""
 # ERROR text, and stays empty when mise printed none
 problem() {
   local reason
-  reason=$(grep -E 'failed: |ERROR ' <<< "${3:-}" | grep -vE 'ERROR +(Version:|Run with)' | tail -1 | sed -E 's/.*(failed: |ERROR +)//' | cut -c1-100) || reason=""
+  reason=$(grep -E 'failed: |ERROR ' <<< "${3:-}" | grep -vE 'ERROR +(Version:|Run with)' | tail -1 | sed -E 's/.*(failed: |ERROR +)//' \
+    | sed -E 's/^command \["([^"]+)"(, "([^"-][^"]*)")?.*\] (exited with .*)$/\1 \3 \4/; s/  +/ /g' | cut -c1-100) || reason=""
   problems+="$1"$'\t'"$2"$'\t'"$reason"$'\n'
 }
 
@@ -556,21 +571,40 @@ report_changes() {
   done <<< "$3"
 }
 
-# The full install measured about 32 GB; a full disk is the likeliest mid-run
-# failure. A green ✔ at 20 GiB or more; under 20 a notice, amber, and red under 10
-free_space() {
-  local kb gib color=$c_notice
+# free_gib: whole GiB free on /, or nothing when df's answer is not a number
+free_gib() {
+  local kb
   kb=$(df -k / 2> /dev/null | awk 'NR == 2 { print $4 }') || kb=""
   case $kb in '' | *[!0-9]*) return 0 ;; esac
-  gib=$((kb / 1048576))
-  say ""
+  echo $((kb / 1048576))
+}
+# The full install measured about 39 GB (fresh-install run 45750820756, 2026-11-25);
+# a full disk is the likeliest mid-run failure. A green ✔ at 20 GiB or more;
+# under 20 a notice, amber, and red under 10. free_space tight: no blank line
+# first, after a line that already left one
+free_space() {
+  local gib color=$c_notice
+  gib=$(free_gib)
+  [ -n "$gib" ] || return 0
+  free_shown=true
+  [ "${1:-}" = tight ] || say ""
   if [ "$gib" -ge 20 ]; then
     line ok "free space" "$c_ok$gib GiB$c_reset free on /"
   else
     [ "$gib" -ge 10 ] || color=$c_fail
     line notice "free space" "$color$gib GiB$c_reset free on /" "$color"
-    record_warning "Only $gib GiB free on /: the full install measured about 32 GB"
+    record_warning "Only $gib GiB free on /: the full install measured about 39 GB"
   fi
+  say ""
+}
+# space_before_install: a notice before the packages when most of them are
+# still to install and the disk cannot hold them
+space_before_install() {
+  local gib missing
+  gib=$(free_gib)
+  missing=$(jq -r '[.[].packages[]? | select(.state == "missing")] | length' <<< "$pkg_json" 2> /dev/null) || missing=0
+  [ -n "$gib" ] && [ "${missing:-0}" -ge 50 ] && [ "$gib" -lt 45 ] || return 0
+  warning "free space" "$gib GiB free on / with $missing packages to install: a full install needs about 39 GB"
   say ""
 }
 
@@ -640,7 +674,13 @@ packages_for() {
     # After a ✖ line, a line only for what did install
     [ "$bad" = true ] && [ -z "$changes" ] || report_changes "$2" "$4" "$changes" "$(grep -c '^installed' <<< "$after" || true)"
   fi
-  free_space
+  # After a phase that installed or failed, and wherever space is short; a
+  # run with neither shows it once, after the last package phase
+  if [ -n "$changes" ] || [ "$bad" = true ] || [ "$(free_gib)" -lt 20 ] 2> /dev/null; then
+    free_space
+  else
+    say ""
+  fi
 }
 
 # The git-credential-manager pkg registers itself with `git config --global`,
@@ -769,6 +809,7 @@ load_saved_settings
 pkg_json=""
 if [ "$run_packages" = true ]; then
   [ -n "$dry_run_flag" ] || pkg_json=$(pkg_status)
+  space_before_install
   # Formulae first: reading the claude-multipass-app tap cask needs the Ruby 3 that brew:ruby installs
   packages_for brew formulae formula package
   packages_for brew-cask casks cask package
@@ -958,6 +999,7 @@ if [ "$run_packages" = true ]; then
     warning extensions "VS Code is not installed yet: extensions are skipped. Rerun $self once it is"
     say ""
   fi
+  [ -n "${free_shown:-}" ] || free_space tight
 fi
 
 # Never a mise hook: a post-dotfiles hook also runs on every plain
@@ -1013,8 +1055,15 @@ if [ -n "$changes" ]; then
       }
       END { for (i = 1; i <= n; i++) { l = sprintf("    %s %-*s  %s", x, w, name[i], detail[i]); sub(/ +$/, "", l); print l } }' <<< "$changes")
     [ -n "$rows" ] || continue
-    say "  $heading"
-    say "$rows"
+    n_rows=$(grep -c . <<< "$rows")
+    if [ "$n_rows" -gt "${ROTM_SUMMARY_ROWS:-15}" ] && [ "$log" != /dev/null ]; then
+      clear_line
+      printf '  %s  %s, listed in the log\n' "$heading" "$n_rows"
+      printf '  %s\n%s\n' "$heading" "$rows" | log_clean >> "$log"
+    else
+      say "  $heading"
+      say "$rows"
+    fi
   done
   say ""
 fi
