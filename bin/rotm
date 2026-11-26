@@ -120,7 +120,7 @@ update() {
   old=$(git -C "$DOTFILES" rev-parse --short HEAD)
   cd "$HOME"
   # --only final-hook: fetch and link, apply nothing (probes 11 and 13). setup.sh does the installing.
-  # Captured: it is git's fetch and pull chatter, shown only when the update fails.
+  # Captured: it is git's fetch and pull chatter, shown only when the update fails and logged by setup otherwise.
   # No stdin, so mise cannot ask a question nobody would see: without a terminal it does not ask
   out=$(mise bootstrap --from "$url?ref=$branch" --config-dir tilde/.config/mise --update --only final-hook ${yes:+"$yes"} 2>&1 < /dev/null) || {
     rc=$?
@@ -141,6 +141,11 @@ update() {
     files=$(git -C "$DOTFILES" diff --name-only "$old" "$new" | wc -l | tr -d ' ')
     [ "$files" = 1 ] && files="1 file" || files="$files files"
     result changed "$branch $old → $new, $files"
+  fi
+  # setup.sh starts the run's log, so it is handed what the fetch printed and writes that first
+  if ROTM_UPDATE_OUTPUT=$(mktemp -t rotm-update 2> /dev/null); then
+    printf '%s\n' "$out" > "$ROTM_UPDATE_OUTPUT"
+    export ROTM_UPDATE_OUTPUT
   fi
   # setup.sh skips its first-install warning and wait
   export ROTM_UPDATE=1

@@ -125,7 +125,21 @@ Docs that describe the output change with it: `setup/README.md`, `docs/updating.
 - mise's own output format. Where mise prints, setup captures it and prints its own line.
 - Auto-merging the Hindsight pin.
 
+## Unit 3: measured and decided (2026-11-25)
+
+- macOS `script` overwrites what a child appends to its log: `script -q f sh -c 'echo a; echo X >> f; echo b'` loses `X`. So `setup.sh` no longer re-executes itself under `script`. It creates the log, exports `DOTFILES_SETUP_LOG` and appends to it. `script` gave two things, the log and a terminal for the run. The run now keeps the caller's terminal, so prompts, `sudo` and `gh auth login` are untouched. What the log no longer holds is what the owner types and the output of programs left on the terminal.
+- Every run is logged, not only one from a terminal. A quiet run without a terminal (CI) would otherwise keep mise's output nowhere.
+- mise 2026.11.12 asks before it applies a change (`system files: apply 1 change(s)?`, `files: apply ~/.foo?`) only while its stderr is a terminal. With stderr captured it applies unasked, and with stdin closed it asks, reads no answer and skips the part. Measured in a scratch HOME under a pty with a system file and a dotfile pending. So the first `mise bootstrap` call is captured only when mise cannot ask (`-y`, or stderr is not a terminal) or when `mise bootstrap … --dry-run`, read first (0.1 s, measured), shows nothing to apply. A dry run prints a pending action as a bare line (`would write file …`, `ln -sf …`, `chmod …`, `edit …`, `chsh -s …`), so the test is not for a pending line. It is that every line is a part's heading or one of the four a settled part prints (`mise system files: already converged`, `mise files: all files are applied`, `mise edits: all edits are applied`, `mise login_shell: already set to …`). Any other line, a failed dry run or an empty one leaves mise on the terminal with nothing between the two, `--verbose` included.
+- mise exits 0 when the owner answers no (it prints `<part>: skipped`). After a run on the terminal a second dry run says what was applied: a part pending before and settled now is a change, and one still pending is a notice with no change record.
+- `mise bootstrap --only task -q` drops `mise bootstrap: running …` and `[bootstrap] $ …`, keeps the task on the terminal (`raw = true`), and does not set `MISE_QUIET` for the task. `MISE_QUIET=1` does the same but reaches the task's own mise calls. A failed task still prints `[bootstrap] ERROR task failed`.
+- What a phase installed is not parsed from mise's lines, whose install format was not observed. It is the difference between two reads of `mise bootstrap packages status --json` (3.1 s measured, so read once before the first manager and again only for a manager that had something missing, failed or was upgraded), of `mise ls --installed --json` for the tools (0.1 s), and of `mise dotfiles status --json` for the links (0.1 s).
+- A `--dry-run` shows mise's output as `--verbose` does: the plan is the point of it.
+- `--verbose` exports `DOTFILES_SETUP_VERBOSE=1`, and `setup/misc.sh`'s `capture` then prints `$out` after each command.
+- Two warnings lost a word that the quiet output made false: "fix what's shown above" is now "fix what's shown", and "Catalog built with problems (listed above)" is now "Catalog built with problems".
+
 ## What is not verified
 
-- Whether `sudo` and the `gh auth login` prompt behave without the `script` re-exec.
+- `sudo -v`, Touch ID and the `gh auth login` prompt on a real terminal without the `script` re-exec. The self-check runs the prompts on a pty with stubs for `sudo` and `gh`.
+- Whether the dotfile edits and the login shell parts ask before they apply (system files and dotfiles do, measured). The dry run read covers them either way. The words mise prints when it changes the login shell are not known either: `chsh` is not run for a test.
+- The words mise prints when a package or tool installs. The count lines do not depend on them, but the `mise bootstrap` part lines quote mise's last line for a part that changed.
 - How a first install reads. Only an unchanged re-run was measured. The disposable VM is the place to look.

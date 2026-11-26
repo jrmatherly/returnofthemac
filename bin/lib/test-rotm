@@ -45,7 +45,7 @@ make_copy() {
   mkdir -p "$1/bin/lib"
   cp "$repo/bin/rotm" "$1/bin/rotm"
   cp "$mode" "$1/bin/lib/rotm-mode"
-  printf '#!/bin/bash\necho "env ROTM_UPDATE=${ROTM_UPDATE:-}" >> "%s/log"\necho "setup $*" >> "%s/log"\n' "$tmp" "$tmp" > "$1/setup.sh"
+  printf '#!/bin/bash\necho "env ROTM_UPDATE=${ROTM_UPDATE:-}" >> "%s/log"\n[ ! -f "${ROTM_UPDATE_OUTPUT:-}" ] || { sed "s/^/handed over: /" "$ROTM_UPDATE_OUTPUT" >> "%s/log"; rm -f "$ROTM_UPDATE_OUTPUT"; }\necho "setup $*" >> "%s/log"\n' "$tmp" "$tmp" "$tmp" > "$1/setup.sh"
   printf '#!/bin/bash\necho "dotfiles-settings $*" >> "%s/log"\n' "$tmp" > "$1/bin/dotfiles-settings"
   chmod +x "$1/setup.sh" "$1/bin/dotfiles-settings"
 }
@@ -109,6 +109,7 @@ new=$(git -C "$tmp/up" rev-parse --short HEAD)
 pull='echo "remote: Enumerating objects: 5, done." >&2; git -C "$DOTFILES" pull -q --ff-only origin stable; echo " 1 file changed"'
 export DOTFILES="$fix"
 check "a moved update prints one line with the commits and the file count" "[ \"\$(STUB_MISE_DO='$pull' rotm update 2>&1)\" = \"↻ returnofthemac     stable $old → $new, 1 file\" ]"
+check "what the fetch printed is handed to setup.sh for its log" "grep -qx 'handed over: remote: Enumerating objects: 5, done.' '$tmp/log' && grep -qx 'handed over:  1 file changed' '$tmp/log'"
 check "an update with nothing new says up to date" "[ \"\$(STUB_MISE_DO='echo Already up to date.' rotm update 2>&1)\" = '✔ returnofthemac     stable up to date' ]"
 unset DOTFILES
 git -C "$tmp/dev" init -q -b main

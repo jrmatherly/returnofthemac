@@ -53,9 +53,10 @@ jobs:
       # The runner image ships these and a new Mac has neither
       - name: Move the runner's own dotfiles aside
         run: for f in ~/.bash_profile ~/.gitconfig; do [ ! -e "$f" ] || mv "$f" "$f.runner"; done
-      # The command a new Mac runs. Without a terminal it skips sudo -v, the
-      # Enter prompt and the script log, and mise elevates with the runner's
-      # passwordless sudo. It installs mise, links the dotfiles, applies formulae and casks
+      # The command a new Mac runs. Without a terminal it skips sudo -v and the
+      # Enter prompt, and mise elevates with the runner's passwordless sudo.
+      # Each step prints one line and a failed one the last ten of its output:
+      # the rest is in the run's log, printed by the last step. It installs mise, links the dotfiles, applies formulae and casks
       # (printing free space after each), runs mise bootstrap without macOS
       # preferences, mise install and the task, then applies the extensions. A
       # failed bootstrap part or task fails this step. Exit 2 means only some
@@ -158,3 +159,16 @@ jobs:
         run: |
           git -C "$HOME/dotfiles" status --porcelain --untracked-files=no
           test -z "$(git -C "$HOME/dotfiles" status --porcelain --untracked-files=no)"
+      # What the setup.sh, install line and rotm update steps kept off the screen.
+      # The clone's log is in the workspace, the installed copy's in mise's checkout
+      - name: Setup logs
+        if: always()
+        env:
+          CLONE: ${{ matrix.path == 'clone' && github.workspace || '' }}
+        run: |
+          for f in "${CLONE:-$HOME/dotfiles}"/private/setup-logs/*.log; do
+            [ -f "$f" ] || continue
+            echo "::group::$f"
+            cat "$f"
+            echo "::endgroup::"
+          done

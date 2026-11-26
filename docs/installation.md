@@ -121,6 +121,7 @@ Options, which `rotm install` takes too:
 | `--without <a,b>` | Turn these modules off before anything is installed, and keep them off on later runs. The modules are `fonts`, `apps`, `vscode`, `claude`, `agents`, `cloud`, `kubernetes`, `devops`, `security`, `network`, `languages`, `media`, `menubar`, `multipass`, `itsaplan`, `touchid` and `loginshell` |
 | `--skip-codegraph` | Don't install [CodeGraph](https://github.com/colbymchenry/codegraph) or connect it to Claude Code (an existing install is left alone) |
 | `--dash` | Also run the optional [Dash docset setup](../setup/dash.sh) |
+| `--verbose` | Also show mise's own output while it runs. Without it each step prints one line and the rest goes to the run's log, `private/setup-logs/<timestamp>.log` |
 | `-h`, `--help` | Print usage and exit |
 | `-- <args>` | Pass the rest to `mise bootstrap`. `./setup.sh -- --skip packages` leaves the packages alone, `-- --upgrade` also upgrades the packages and tools, `-- --dry-run` previews. A `--skip` list is merged with the `macos-defaults` setup always skips. `--only` is refused: run `mise bootstrap --only <parts>` from `~` instead |
 

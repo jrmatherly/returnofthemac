@@ -73,7 +73,8 @@ run "$h"
 check "closed stdin and no knobs: exits 0" "[ $? = 0 ]"
 check "closed stdin and no knobs: no identity file" "[ ! -e '$h/.gitconfig.local' ]"
 check "no 1Password agent: no warning about the public key" "! grep -q github_personal.pub '$tmp/out'"
-check "no Firefox profile: skipped, not warned" "grep -q '\[skipped\]  Firefox styles (no Firefox Developer Edition profile)' '$tmp/out'"
+check "no 1Password agent: … and one line for the step" "grep -q '^✔ GitHub SSH key  *skipped: no 1Password SSH agent$' '$tmp/out'"
+check "no Firefox profile: skipped, not warned" "grep -q '^✔ Firefox  *skipped: no Firefox Developer Edition profile$' '$tmp/out'"
 check "cot linked without sudo into a writable folder" "[ '$tmp/bin/cot' -ef '$cot' ] && ! grep -q '^sudo' '$tmp/log'"
 check "VS Code missing: warned" "grep -q 'Visual Studio Code not installed' '$tmp/out'"
 check "bat cache rebuilt" "grep -qx 'bat cache --build' '$tmp/log'"
@@ -103,6 +104,7 @@ check "ssh signing: the key is an allowed signer" "grep -qx 'a@b.c ssh-ed25519 A
 run "$h" DOTFILES_GIT_NAME=Other DOTFILES_GIT_EMAIL=o@b.c
 check "an existing identity file is kept" "grep -qx '  name = A B' '$h/.gitconfig.local'"
 check "second run: cot link kept, nothing asked of sudo" "[ -L '$tmp/bin/cot' ] && ! grep -q '^sudo' '$tmp/log'"
+check "second run: … and the link has its line" "grep -q '^✔ cot CLI  *already linked$' '$tmp/out'"
 
 rm "$tmp/bin/cot"
 chmod 555 "$tmp/bin"

@@ -35,7 +35,7 @@ grep -qF "\${HOMEBREW_PREFIX:-/opt/homebrew}" "$repo/setup.sh" \
 fix="$tmp/clone"
 export STATE="$tmp/state" HOMEBREW_PREFIX="$tmp/nobrew"
 # A caller's own values would reach the mise stub and fail the assertions on its log
-unset MISE_GITHUB_TOKEN MISE_DISABLE_TOOLS DOTFILES DOTFILES_DIR DOTFILES_SKIP_CODEGRAPH DOTFILES_SETUP_LOG STUB_MISE_VERSION DOTFILES_YES MISE_DATA_DIR ROTM_UPDATE
+unset MISE_GITHUB_TOKEN MISE_DISABLE_TOOLS DOTFILES DOTFILES_DIR DOTFILES_SKIP_CODEGRAPH DOTFILES_SETUP_LOG DOTFILES_SETUP_VERBOSE STUB_MISE_VERSION DOTFILES_YES MISE_DATA_DIR ROTM_UPDATE ROTM_UPDATE_OUTPUT HINDSIGHT_CONFIG HINDSIGHT_DAEMON_ENV VSCODE_SETTINGS_ENV VSCODE_SETTINGS_DIR
 mkdir -p "$fix/setup" "$fix/bin/lib" "$fix/tilde/.config/gh" "$fix/tilde/.config/mise" "$tmp/bin" "$tmp/other"
 cp "$repo/setup.sh" "$fix/setup.sh"
 cp "$repo/setup/mise-floor.sh" "$fix/setup/mise-floor.sh"
@@ -90,6 +90,7 @@ case $1 in
       "bootstrap packages upgrade "*) [ ! -e "$STATE/upgrade-fails" ] ;;
       "bootstrap packages apply --yes --manager brew")
         cp "$HOME/.config/mise/miserc.local.toml" "$STATE/rc-at-packages" 2> /dev/null || true
+        echo "mise brew: 147 package(s) already installed"
         [ ! -e "$STATE/no-packages" ] || { echo "mise ERROR no packages requested for manager 'brew'"; exit 1; } ;;
       "dot origin")
         if [ -e "$STATE/origin" ]; then echo "https://github.com/octo/rotm-settings.git"
@@ -98,34 +99,66 @@ case $1 in
         if grep -qsF 'DOTFILES_SKIP_CODEGRAPH = "true"' "$HOME/.config/mise/config.override.toml"; then
           echo '{"DOTFILES_SKIP_CODEGRAPH":"true"}'
         else echo '{}'; fi ;;
-      *"--manager brew-cask"*) [ ! -e "$STATE/casks-fail" ] ;;
+      *"--manager brew-cask"*) touch "$STATE/casks-applied"; [ ! -e "$STATE/casks-fail" ] ;;
       "bootstrap packages status --json")
         printf '{"brew-cask":{"available":true,"packages":['
         for p in $(cat "$STATE/missing-casks" 2> /dev/null); do printf '{"package":"%s","state":"missing"},' "$p"; done
         for p in $(cat "$STATE/absent-casks" 2> /dev/null); do printf '{"package":"%s","state":"unexpectedly_installed"},' "$p"; done
+        # A cask the apply installs: missing until it ran
+        for p in $(cat "$STATE/new-casks" 2> /dev/null); do
+          if [ -e "$STATE/casks-applied" ]; then printf '{"package":"%s","state":"installed","installed_version":"1.0"},' "$p"
+          else printf '{"package":"%s","state":"missing"},' "$p"; fi
+        done
         printf '{"package":"ghostty","state":"installed"}]}}\n' ;;
       "bootstrap packages apply --yes brew-cask:"*)
         # Coloured as mise colours it when forced
         ! grep -qxF "${5#brew-cask:}" "$STATE/bad-casks" 2> /dev/null || { printf 'mise %sERROR%s download returned 404\n' "${CLICOLOR_FORCE:+$'\e[31m'}" "${CLICOLOR_FORCE:+$'\e[0m'}"; exit 1; } ;;
-      "dotfiles apply"*) [ ! -e "$STATE/dotfiles-fail" ] ;;
+      "dotfiles apply"*)
+        [ ! -e "$STATE/dotfiles-fail" ] || exit 1
+        printf 'mise files: all files are applied\nmise edits: all edits are applied\n' ;;
       install*)
+        touch "$STATE/tools-ran"
         [ ! -e "$STATE/tools-fail" ] || {
           echo "mise ✗ npm:@vue/language-server@3.1.0  2.1s · failed: failed to resolve dependencies"
           echo "mise ✓ npm:typescript@5.9.3  1.0s"
           exit 1
-        } ;;
+        }
+        printf 'mise ⇢ node@24                              2ms · already installed\nmise ████████████████ 33/33 · installed 0 tools · 33 already installed in 470ms\n' ;;
+      "ls --installed --json")
+        # A tool the install adds: there once it ran
+        printf '{"node":[{"version":"24.11.0"}]'
+        [ ! -e "$STATE/new-tool" ] || [ ! -e "$STATE/tools-ran" ] || printf ',"npm:typescript":[{"version":"6.0.2"}]'
+        echo '}' ;;
       "ls --missing --json") if [ -e "$STATE/tools-fail" ]; then echo '{"npm:@vue/language-server":[]}'; else echo '{}'; fi ;;
       upgrade*) ;;
-      "bootstrap --only task"*)
+      bootstrap*"--only task"*)
         # What setup/misc.sh's warning does, a separate process
         echo "$ROTM_WARNINGS_FILE" > "$STATE/warnings-file"
+        echo "${ROTM_CHANGES_FILE:-}" > "$STATE/changes-file"
         [ ! -e "$STATE/task-warns" ] || { echo "a task warning" >> "$ROTM_WARNINGS_FILE"; echo "a task warning" >> "$ROTM_WARNINGS_FILE"; }
+        # … and its log lines and change records, appended only to files that exist
+        [ ! -f "${DOTFILES_SETUP_LOG:-}" ] || echo "== a step of the task ==" >> "$DOTFILES_SETUP_LOG"
+        [ ! -e "$STATE/task-changes" ] || [ ! -e "${ROTM_CHANGES_FILE:-}" ] || printf 'mcp\tSerena\tadded\nodd\tthing\tnew\n' >> "$ROTM_CHANGES_FILE"
         [ ! -e "$STATE/task-fails" ] ;;
       "bootstrap packages "* | plugins*) ;;
       bootstrap*)
         # TERM, not Ctrl-C's INT: pnpm check runs this in the background, where INT is ignored and cannot be trapped
         [ ! -e "$STATE/interrupt" ] || kill -TERM "$PPID"
-        [ ! -e "$STATE/bootstrap-fails" ] ;;
+        [ ! -e "$STATE/bootstrap-fails" ] || exit 1
+        case "$*" in
+          *--dry-run*)
+            [ ! -e "$STATE/plan-fails" ] || exit 1
+            # A plan stays pending until a real run applies it
+            if [ -e "$STATE/bootstrap-plan" ] && [ ! -e "$STATE/bootstrap-applied" ]; then
+              cat "$STATE/bootstrap-plan"
+              exit 0
+            fi ;;
+          *)
+            # mise asks only here: nothing between it and the terminal
+            if [ -t 0 ] && [ -t 1 ] && [ -t 2 ]; then touch "$STATE/bootstrap-on-terminal"; fi
+            [ ! -e "$STATE/bootstrap-plan" ] || [ -e "$STATE/bootstrap-declined" ] || touch "$STATE/bootstrap-applied" ;;
+        esac
+        cat "$STATE/bootstrap-out" 2> /dev/null || true ;;
     esac ;;
 esac
 EOF
@@ -200,7 +233,7 @@ run_installed() {
   copy=$fix
 }
 apply="args=bootstrap packages apply --yes --manager"
-task="args=bootstrap --only task disable="
+task="args=bootstrap --only task -q disable="
 # sudo_dropped_before <text>: a `sudo -k` comes before the first call naming text, and after the bootstrap
 sudo_dropped_before() {
   local k b n
@@ -227,7 +260,7 @@ check_true "a: dotfiles, plugin link, formulae, casks, then bootstrap" in_order 
 check_true "a: sudo is dropped after the bootstrap, before the tools" sudo_dropped_before "mise install"
 check_true "a: no tool is upgraded" log_lacks "args=upgrade"
 check_true "a: without -y the task may ask" log_lacks "yes=true"
-check_true "a: says All done with no problem list" has 'All done' && check_true "a: … and no problem list" lacks 'Setup finished'
+check_true "a: says All done with no problem list" has 'All done' && check_true "a: … and no problem list" lacks '^Failed$'
 check_true "a: every mise call runs from HOME" [ -z "$(grep -v "^pwd=$HOME " "$STATE/mise.log")" ]
 check_true "a: no package is upgraded" log_lacks "packages upgrade"
 check_true "a: no extensions without code" log_lacks "--manager vscode"
@@ -237,23 +270,23 @@ check_true "a: without a terminal gh is not installed ahead to ask for a login" 
 check_true "a: the GitHub warning comes before the packages" [ "$(grep -n 'No GitHub token' <<< "$out" | head -1 | cut -d: -f1)" -lt "$(grep -n 'Installing formulae' <<< "$out" | head -1 | cut -d: -f1)" ]
 check_true "the bootstrap task no longer asks for the GitHub login" eval '! grep -q "read -rp.*gh auth login" "$repo/setup/misc.sh"'
 check_true "setup.sh offers the GitHub login before the first package list" [ "$(grep -n '^github_login$' "$repo/setup.sh" | cut -d: -f1)" -lt "$(grep -n '^  packages_for brew formulae' "$repo/setup.sh" | cut -d: -f1)" ]
-check_true "a: a free-space line per manager" [ "$(grep -cE '^[0-9.]+[KMGT]i? free on /$' <<< "$out")" = 2 ]
+check_true "a: a free-space line per manager" [ "$(grep -cE '^✔ free space +[0-9]+ GiB free on /$' <<< "$out")" = 2 ]
 check_true "a: the extras script runs once" extras_ran 1
 check_true "a: no sudo prompt without a terminal" [ -z "$(grep -e '-v' "$STATE/sudo.log")" ]
-check_true "a: the GitHub warning is listed again at the end" has '^  ! No GitHub token'
-check_true "a: … in a Warnings block before All done" [ "$(grep -n 'warning during setup' <<< "$out" | cut -d: -f1)" -lt "$(grep -n 'All done' <<< "$out" | cut -d: -f1)" ]
+check_true "a: the GitHub warning is listed again at the end" has '^  ● No GitHub token'
+check_true "a: … under Notices before All done" [ "$(grep -nx 'Notices' <<< "$out" | cut -d: -f1)" -lt "$(grep -n 'All done' <<< "$out" | cut -d: -f1)" ]
 check_true "a: the warnings file is removed" [ ! -e "$(cat "$STATE/warnings-file")" ]
 
 prepare() { touch "$STATE/task-warns"; }
 run
-check_true "w: the task's warning is in the block, once" [ "$(grep -c '^  ! a task warning$' <<< "$out")" = 1 ]
-check_true "w: … counted with setup.sh's own" has '^⚠️  2 warnings during setup$'
+check_true "w: the task's warning is in the block, once" [ "$(grep -c '^  ● a task warning$' <<< "$out")" = 1 ]
+check_true "w: … counted with setup.sh's own" has '^Done in [0-9]+s · nothing changed · 3 notices$'
 prepare() { :; }
 
 run -y --skip-codegraph -- --skip packages
 check_true "b: --yes, the merged skip list and CodeGraph disabled" boot_has "args=bootstrap --yes --skip macos-defaults,packages,tools,task disable=npm:@colbymchenry/codegraph "
 check_true "b: the task is told to skip CodeGraph" boot_has " skip=true "
-check_true "b: -y reaches the task, for its prompts" log_has "args=bootstrap --yes --only task disable=npm:@colbymchenry/codegraph dotfiles=$fix skip=true token= telemetry=0 yes=true"
+check_true "b: -y reaches the task, for its prompts" log_has "args=bootstrap --yes --only task -q disable=npm:@colbymchenry/codegraph dotfiles=$fix skip=true token= telemetry=0 yes=true"
 check_true "b: --skip packages skips setup's own package step" log_lacks "packages apply"
 check_true "b: … and the plugin link" log_lacks "plugins link"
 
@@ -261,7 +294,7 @@ prepare() { stub code 'exit 0'; }
 run -- --skip tools --skip=files --upgrade
 check_true "b2: both --skip forms merge, --upgrade stays" boot_has "args=bootstrap --skip macos-defaults,tools,files,packages,task --upgrade disable="
 check_true "b2: --skip tools installs and upgrades no tool" log_lacks "args=install" && check_true "b2: … no upgrade" log_lacks "args=upgrade"
-check_true "b2: the task still runs" log_has "args=bootstrap --only task --upgrade disable="
+check_true "b2: the task still runs" log_has "args=bootstrap --only task --upgrade -q disable="
 check_true "b2: each manager is applied, then upgraded, extensions after bootstrap" in_order \
   "$apply brew disable=" "$upgrade brew disable=" "$apply brew-cask disable=" "$upgrade brew-cask disable=" \
   "args=bootstrap --skip" "$apply vscode disable=" "$upgrade vscode disable="
@@ -335,14 +368,14 @@ check_true "f: says to rerun" has 'rerun \./setup\.sh'
 check_true "f: no extras after a failed bootstrap" extras_ran 0
 check_true "f: no tools after a failed bootstrap" log_lacks "args=install"
 check_true "f: does not say All done" lacks 'All done'
-check_true "f: the run's warnings are listed before it stops" has '^  ! No GitHub token'
-check_true "f: … once" [ "$(grep -c '^  ! No GitHub token' <<< "$out")" = 1 ]
+check_true "f: the run's warnings are listed before it stops" has '^  ● No GitHub token'
+check_true "f: … once" [ "$(grep -c '^  ● No GitHub token' <<< "$out")" = 1 ]
 
 prepare() { touch "$STATE/interrupt"; }
 run
 check_true "a signal: setup stops with 143" [ "$rc" -eq 143 ]
 check_true "a signal: no extras" extras_ran 0
-check_true "a signal: the run's warnings are listed before it stops" has '^  ! No GitHub token'
+check_true "a signal: the run's warnings are listed before it stops" has '^  ● No GitHub token'
 
 prepare() {
   touch "$STATE/bootstrap-fails"
@@ -385,7 +418,7 @@ prepare() {
 }
 run
 check_true "f2b: exits 2" [ "$rc" -eq 2 ]
-check_true "f2b: each cask left missing gets its own apply" in_order "$apply brew-cask disable=" "args=bootstrap packages status --json" \
+check_true "f2b: each cask left missing gets its own apply" in_order "$apply brew-cask disable=" \
   "args=bootstrap packages apply --yes brew-cask:royal-tsx disable=" "args=bootstrap packages apply --yes brew-cask:syntax-highlight disable=" \
   "args=bootstrap packages apply --yes brew-cask:utm disable=" "args=bootstrap --skip"
 check_true "f2b: an installed cask is not retried" log_lacks "brew-cask:ghostty"
@@ -398,7 +431,7 @@ check_true "f3: a failed upgrade exits 2" [ "$rc" -eq 2 ]
 check_true "f3: warns that the upgrade failed" has 'failed to upgrade'
 check_true "f3: casks are applied after the failed formula upgrade" in_order "$upgrade brew disable=" "$apply brew-cask disable="
 check_true "f3: the bootstrap still gets --upgrade" boot_has "--skip macos-defaults,packages,tools,task --upgrade disable="
-check_true "f3: lists the upgrade" has '✗ upgrade +formulae'
+check_true "f3: lists the upgrade" has '✖ upgrade +formulae'
 check_true "f3: … and says to retry with --upgrade" has 'To retry: \./setup\.sh -- --upgrade$'
 
 check_true "f3: the extras script runs" extras_ran 1
@@ -414,18 +447,22 @@ run
 check_true "t: a failed tool exits 2" [ "$rc" -eq 2 ]
 check_true "t: the task, then the extensions still run" in_order "args=install --yes disable=" "$task" "$apply vscode disable="
 check_true "t: the extras script runs" extras_ran 1
-check_true "t: counts the problems" has '^⚠️  Setup finished with 2 problems$'
-check_true "t: lists the cask with mise's reason" has '^  ✗ cask   warp                       download returned 404$'
-check_true "t: lists the tool with mise's reason" has '^  ✗ tool   npm:@vue/language-server   failed to resolve dependencies$'
-check_true "t: a tool that installed is not listed" lacks '✗ tool +npm:typescript'
-check_true "t: ends with the tool hint" [ "$(tail -1 <<< "$out")" = "  To see why a tool failed: mise install <tool>" ]
+check_true "t: counts the problems" has '^Done in [0-9]+s · nothing changed · [0-9] notices? · 2 failed$'
+check_true "t: lists the cask with mise's reason" has '^  ✖ cask   warp                       download returned 404$'
+check_true "t: lists the tool with mise's reason" has '^  ✖ tool   npm:@vue/language-server   failed to resolve dependencies$'
+check_true "t: a tool that installed is not listed" lacks '✖ tool +npm:typescript'
+check_true "t: the tool hint follows the list" has '^  To see why a tool failed: mise install <tool>$'
+check_true "t: ends with the log, in place of the art" grep -qE '^Log: .*/private/setup-logs/[0-9-]+\.log$' <<< "$(tail -1 <<< "$out")"
+check_true "t: the failed tool's line has the end of mise's output under it" has '^    mise ✗ npm:@vue/language-server@3\.1\.0  2\.1s · failed: failed to resolve dependencies$'
 check_true "t: no All done" lacks 'All done'
 check_true "t: without a terminal mise's colours are not forced" log_lacks "color=1"
 answers='\n' run
-check_true "t, on a terminal: mise's colours are forced" log_has "color=1"
-check_true "t, on a terminal: … and a coloured ERROR still gives the reason" has '✗.* cask +warp +download returned 404$'
-check_true "t: a failure the problem list names is not a warning too" lacks '^  ! .*failed to install'
-NO_COLOR=1 answers='\n' run
+check_true "t, on a terminal: mise's output is captured, so no colour is forced" log_lacks "color=1"
+answers='\n' run --verbose
+check_true "t, on a terminal with --verbose: mise's colours are forced" log_has "color=1"
+check_true "t, on a terminal with --verbose: … and a coloured ERROR still gives the reason" has '✖.* cask +warp +download returned 404$'
+check_true "t: a failure the problem list names is not a warning too" lacks '^  ● .*failed to install'
+NO_COLOR=1 answers='\n' run --verbose
 check_true "t, on a terminal with NO_COLOR: mise's colours are not forced" log_lacks "color=1"
 
 prepare() { touch "$STATE/task-fails"; }
@@ -491,7 +528,7 @@ check_true "installed: ~/dotfiles links to mise's checkout" [ "$HOME/dotfiles" -
 check_true "installed: a link into the checkout at a real-folder key is removed" [ ! -L "$HOME/.config/gh" ]
 check_true "installed: a real folder at such a key is kept" [ -d "$HOME/.config/keep" ]
 check_true "installed: a link that points elsewhere is kept" [ -L "$HOME/.config/elsewhere" ]
-check_true "installed: says what it unlinked" has 'Unlinked .*/\.config/gh: ' 
+check_true "installed: says what it unlinked" has 'Unlinked .*/\.config/gh: '
 run_installed -y -- --dry-run
 check_true "installed: a dry run unlinks nothing" [ -L "$HOME/.config/gh" ]
 for own in .zshrc .gitconfig; do
@@ -551,7 +588,7 @@ prepare() {
   echo warp > "$STATE/absent-casks"
 }
 run -y
-check_true "an installed package declared absent is not a problem" lacks 'Setup finished with'
+check_true "an installed package declared absent is not a problem" lacks '^Failed$'
 check_true "and setup exits 0" [ "$rc" -eq 0 ]
 check_true "and says nothing is missing" has 'Nothing is missing'
 prepare() {
@@ -561,7 +598,7 @@ prepare() {
   echo utm > "$STATE/bad-casks"
 }
 run -y
-check_true "a package that is missing beside it still is a problem" has 'Setup finished with 1 problem'
+check_true "a package that is missing beside it still is a problem" has ' · 1 failed$'
 prepare() { :; }
 
 # Saved settings (rotm settings sync): gh is signed in as octo, who has a settings repository.
@@ -623,7 +660,7 @@ prepare() {
 }
 answers='\ny\n' run
 check_true "saved: CodeGraph left alone in the restored settings is not installed" log_has "args=install --yes disable=npm:@colbymchenry/codegraph "
-check_true "saved: … and the task is told" log_has "args=bootstrap --only task disable=npm:@colbymchenry/codegraph dotfiles=$fix skip=true "
+check_true "saved: … and the task is told" log_has "args=bootstrap --only task -q disable=npm:@colbymchenry/codegraph dotfiles=$fix skip=true "
 check_true "saved: a failed apply of the tool settings names the command that retries it" has 'rotm settings sync apply'
 check_true "saved: … and setup still ends All done" [ "$rc" -eq 0 ]
 
@@ -705,12 +742,238 @@ prepare() {
 }
 answers='\ny\n' run
 check_true "modules sync refused after the restore: setup stops with its code" [ "$rc" -eq 2 ]
-check_true "modules sync refused after the restore: the run's warnings are listed before it stops" has '^  ! Your saved settings did not load'
+check_true "modules sync refused after the restore: the run's warnings are listed before it stops" has '^  ● Your saved settings did not load'
 
 prepare() { stub gh "$saved"; }
 answers='\ny\n' run -- --dry-run
 check_true "a dry run: no question" eval '! asked'
 check_true "a dry run: no restore" restores 0
+prepare() { :; }
+
+# What a run prints: one line per step, mise's own output in the log, and a summary of what changed.
+# The three texts below are mise 2026.11.12's own, printed in a scratch HOME on 2026-11-25 with a
+# system file, a link, a permissions entry, a merge edit and a login shell declared (/scratch stands
+# for that HOME). converged: every part with nothing to do, in a dry run and in a real one alike
+converged='mise bootstrap: system files
+mise system files: already converged
+mise bootstrap: dotfiles
+mise files: all files are applied
+mise bootstrap: dotfile edits
+mise edits: all edits are applied
+mise bootstrap: login shell
+mise login_shell: already set to /opt/homebrew/bin/zsh'
+# A dry run with every part pending: the actions are bare lines
+planned='mise bootstrap: system files
+would write file /scratch/etc/sysfile
+mise bootstrap: dotfiles
+ln -sf ~/src/foo ~/.foo
+chmod 0700 ~/.ssh
+mise bootstrap: dotfile edits
+edit ~/target.toml (merge:defaults)
+mise bootstrap: login shell
+chsh -s /bin/bash
+bootstrap: follow-up if applied
+  - start a new login session for /bin/bash to take effect'
+# A real run with --yes that applied the first three (the login shell was left out: chsh is not run for a test)
+applied='mise bootstrap: system files
+mise system files: applied 1 change(s)
+mise bootstrap: dotfiles
+mise files: created symlink ~/.foo -> ~/src/foo
+mise files: set permissions of ~/.ssh to 0700
+mise files: applied ~/.foo, ~/.ssh
+mise bootstrap: dotfile edits
+mise edits: applied ~/target.toml (merge:defaults)'
+signed_in='[ "$*" = "auth token" ] && echo tok'
+run_log() { sed -n 's/^Log: //p' <<< "$out" | tail -1; }
+in_log() { grep -qF -- "$1" "$(run_log)"; }
+count() { grep -cE -- "$1" <<< "$out" || true; }
+prepare() {
+  stub gh "$signed_in"
+  stub code 'exit 0'
+  echo "$converged" > "$STATE/bootstrap-out"
+}
+run
+check_true "quiet: an unchanged run exits 0" [ "$rc" -eq 0 ]
+check_true "quiet: none of mise's own lines is on screen" lacks '^mise |⇢|\[bootstrap\]'
+for step in links formulae casks 'mise bootstrap' tools extensions; do
+  check_true "quiet: one line for $step" [ "$(count "^✔ $step  ")" = 1 ]
+done
+check_true "quiet: the tools are one count" has '^✔ tools +33 already installed$'
+check_true "quiet: four parts already applied are one line" has '^✔ mise bootstrap +4 parts already applied$'
+check_true "quiet: the links say all files applied" has '^✔ links +all files applied$'
+check_true "quiet: the summary says nothing changed" has '^Done in [0-9]+s · nothing changed$'
+check_true "quiet: … with no Changed, Notices or Failed section" lacks '^(Changed|Notices|Failed)$'
+check_true "quiet: All done is the last line (the art follows it)" grep -q 'All done!' <<< "$(tail -1 <<< "$out")"
+check_true "quiet: the log is in private/setup-logs of the copy" eval '[ -f "$(run_log)" ] && [ "$(dirname "$(run_log)")" = "$fix/private/setup-logs" ]'
+check_true "quiet: the log has mise's own lines" in_log 'mise ⇢ node@24'
+check_true "quiet: … each under the command that printed them" in_log '$ mise install --yes'
+check_true "quiet: … and every line the terminal showed" in_log '✔ tools              33 already installed'
+check_true "quiet: a line the task appended to the log is still there at the end" eval 'in_log "== a step of the task ==" && [ "$(grep -n "== a step of the task ==" "$(run_log)" | cut -d: -f1)" -lt "$(grep -n "^Done in" "$(run_log)" | cut -d: -f1)" ]'
+check_true "quiet: the task runs without mise's two lines about it" log_has "$task"
+check_true "quiet: the changes file is removed" eval '[ -n "$(cat "$STATE/changes-file")" ] && [ ! -e "$(cat "$STATE/changes-file")" ]'
+
+run --verbose
+check_true "--verbose: mise's own lines are on screen too" has '^mise ⇢ node@24'
+check_true "--verbose: … with the step's line" has '^✔ tools +33 already installed$'
+check_true "--verbose: mise's lines about the task are left in" log_has "args=bootstrap --only task disable="
+run --help
+check_true "--help documents --verbose" has '--verbose'
+run -- --dry-run
+check_true "a dry run shows mise's plan" has '^mise ⇢ node@24'
+check_true "a dry run: each step says nothing was installed" has '^✔ tools +dry run: nothing installed$'
+
+prepare() {
+  stub gh "$signed_in"
+  stub code 'exit 0'
+  touch "$STATE/new-tool" "$STATE/task-changes"
+  echo utm > "$STATE/new-casks"
+  { echo 'mise bootstrap: login shell' && echo 'mise login_shell: already set to /opt/homebrew/bin/zsh' && echo "$applied"; } > "$STATE/bootstrap-out"
+}
+run
+check_true "changed: exits 0" [ "$rc" -eq 0 ]
+check_true "changed: the tools line counts the install" has '^↻ tools +1 installed, 33 already installed$'
+check_true "changed: the casks line counts the install" has '^↻ casks +1 installed, 1 already installed$'
+check_true "changed: a part that applied something gets its own line, with mise's last one" has '^↻ dotfiles +applied ~/\.foo, ~/\.ssh$'
+check_true "changed: … beside the one that did not" has '^✔ login shell +already set to /opt/homebrew/bin/zsh$'
+check_true "changed: the totals count every record" has '^Done in [0-9]+s · 7 changed$'
+check_true "changed: the summary groups by type, in the list's order" [ "$(sed -n '/^Changed$/,/^$/p' <<< "$out" | grep -E '^  [A-Z]' | tr '\n' '|')" = "  Packages|  Tools|  Links|  MCP servers|  Files|  Other|" ]
+check_true "changed: the tool is listed with its version" has '^    ↻ npm:typescript@6\.0\.2  installed$'
+check_true "changed: the cask is listed with its version" has '^    ↻ utm  installed 1\.0$'
+check_true "changed: the task's record is listed" has '^    ↻ Serena  added$'
+check_true "changed: a record of an unknown type is listed under Other" has '^    ↻ thing  new$'
+check_true "changed: nothing is listed twice" [ "$(count '^    ↻ ')" = 7 ]
+check_true "changed: the summary is in the log" in_log '    ↻ npm:typescript@6.0.2  installed'
+
+# On a terminal mise asks before it applies, and only while its stderr is one. So it is captured
+# there only when a dry run shows nothing to apply, and what it applied is read afterwards
+on_terminal() { [ -e "$STATE/bootstrap-on-terminal" ]; }
+dry_runs() { grep -c 'args=bootstrap --skip macos-defaults,packages,tools,task --dry-run disable=' "$STATE/mise.log" || true; }
+prepare() {
+  stub gh "$signed_in"
+  echo "$planned" > "$STATE/bootstrap-plan"
+  echo "$converged" > "$STATE/bootstrap-out"
+}
+TERM=xterm answers='\n' run
+check_true "something to apply, on a terminal: nothing stands between mise and the terminal" on_terminal
+check_true "… after a dry run that read the plan" in_order "args=bootstrap --skip macos-defaults,packages,tools,task --dry-run disable=" "args=bootstrap --skip macos-defaults,packages,tools,task disable="
+check_true "… and one after it, to read what mise applied" [ "$(dry_runs)" = 2 ]
+for part in 'system files' dotfiles 'dotfile edits' 'login shell'; do
+  check_true "… an applied part is a change: $part" has "↻.* $part +applied$"
+done
+check_true "… listed at the end by type" [ "$(sed -n '/Changed/,/^$/p' <<< "$out" | grep -cE '    .*↻.* (system files|dotfiles|dotfile edits|login shell) +applied$')" = 4 ]
+check_true "… and the plan's own words are not reported as done" lacks '(↻|✔).*(would write|ln -sf|chsh)'
+check_true "on a terminal: a line shows the step that is running" grep -q '  … formulae' "$STATE/out"
+check_true "on a terminal: the marks are coloured" has $'\033\\[32m✔\033\\[0m links'
+check_true "on a terminal: sudo is asked for on a › line, then a ✔ one" [ "$(grep -nE '›.* sudo +the administrator password' <<< "$out" | cut -d: -f1)" -lt "$(grep -nE '✔.* sudo +active' <<< "$out" | cut -d: -f1)" ]
+check_true "on a terminal: … and released on a line with a blank one after it" [ -z "$(grep -A1 -E '✔.* sudo +released' <<< "$out" | tail -1)" ]
+# mise exits 0 when the owner answers no
+prepare() {
+  stub gh "$signed_in"
+  echo "$planned" > "$STATE/bootstrap-plan"
+  touch "$STATE/bootstrap-declined"
+  printf '%s\n' 'mise bootstrap: system files' 'mise system files: skipped' 'mise bootstrap: dotfiles' 'mise files: skipped' > "$STATE/bootstrap-out"
+}
+TERM=xterm answers='\n' run
+check_true "the owner says no: the run goes on" [ "$rc" -eq 0 ]
+check_true "the owner says no: no part is reported as changed" lacks '↻'
+check_true "the owner says no: … each is a notice" [ "$(count '●.* (system files|dotfiles|dotfile edits|login shell) +not applied')" = 4 ]
+check_true "the owner says no: … listed at the end, by part" has '^  .*●.* mise bootstrap did not apply the login shell part'
+check_true "the owner says no: … and the summary counts no change" has 'Done in [0-9]+s.* · nothing changed · [0-9] notices'
+TERM=xterm answers='\n' run --verbose
+check_true "--verbose with something to apply: mise still has the terminal to itself" on_terminal
+prepare() {
+  stub gh "$signed_in"
+  echo "$planned" > "$STATE/bootstrap-plan"
+  echo "$applied" > "$STATE/bootstrap-out"
+}
+TERM=xterm answers='\n' run -y
+check_true "the same with -y: mise does not ask, so its output is captured" eval '! on_terminal && lacks "^mise (files|edits)"'
+check_true "… with no dry run" [ "$(dry_runs)" = 0 ]
+check_true "… and a part's line is mise's last for it" has '↻.* dotfile edits +applied ~/target\.toml \(merge:defaults\)$'
+prepare() {
+  stub gh "$signed_in"
+  echo "$converged" > "$STATE/bootstrap-out"
+}
+TERM=xterm answers='\n' run
+check_true "nothing to apply, on a terminal: mise is captured" eval '! on_terminal && lacks "^mise login_shell"'
+check_true "… into one line" has '✔.* mise bootstrap +4 parts already applied$'
+# Anything the dry run prints that is not known to mean "nothing to do" leaves mise on the terminal
+for unknown in 'mise WARN  a config key is deprecated' 'mise login_shell: would change to /bin/zsh' 'chsh -s /bin/zsh'; do
+  prepare() {
+    stub gh "$signed_in"
+    { echo "$converged" && echo "$unknown"; } > "$STATE/bootstrap-out"
+  }
+  TERM=xterm answers='\n' run
+  check_true "a dry run line setup does not know ('$unknown'): mise keeps the terminal" on_terminal
+done
+prepare() {
+  stub gh "$signed_in"
+  echo "$converged" > "$STATE/bootstrap-out"
+  touch "$STATE/plan-fails"
+}
+TERM=xterm answers='\n' run
+check_true "a dry run that fails: mise keeps the terminal" on_terminal
+check_true "… and the parts are not called changed" lacks '↻'
+prepare() { stub gh "$signed_in"; }
+TERM=xterm answers='\n' run
+check_true "a dry run that prints nothing: mise keeps the terminal" on_terminal
+check_true "… with a line for the step" has '✔.* mise bootstrap +ran on the terminal$'
+NO_COLOR=1 TERM=xterm answers='\n' run
+check_true "on a terminal with NO_COLOR: no colour" lacks $'\033\\[3[0-9]m'
+
+# Free space: a green ✔ at 20 GiB or more; under 20 a notice, amber, and red under 10
+for case in "25:✔:32" "15:●:33" "5:●:31"; do
+  IFS=: read -r gib mark colour <<< "$case"
+  prepare() {
+    stub gh "$signed_in"
+    echo $((gib * 1048576 + 5)) > "$STATE/free-kb"
+  }
+  stub df 'echo "Filesystem 1024-blocks Used Available Capacity Mounted on"; echo "/dev/disk3s1 994662584 1 $(cat "$STATE/free-kb") 1% /"'
+  run
+  check_true "free space, $gib GiB: a $mark line" has "^$mark free space +$gib GiB free on /$"
+  check_true "free space, $gib GiB: a blank line on each side" [ "$(grep -B1 -A1 'free space' <<< "$out" | head -3 | grep -c '^$')" = 2 ]
+  TERM=xterm answers='\n' run
+  check_true "free space, $gib GiB, on a terminal: the mark and the figure take the colour" has $'\033\\['"$colour"$'m'"$mark"$'\033\\[0m free space +\033\\['"$colour"$'m'"$gib GiB"
+  if [ "$gib" -ge 20 ]; then
+    check_true "free space, $gib GiB: not a notice" lacks 'Only [0-9]+ GiB free'
+  else
+    check_true "free space, $gib GiB: a notice at the end" has "^  .*●.* Only $gib GiB free on /"
+  fi
+done
+rm "$tmp/bin/df"
+
+# rotm update hands over what its fetch printed
+prepare() { stub gh "$signed_in"; }
+echo 'remote: Enumerating objects: 5, done.' > "$tmp/handoff"
+ROTM_UPDATE=1 ROTM_UPDATE_OUTPUT="$tmp/handoff" run
+check_true "rotm update's fetch output is at the top of the log" [ "$(sed -n 2p "$(run_log)")" = 'remote: Enumerating objects: 5, done.' ]
+check_true "… and the handed-over file is removed" [ ! -e "$tmp/handoff" ]
+echo 'remote: Enumerating objects: 5, done.' > "$tmp/handoff"
+logs() { find "$fix/private/setup-logs" -type f | wc -l | tr -d ' '; }
+logs_before=$(logs)
+ROTM_UPDATE=1 ROTM_UPDATE_OUTPUT="$tmp/handoff" run --bogus
+check_true "… also by a run that stops at a bad flag" eval '[ "$rc" -eq 1 ] && [ ! -e "$tmp/handoff" ]'
+check_true "… which starts no log" [ "$(logs)" = "$logs_before" ]
+run
+check_true "the log names the task command as it ran" in_log '$ mise bootstrap --only task -q'
+# A check that stops the run is in the log too, which /validate-setup after reads
+prepare() { touch "$STATE/no-clt"; }
+run
+check_true "an early stop is in the log: Command Line Tools" in_log 'Command Line Tools missing'
+prepare() { stub gh "$signed_in"; }
+STUB_MISE_VERSION=2026.10.1 run
+check_true "an early stop is in the log: the mise floor" in_log 'mise 2026.11.8 or newer is required, found 2026.10.1'
+prepare() { mkdir "$HOME/dotfiles"; }
+run
+check_true "an early stop is in the log: ~/dotfiles in the way" in_log '/dotfiles is not a link to'
+prepare() {
+  stub gh "$signed_in"
+  touch "$STATE/dotfiles-fail"
+}
+run
+check_true "a step that stops the run: the log path is printed once, last" eval '[ "$(grep -cF "$(run_log)" <<< "$out")" = 1 ] && grep -q "^Log: " <<< "$(tail -1 <<< "$out")"'
+DOTFILES_SETUP_LOG=none run
+check_true "a log that is switched off: no file and no Log line" eval 'lacks "^Log: " && [ ! -e "$HOME/none" ]'
 prepare() { :; }
 
 # setup/misc.sh under stubs. It puts the Homebrew prefix on PATH and names two kegs, so it must read HOMEBREW_PREFIX
@@ -763,7 +1026,7 @@ check_true "all on: Claude's config is restored" ran 'claude-config restore'
 check_true "all on: the catalog is built" ran claude-catalog
 check_true "all on: an MCP server is registered" ran 'mcp add'
 check_true "all on: the owner's tracker is registered" ran 'mcp add --scope user --transport http itsaplan https://plan.matherly.net/api/mcp'
-check_true "all on: … with the sign-in reminder" has 'Sign in once on this Mac'
+check_true "all on: … with the sign-in reminder" has '^● MCP servers +Sign in once on this Mac'
 check_true "all on: a uv tool is installed" ran 'uv tool install'
 check_true "all on: Hindsight is set up" ran 'hindsight-memory init'
 check_true "all on: … with rustup's cargo on PATH" grep -qF ":$HOMEBREW_PREFIX/opt/rustup/bin:" "$STATE/hindsight-path"
@@ -774,39 +1037,44 @@ check_true "all on: nothing is skipped" lacks 'skipped: the'
 check_true "all on: rustup's default toolchain is set" ran 'rustup default stable'
 check_true "all on: Supabase telemetry is turned off" ran 'supabase telemetry disable'
 check_true "all on: PowerShell is installed" ran 'dotnet tool install --global PowerShell'
-check_true "all on: the Aspire certificate hint is printed" has '\[Aspire\] HTTPS dev certificate not trusted'
-check_true "permissions: one line, not one per script" has '^  [0-9]+ scripts executable$'
-check_true "permissions: … and no per-script line" lacks 'set for '
-check_true "restore with nothing to do says so" has '^  nothing to restore$'
-check_true "PowerShell: the heading does not claim an install" has 'Checking PowerShell'
-check_true "PowerShell: … in either wording" lacks 'Installing PowerShell'
+check_true "all on: the Aspire certificate hint is printed" has '^● Aspire certificate +HTTPS dev certificate not trusted — run: aspire certs trust$'
+check_true "all on: the registrations are one line" has '^↻ MCP servers +0 registered, [0-9]+ added$'
+check_true "all on: … and none prints its own" lacks 'Registering|already registered'
+check_true "permissions: one line, not one per script" has '^✔ bin scripts +[0-9]+ executable$'
+check_true "restore with nothing to do says so" has '^✔ Claude Code config +nothing to restore$'
+check_true "PowerShell: a first install is a change" has '^↻ PowerShell +installed$'
+check_true "no step prints the old heading" lacks '\[ \.\. \]'
 want='if asks && [ ! -f "${VSCODE_SETTINGS_ENV:-$HOME/.config/dotfiles/vscode.env}" ]; then'
 check_true "the font menu is only for a Mac with no saved preset" grep -qF -- "$want" "$repo/setup/misc.sh"
 fresh
-mstub "$mfix/bin/claude-config" "echo 'restored one plugin'"
-misc
+mstub "$mfix/bin/claude-config" "echo 'npx output'; mkdir -p \"\$HOME/.claude/skills/demo\""
+: > "$STATE/changes"
+ROTM_CHANGES_FILE="$STATE/changes" misc
 mstub "$mfix/bin/claude-config"
-check_true "restore that did something keeps its output" has '^  restored one plugin$'
-check_true "restore that did something: … and no nothing-to-restore line" lacks 'nothing to restore'
+check_true "restore that did something says how much" has '^↻ Claude Code config +1 restored'
+check_true "restore that did something: … names it in the changes file" grep -qxF "skill	demo	restored" "$STATE/changes"
+check_true "restore that did something: … and its output stays off the terminal" lacks 'npx output'
 fresh
 # Only for install: misc.sh also calls `codegraph telemetry off`
 mstub "$tmp/mbin/codegraph" "[ \"\$1\" != install ] || { echo '◆  Claude Code: Unchanged ~/.claude.json'; echo '◇  Next: index a project'; echo '└  Done! Restart your agent to use CodeGraph.'; }"
 misc
-check_true "CodeGraph unchanged: one line" has '^  CodeGraph already connected$'
+check_true "CodeGraph unchanged: one line" has '^✔ CodeGraph +already connected$'
 check_true "CodeGraph unchanged: … and no restart advice" lacks 'Restart your agent'
 fresh
 mstub "$tmp/mbin/codegraph" "[ \"\$1\" != install ] || { echo '◆  Claude Code: Updated ~/.claude.json'; echo '└  Done! Restart your agent to use CodeGraph.'; }"
 misc
-check_true "CodeGraph changed: its output is kept" has 'Restart your agent'
+check_true "CodeGraph changed: says so" has '^↻ CodeGraph +connected to Claude Code'
 fresh
 mstub "$tmp/mbin/codegraph" "echo 'boom'; [ \"\$1\" != install ]"
 misc
-check_true "CodeGraph: a failed install shows its output" has '^  boom$'
+check_true "CodeGraph: a failed install shows its output" has '^    boom$'
+check_true "CodeGraph: … under a failed line" has '^✖ CodeGraph +codegraph install failed'
+check_true "CodeGraph: … and the task goes on" [ "$rc" -eq 0 ]
 check_true "CodeGraph: … and still warns" has 'codegraph install failed'
 fresh
 mstub "$tmp/mbin/rtk" "echo 'RTK hook registered (hook-only mode).'; echo '  settings.json: hook already present'; echo '  Restart Claude Code. Test with: git status'"
 misc
-check_true "rtk already wired: one line" has '^  rtk hook already present$'
+check_true "rtk already wired: one line" has '^✔ rtk +hook already present$'
 check_true "rtk already wired: … and no restart advice" lacks 'Restart Claude Code'
 fresh
 : > "$STATE/warnings"
@@ -815,6 +1083,146 @@ check_true "misc.sh's warnings reach setup.sh's file" grep -qxF 'npm:typescript 
 fresh
 ROTM_WARNINGS_FILE="$STATE/removed" misc
 check_true "misc.sh does not recreate a warnings file setup.sh removed" [ ! -e "$STATE/removed" ]
+
+# A Mac where every step finds its work done, with the output a real run prints.
+# claude keeps what `mcp add` registered, so the second run finds each server
+settled() {
+  fresh
+  mstub "$tmp/mbin/claude" 'reg="$STATE/mcp"; mkdir -p "$reg"
+case "$1 $2" in
+  "mcp get") cat "$reg/$3" 2> /dev/null ;;
+  "mcp add")
+    shift 4
+    if [ "$1" = --transport ]; then echo "URL: $4" > "$reg/$3"; exit 0; fi
+    name=$1; shift
+    while [ "$1" = -e ]; do echo "$2" >> "$reg/$name"; shift 2; done
+    shift; cmd=$1; shift
+    printf "Command: %s\nArgs:%s\n" "$cmd" "${*:+ $*}" >> "$reg/$name" ;;
+esac'
+  cp "$tmp/mbin/claude" "$HOME/.local/bin/claude"
+  mstub "$tmp/mbin/mise" '[ "$1" != where ] || echo "$HOME/ts"'
+  mstub "$HOMEBREW_PREFIX/opt/rustup/bin/rustup" 'echo "stable-aarch64-apple-darwin (default)"'
+  mstub "$tmp/mbin/codegraph" "if [ \"\$1\" = install ]; then echo '◆  Claude Code: Unchanged ~/.claude.json'; else echo '✓ Telemetry disabled. Buffered, unsent data was deleted.'; fi"
+  mstub "$HOME/.local/bin/serena"
+  mstub "$HOME/.local/bin/scrapling" "echo 'The dependencies are already installed'"
+  mstub "$HOME/.local/bin/browser-use" "printf '{\n  \"enabled\": false\n}\n'"
+  mstub "$tmp/mbin/rtk" "echo '  settings.json: hook already present'"
+  mstub "$tmp/mbin/supabase" "echo 'Telemetry is disabled.'"
+  mstub "$tmp/mbin/dotnet" "case \"\$*\" in 'tool list'*) echo 'powershell 7.6.10 pwsh' ;; 'tool update'*) echo \"Tool 'powershell' (version '7.6.10') is already installed.\" ;; dev-certs*) echo 'A trusted certificate was found' ;; esac"
+  mstub "$tmp/mbin/npm"
+  mstub "$tmp/mbin/pnpm" "echo 'Already up to date'; echo 'Done in 85ms using pnpm v12.21.0'"
+  mstub "$tmp/mbin/minijinja-cli"
+  mstub "$mfix/bin/vscode-settings" "echo 'rendered settings.json (preset iosevka)'"
+  mstub "$mfix/bin/hindsight-memory" "echo 'Checked 206 packages in 34ms'"
+  mstub "$mfix/bin/install-snippetslab-skill" "echo 'SnippetsLab skill unchanged'"
+  mstub "$mfix/bin/claude-catalog" "echo '  lint: no description: mcp slack' >&2; echo '  lint: no description: mcp figma' >&2; echo 'wrote /c/CATALOG.md, CATALOG-lite.md, catalog.html: 411 skills, 45 commands, 216 agents, 43 MCP servers, 74 plugins, 61,588 always-on tokens, 15 to review, 9 to watch, 0 to retire, since 2026-11-16: +0 -0'"
+  mstub "$mfix/setup/menubar-open.sh" "echo 'skipped: setup opened the app before (delete /marker to open it on the next run)'"
+  : > "$STATE/changes"
+  : > "$STATE/setup.log"
+}
+quiet_misc() { ROTM_CHANGES_FILE="$STATE/changes" DOTFILES_SETUP_LOG="$STATE/setup.log" misc; }
+settled
+quiet_misc
+: > "$STATE/changes"
+: > "$STATE/setup.log"
+quiet_misc
+check_true "unchanged: exits 0" [ "$rc" -eq 0 ]
+check_true "unchanged: every line is a step's result, none a change or a failure" [ -z "$(grep -vE '^(✔|●) [A-Za-z][A-Za-z ]{17} [^ ]' <<< "$out")" ]
+check_true "unchanged: one line per step" [ -z "$(grep '^✔' <<< "$out" | cut -c5-22 | sort | uniq -d)" ]
+check_true "unchanged: the registrations are one line with a count" has '^✔ MCP servers +8 registered$'
+check_true "unchanged: the catalog is its counts" has '^✔ catalog +411 skills, 45 commands, 216 agents, 43 MCP servers, 74 plugins$'
+check_true "unchanged: … and one line for its lint notes" has '^● catalog +2 lint notes \(listed in the log\)$'
+check_true "unchanged: no tool's own output" lacks 'already registered|Done in|Checked 206|Telemetry|already installed\.|^ *[{}]|lint:|wrote '
+check_true "unchanged: no change is recorded" [ ! -s "$STATE/changes" ]
+for kept in 'Checked 206 packages in 34ms' '"enabled": false' 'Done in 85ms' 'Telemetry is disabled.' 'lint: no description: mcp slack' "Tool 'powershell'" '== catalog ==' '✔ catalog '; do
+  check_true "unchanged: the log keeps: $kept" grep -qF -- "$kept" "$STATE/setup.log"
+done
+rm "$STATE/mcp/mise"
+quiet_misc
+check_true "a new registration: one changed line" has '^↻ MCP servers +7 registered, 1 added$'
+check_true "a new registration: … under its own heading in the log" grep -qxF '== MCP servers: mise ==' "$STATE/setup.log"
+check_true "a new registration: … and one mcp record" [ "$(cat "$STATE/changes")" = "mcp	mise	registered with Claude Code" ]
+echo 'Command: /elsewhere/serena' > "$STATE/mcp/serena"
+: > "$STATE/warnings"
+ROTM_WARNINGS_FILE="$STATE/warnings" quiet_misc
+check_true "a registration that differs: counted" has '^● MCP servers +8 registered, 1 registered differently$'
+check_true "a registration that differs: … with the command to fix it" has '^● MCP servers +Serena MCP server is registered differently .* claude mcp remove serena'
+check_true "a registration that differs: … listed for setup.sh" grep -q '^Serena MCP server is registered differently' "$STATE/warnings"
+settled
+mstub "$mfix/bin/install-iosevka-code" "seq 1 20; echo 'curl: (6) could not resolve host'; exit 1"
+: > "$STATE/warnings"
+ROTM_WARNINGS_FILE="$STATE/warnings" quiet_misc
+mstub "$mfix/bin/install-iosevka-code"
+check_true "a failed step: a failed line" has '^✖ Iosevka font +Iosevka Code font not installed'
+check_true "a failed step: … the end of its output" has '^    curl: \(6\) could not resolve host$'
+check_true "a failed step: … only the end" lacks '^    5$'
+check_true "a failed step: … the log path" has "^    full output: $STATE/setup.log$"
+check_true "a failed step: … all of it in the log" grep -qx 5 "$STATE/setup.log"
+check_true "a failed step: … still a warning for setup.sh" grep -q '^Iosevka Code font not installed' "$STATE/warnings"
+check_true "a failed step: … and the task goes on" eval '[ "$rc" -eq 0 ] && ran claude-catalog'
+settled
+quiet_misc
+check_true "the TypeScript link has a line when it is made" has '^✔ TypeScript link +linked to npm:typescript$'
+DOTFILES_SETUP_VERBOSE=1 quiet_misc
+check_true "setup.sh --verbose: a step's own output is on screen too" has '^Checked 206 packages in 34ms$'
+check_true "setup.sh --verbose: … with the step's line" has '^✔ Hindsight memory +set up$'
+# The one step whose failure ends the task says so first
+mstub "$tmp/mbin/mise" 'case $1 in where) echo "$HOME/ts" ;; reshim) echo "mise ERROR no shims directory"; exit 4 ;; esac'
+DOTFILES_SKIP_CODEGRAPH=true quiet_misc
+check_true "a failed reshim: the task stops with mise's status" [ "$rc" -eq 4 ]
+check_true "a failed reshim: … after a failed line" has '^✖ mise shims +mise reshim failed$'
+check_true "a failed reshim: … with the end of its output" has '^    mise ERROR no shims directory$'
+# A change is told from the no-op by what the step left behind, not by what it printed
+settled
+mstub "$mfix/bin/hindsight-memory" 'mkdir -p "$HOME/.hindsight/daemon-env" && echo "{}" > "$HOME/.hindsight/coding-agent.json" && echo 1 > "$HOME/.hindsight/daemon-env/.synced"'
+mstub "$HOME/.local/bin/scrapling" 'mkdir -p "$HOME/Library/Caches/ms-playwright/chromium-1255"'
+mkdir -p "$HOME/.local/share/mise/shims"
+mstub "$HOME/.local/share/mise/shims/rea" 'echo skill > "$HOME/.claude/skills/reverse-engineer-anything/SKILL.md"'
+mkdir -p "$HOME/.claude/skills/reverse-engineer-anything"
+quiet_misc
+check_true "Hindsight, a first install: a change" has '^↻ Hindsight memory +installed for Claude Code and Codex$'
+check_true "Hindsight, a first install: … recorded" grep -qxF "setting	Hindsight memory	installed for Claude Code and Codex" "$STATE/changes"
+check_true "Scrapling, a browser download: a change" has '^↻ Scrapling +browser downloaded$'
+check_true "REA, a skill it wrote: a change" has '^↻ REA +skill written$'
+check_true "REA, a skill it wrote: … recorded" grep -qxF "skill	reverse-engineer-anything	written by rea setup" "$STATE/changes"
+mstub "$mfix/bin/hindsight-memory" 'echo 2 > "$HOME/.hindsight/daemon-env/.synced"'
+quiet_misc
+check_true "Hindsight, a rebuilt daemon environment: a change" has '^↻ Hindsight memory +set up, daemon environment updated$'
+check_true "Scrapling, nothing downloaded: no change" has '^✔ Scrapling +installed, browser ready$'
+check_true "REA, the same skill: no change" has '^✔ REA +skill in place$'
+mstub "$mfix/bin/hindsight-memory"
+quiet_misc
+check_true "Hindsight, nothing new: no change" has '^✔ Hindsight memory +set up$'
+# A failed registration: the end of its output and the log, as any failed step
+fresh
+mstub "$tmp/mbin/claude" 'case "$1 $2" in "mcp get") exit 1 ;; "mcp add") [ "$5" != mise ] || echo "add refused"; exit 1 ;; esac'
+cp "$tmp/mbin/claude" "$HOME/.local/bin/claude"
+: > "$STATE/setup.log"
+quiet_misc
+check_true "failed registrations: one failed line" has '^✖ MCP servers +0 registered, [0-9]+ failed$'
+check_true "failed registrations: … the output of the one that printed any, and no blank line" eval 'has "^    add refused$" && lacks "^ +$"'
+check_true "failed registrations: … and the log path" has "^    full output: $STATE/setup.log$"
+# The font menu runs uncaptured, so the preset comes from the file its answer wrote
+settled
+mstub "$mfix/bin/vscode-settings" 'mkdir -p "$HOME/.config/dotfiles" && echo VSCODE_FONT_PRESET=warp > "$HOME/.config/dotfiles/vscode.env"'
+out=$( (cd "$HOME" && PATH="$tmp/mbin:/usr/bin:/bin" TERM=xterm NO_COLOR=1 script -q /dev/null "$mfix/setup/misc.sh" 2>&1 < <(sleep 3)) | tr '\r' '\n')
+check_true "after the font menu: the line names the preset" eval 'ran "vscode-settings --choose" && has "✔ VS Code settings +unchanged \(preset warp\)$"'
+# On a terminal (script's pty): a line while a step runs, and colour unless NO_COLOR is set
+settled
+on_tty() { (cd "$HOME" && PATH="$tmp/mbin:/usr/bin:/bin" TERM=xterm DOTFILES_YES=1 script -q /dev/null "$mfix/setup/misc.sh" < /dev/null 2>&1) | tr '\r' '\n'; }
+out=$(on_tty)
+check_true "on a terminal: a line shows the step that is running" has '^.\[2K  … Iosevka font$'
+check_true "on a terminal: … and the marks are coloured" has $'\033\\[32m✔'
+out=$(NO_COLOR=1 on_tty)
+check_true "on a terminal with NO_COLOR: no colour" lacks $'\033\\[3[0-9]m'
+misc
+check_true "off a terminal: no running line and no escape codes" lacks $'…|\033'
+fresh
+DOTFILES_SETUP_LOG=none ROTM_CHANGES_FILE="$STATE/absent" misc
+check_true "a log or changes file that does not exist is not created" eval '[ ! -e "$HOME/none" ] && [ ! -e "$STATE/absent" ]'
+for helper in vscode-settings hindsight-memory install-snippetslab-skill claude-catalog; do mstub "$mfix/bin/$helper"; done
+printf '#!/bin/bash\n%s\necho "$PATH" > "$STATE/hindsight-path"\n' "$logging" > "$mfix/bin/hindsight-memory"
+mstub "$mfix/setup/menubar-open.sh"
 
 fresh
 printf 'claude\nagents\nfonts\napps\nmenubar\nitsaplan\n' > "$HOME/.config/mise/modules-off.local"
@@ -842,7 +1250,7 @@ for call in 'supabase telemetry' 'dotnet tool' 'dev-certs'; do
   check_true "devops and cloud off, tools present: no $call" eval '! ran "$call"'
 done
 check_true "devops off, agents on: rustup's default is still set for Hindsight" ran 'rustup default stable'
-check_true "devops and cloud off: no Aspire hint" lacks '\[Aspire\]'
+check_true "devops and cloud off: no Aspire hint" lacks 'not trusted'
 check_true "devops and cloud off: each says why" eval 'has "skipped: the devops module is off" && has "skipped: the cloud module is off"'
 fresh
 printf 'devops\nagents\n' > "$HOME/.config/mise/modules-off.local"
@@ -854,12 +1262,12 @@ fresh
 mstub "$tmp/mbin/rtk" "echo 'Hook installed'; echo \"  Note: No RTK.md created. Claude won't know about meta commands (gain, discover, bypass).\""
 misc
 check_true "rtk: its RTK.md note is dropped" lacks 'No RTK.md'
-check_true "rtk: … and the rest of its output kept" has '^  Hook installed$'
+check_true "rtk: … and a new hook is a change" has '^↻ rtk +hook installed'
 check_true "rtk: … with no warning" lacks 'rtk init failed'
 fresh
 mstub "$tmp/mbin/rtk" "echo \"  Note: No RTK.md created.\"; exit 1"
 misc
-check_true "rtk: a failed init still warns" has 'rtk init failed'
+check_true "rtk: a failed init still warns" has '^✖ rtk +rtk init failed'
 
 fresh no-claude
 misc
@@ -868,6 +1276,29 @@ fresh no-claude
 printf 'claude\n' > "$HOME/.config/mise/modules-off.local"
 misc
 check_true "claude off: the installer is not fetched" eval '! ran "claude.ai/install.sh"'
+
+# setup/dotfiles-extras.sh in a scratch HOME, with its apps and bin folders pointed away from this Mac's
+fresh
+: > "$STATE/changes"
+mkdir -p "$tmp/apps/CotEditor.app/Contents/SharedSupport/bin" "$tmp/xbin"
+mstub "$tmp/apps/CotEditor.app/Contents/SharedSupport/bin/cot"
+extras() {
+  rc=0
+  out=$(PATH="/usr/bin:/bin" DOTFILES_EXTRAS_APPS="$tmp/apps" DOTFILES_EXTRAS_BIN="$tmp/xbin" ROTM_CHANGES_FILE="$STATE/changes" \
+    DOTFILES_GIT_NAME=Octo DOTFILES_GIT_EMAIL=octo@example.com DOTFILES_GIT_SIGN_METHOD=none "$repo/setup/dotfiles-extras.sh" 2>&1 < /dev/null) || rc=$?
+}
+extras
+check_true "extras: exits 0" [ "$rc" -eq 0 ]
+check_true "extras: the identity file is a change" has '^↻ git identity +wrote ~/\.gitconfig\.local$'
+check_true "extras: a linked CLI is a change" has "^↻ cot CLI +linked $tmp/xbin/cot$"
+check_true "extras: a missing app is a notice" has '^● code CLI +Visual Studio Code not installed'
+check_true "extras: no Firefox profile is a line that needs nothing" has '^✔ Firefox +skipped: no Firefox Developer Edition profile$'
+check_true "extras: both changes are recorded" [ "$(cut -f1,2 "$STATE/changes" | tr '\t\n' ' |')" = "file ~/.gitconfig.local|link $tmp/xbin/cot|" ]
+: > "$STATE/changes"
+extras
+check_true "extras, again: the identity is one line" has '^✔ git identity +~/\.gitconfig\.local exists$'
+check_true "extras, again: every line is in the one style" [ -z "$(grep -vE '^(✔|●) ' <<< "$out")" ]
+check_true "extras, again: nothing is recorded" [ ! -s "$STATE/changes" ]
 
 conf="$repo/tilde/.config/mise/conf.d"
 PATH=$(tr ':' '\n' <<< "$real_path" | grep -v '/mise/shims$' | paste -sd: -)
