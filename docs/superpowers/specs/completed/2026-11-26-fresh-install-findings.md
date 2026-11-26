@@ -1,6 +1,6 @@
 # Findings from the fresh-install run of 2026-11-26
 
-Date: 2026-11-26. Status: decided and built the same day (see "Decided and built"). Open: a `fresh-install` run that shows the changes, after which this file moves to `completed/`.
+Date: 2026-11-26. Status: decided, built and confirmed the same day (see "Decided and built").
 
 ## Decided and built
 
@@ -15,6 +15,8 @@ The owner accepted the author's recommendations on 2026-11-26.
 | 5 | Not built. Each notice reads well alone, and prefixing all of them is churn. |
 | 6 | Built. A count line with nothing registered starts at `N added` or `N failed`. |
 | 7 | No action. |
+
+Confirmed by `fresh-install` run 45851050327 on `2ef5ee5`, which passed on both paths. In the `installed` job the disk went from 42 to 56 GiB free once the Android SDK was gone and the job ended with 15 GiB free, where the earlier run ended with 3. The summary listed one `Only 15 GiB free` notice, the failed cask showed one `mise ERROR` line, and the first install printed `MCP servers  9 added`. Still as designed: `rotm update` printed the free-space line twice, because a phase that fails (royal-tsx) always prints it.
 
 ## What this is
 
