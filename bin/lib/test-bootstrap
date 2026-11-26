@@ -864,6 +864,11 @@ space() {
 check_true "space before a full install: a notice when the disk is short" [ "$(space 30 60)" = "30 GiB free on / with 60 packages to install: a full install needs about 39 GB" ]
 check_true "… none with room" [ -z "$(space 80 60)" ]
 check_true "… none when little is left to install" [ -z "$(space 30 3)" ]
+printf '%s\n' 'Only 16 GiB free on /: x' 'gh: not signed in' 'Only 16 GiB free on /: x' 'Only 3 GiB free on /: x' > "$tmp/notices"
+check_true "the summary keeps only the last free-space notice" [ "$(ROTM_WARNINGS_FILE=$tmp/notices bash -c "$(fn notices); notices" | tr '\n' '|')" = 'gh: not signed in|Only 3 GiB free on /: x|' ]
+out=$(printf 'cask failed\nmise ERROR Version: 2026.11.14\nmise ERROR Run with --verbose\n' | log=/dev/null bash -c "$(fn failed)"'
+  line() { :; }; say() { echo "$1"; }; out=$(cat); failed casks x')
+check_true "a failed step's output drops mise's version and --verbose lines" [ "$out" = '    cask failed' ]
 
 # On a terminal mise asks before it applies, and only while its stderr is one. So it is captured
 # there only when a dry run shows nothing to apply, and what it applied is read afterwards
@@ -952,6 +957,7 @@ for case in "25:✔:32" "15:●:33" "5:●:31"; do
   stub df 'echo "Filesystem 1024-blocks Used Available Capacity Mounted on"; echo "/dev/disk3s1 994662584 1 $(cat "$STATE/free-kb") 1% /"'
   run
   check_true "free space, $gib GiB: a $mark line" has "^$mark free space +$gib GiB free on /$"
+  check_true "free space, $gib GiB: said once while it does not drop" [ "$(count 'free space')" = 1 ]
   check_true "free space, $gib GiB: a blank line on each side" [ "$(grep -B1 -A1 'free space' <<< "$out" | head -3 | grep -c '^$')" = 2 ]
   TERM=xterm answers='\n' run
   check_true "free space, $gib GiB, on a terminal: the mark and the figure take the colour" has $'\033\\['"$colour"$'m'"$mark"$'\033\\[0m free space +\033\\['"$colour"$'m'"$gib GiB"
@@ -1059,7 +1065,7 @@ check_true "all on: rustup's default toolchain is set" ran 'rustup default stabl
 check_true "all on: Supabase telemetry is turned off" ran 'supabase telemetry disable'
 check_true "all on: PowerShell is installed" ran 'dotnet tool install --global PowerShell'
 check_true "all on: the Aspire certificate hint is printed" has '^● Aspire certificate +HTTPS dev certificate not trusted — run: aspire certs trust$'
-check_true "all on: the registrations are one line" has '^↻ MCP servers +0 registered, [0-9]+ added$'
+check_true "all on: the registrations are one line" has '^↻ MCP servers +[0-9]+ added$'
 check_true "all on: … and none prints its own" lacks 'Registering|already registered'
 check_true "permissions: one line, not one per script" has '^✔ bin scripts +[0-9]+ executable$'
 check_true "restore with nothing to do says so" has '^✔ Claude Code config +nothing to restore$'
@@ -1226,7 +1232,7 @@ mstub "$tmp/mbin/claude" 'case "$1 $2" in "mcp get") exit 1 ;; "mcp add") [ "$5"
 cp "$tmp/mbin/claude" "$HOME/.local/bin/claude"
 : > "$STATE/setup.log"
 quiet_misc
-check_true "failed registrations: one failed line" has '^✖ MCP servers +0 registered, [0-9]+ failed$'
+check_true "failed registrations: one failed line" has '^✖ MCP servers +[0-9]+ failed$'
 check_true "failed registrations: … the output of the one that printed any, and no blank line" eval 'has "^    add refused$" && lacks "^ +$"'
 check_true "failed registrations: … and the log path" has "^    full output: $STATE/setup.log$"
 # The font menu runs uncaptured, so the preset comes from the file its answer wrote

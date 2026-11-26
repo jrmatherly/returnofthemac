@@ -339,6 +339,8 @@ mcp_summary() {
   [ "$mcp_added" -eq 0 ] || message+=", $mcp_added added"
   [ "$mcp_differ" -eq 0 ] || message+=", $mcp_differ registered differently"
   [ "$mcp_failed" -eq 0 ] || message+=", $mcp_failed failed"
+  # A first install: "9 added" says it without a zero in front
+  message=${message#0 registered, }
   if [ "$mcp_failed" -gt 0 ]; then
     line fail "$message"
     output_tail

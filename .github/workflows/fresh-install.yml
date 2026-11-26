@@ -47,7 +47,11 @@ jobs:
           if command -v mise; then exit 1; fi
           df -h /
           du -sh ~/Library/Caches/mise/system-brew/bottles ~/Library/Caches/mise/system-brew/casks 2> /dev/null || true
-          # The run ends near 3 GiB free of the 42 it starts with. Measured, not yet deleted: what the image carries that a run could free
+          # A run took 39 of the 42 GiB one runner started with (run 45769485504). The image's
+          # Android SDK is 13 GiB that nothing here uses. The Xcodes stay: setup needs the
+          # Command Line Tools, and which one xcode-select points at was not read
+          sudo rm -rf ~/Library/Android
+          df -h /
           sudo du -sh /Applications/Xcode*.app /Library/Developer/CoreSimulator ~/Library/Developer/CoreSimulator ~/Library/Android /usr/local/lib/android 2> /dev/null || true
       # A file here that conf.d/40-dotfiles.toml links would stop setup's dotfiles apply
       - name: Home before setup
@@ -59,7 +63,7 @@ jobs:
       # Enter prompt, and mise elevates with the runner's passwordless sudo.
       # Each step prints one line and a failed one the last ten of its output:
       # the rest is in the run's log, printed by the last step. It installs mise, links the dotfiles, applies formulae and casks
-      # (printing free space after each), runs mise bootstrap without macOS
+      # (printing free space after one that installed), runs mise bootstrap without macOS
       # preferences, mise install and the task, then applies the extensions. A
       # failed bootstrap part or task fails this step. Exit 2 means only some
       # packages or tools failed: the steps below judge each one, so the

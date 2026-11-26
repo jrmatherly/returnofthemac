@@ -1,6 +1,20 @@
 # Findings from the fresh-install run of 2026-11-26
 
-Date: 2026-11-26. Status: findings for triage, nothing decided, nothing built.
+Date: 2026-11-26. Status: decided and built the same day (see "Decided and built"). Open: a `fresh-install` run that shows the changes, after which this file moves to `completed/`.
+
+## Decided and built
+
+The owner accepted the author's recommendations on 2026-11-26.
+
+| Finding | Decision |
+| --- | --- |
+| 1 | Built. While under 20 GiB is free, the line prints after a phase only when the figure is less than the line last said. |
+| 2 | Built. The summary keeps the latest `Only N GiB free` notice. The warning before a full install stays. |
+| 3 | Built. The workflow's "Remove Homebrew" step deletes `~/Library/Android`. No Xcode is touched. |
+| 4 | Built. `failed()` drops mise's `Version:` and `Run with` lines. |
+| 5 | Not built. Each notice reads well alone, and prefixing all of them is churn. |
+| 6 | Built. A count line with nothing registered starts at `N added` or `N failed`. |
+| 7 | No action. |
 
 ## What this is
 

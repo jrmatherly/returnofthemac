@@ -250,7 +250,8 @@ warning() {
 # show_log prints the log's path, once, when the run ends
 failed() {
   line fail "$1" "$2"
-  [ -z "${out:-}" ] || say "$(if [ "$log" = /dev/null ]; then cat; else tail -n 10; fi <<< "$out" | sed 's/^/    /')"
+  # mise ends every error with its version and a --verbose hint, as bin/rotm drops too
+  [ -z "${out:-}" ] || say "$(sed -E '/^mise ERROR +(Version:|Run with)/d' <<< "$out" | if [ "$log" = /dev/null ]; then cat; else tail -n 10; fi | sed 's/^/    /')"
 }
 # stop <message>: a check that ends the run before it starts, on stderr and in
 # the log, which /validate-setup after reads
@@ -260,13 +261,23 @@ stop() {
   printf '%s\n' "$1" | log_clean >> "$log"
   exit 1
 }
+# notices: the run's notices, each once in the order they came. Of free_space's
+# "Only N GiB free" lines only the last stays: each was true when recorded, and
+# the last is the one that still is
+notices() {
+  awk 'NF && !seen[$0]++ {
+      if ($0 ~ /^Only [0-9]+ GiB free on \//) { if (last) kept[last] = ""; last = n + 1 }
+      kept[++n] = $0
+    }
+    END { for (i = 1; i <= n; i++) if (kept[i] != "") print kept[i] }' "$ROTM_WARNINGS_FILE" 2> /dev/null
+}
 # show_warnings: the run's notices, each once in the order they came, in the
 # end summary or, from the EXIT trap, when the run stops early. Once a run
 show_warnings() {
   local warnings
   [ -z "${warnings_shown:-}" ] || return 0
   warnings_shown=true
-  warnings=$(awk 'NF && !seen[$0]++' "$ROTM_WARNINGS_FILE" 2> /dev/null) || warnings=""
+  warnings=$(notices) || warnings=""
   [ -n "$warnings" ] || return 0
   say "${bold}Notices${c_reset}"
   say "$(awk -v x="${c_notice}●${c_reset}" '{ print "  " x " " $0 }' <<< "$warnings")"
@@ -586,7 +597,7 @@ free_space() {
   local gib color=$c_notice
   gib=$(free_gib)
   [ -n "$gib" ] || return 0
-  free_shown=true
+  free_shown=$gib
   [ "${1:-}" = tight ] || say ""
   if [ "$gib" -ge 20 ]; then
     line ok "free space" "$c_ok$gib GiB$c_reset free on /"
@@ -617,7 +628,7 @@ space_before_install() {
 # have to be parsed: before is pkg_json, read once for every manager (it takes
 # about 3 seconds), and after is read only when something could have changed.
 packages_for() {
-  local out before after changes="" reread=false bad=false
+  local out before after changes="" reread=false bad=false gib
   title "🫖 Installing $2 with mise…"
   before=$(pkg_lines "$1" <<< "$pkg_json")
   working "$2"
@@ -674,9 +685,11 @@ packages_for() {
     # After a ✖ line, a line only for what did install
     [ "$bad" = true ] && [ -z "$changes" ] || report_changes "$2" "$4" "$changes" "$(grep -c '^installed' <<< "$after" || true)"
   fi
-  # After a phase that installed or failed, and wherever space is short; a
-  # run with neither shows it once, after the last package phase
-  if [ -n "$changes" ] || [ "$bad" = true ] || [ "$(free_gib)" -lt 20 ] 2> /dev/null; then
+  # After a phase that installed or failed, and while space is short whenever
+  # it is less than the line last said; a run with none of those shows it
+  # once, after the last package phase
+  gib=$(free_gib)
+  if [ -n "$changes" ] || [ "$bad" = true ] || { [ "${gib:-20}" -lt 20 ] && [ "$gib" -lt "${free_shown:-20}" ]; }; then
     free_space
   else
     say ""
@@ -1031,7 +1044,7 @@ fi
 # The end summary: the totals, what changed by type, the notices, what failed, the log
 changes=$(awk 'NF && !seen[$0]++' "$ROTM_CHANGES_FILE" 2> /dev/null) || changes=""
 n_changed=$(grep -c . <<< "$changes" || true)
-n_notices=$(awk 'NF && !seen[$0]++' "$ROTM_WARNINGS_FILE" 2> /dev/null | grep -c . || true)
+n_notices=$(notices | grep -c . || true)
 n_failed=$(grep -c . <<< "$problems" || true)
 tally="nothing changed"
 [ "$n_changed" -eq 0 ] || tally="$n_changed changed"
