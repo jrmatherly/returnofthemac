@@ -5,7 +5,7 @@ jstack is the Claude Code plugin that holds my working habits as skills: one com
 ## Summary
 
 - Start a task with `/jstack:j-mode <task>`. It picks a playbook, copies its steps into a todolist mirrored in the band, reads the principles that apply and names them in the reply, and verifies on the real artifact before reporting.
-- Every skill also runs on its own as `/jstack:<name>`. The agent cannot pick jstack skills on its own (they set `disable-model-invocation`); j-mode reads them as files when a trigger fires, and you run them as commands.
+- Every skill also runs on its own as `/jstack:<name>`. The agent cannot pick jstack skills on its own (they set `disable-model-invocation`), except `j-mode` itself, which stays on the Skill tool so a session or subagent told to work in J mode can load it; j-mode reads the others as files when a trigger fires, and you run them as commands.
 - `/jstack:setup-jstack` writes `~/.claude/rules/jstack-models.md`, one `model effort` line per role (nine roles). This machine runs Fable for judgment, prose and the lead seat on each panel, Opus for code, all at medium effort (the tracked copy is `tilde/.claude/rules/jstack-models.md`).
 - Reversible work proceeds without asking. It pauses for force pushes, deploys, data deletion and customer-facing messages, and for pushes or merges no standing approval covers. A "which approach?" question it can settle by running code gets a prototype, not a question.
 - The plugin updates with `sysup` (`claude plugin update`); the skills repo is the place to change it.
