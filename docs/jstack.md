@@ -1,6 +1,6 @@
 # jstack
 
-jstack is the Claude Code plugin that holds my working habits as skills: one command puts the agent into a written playbook for the kind of task at hand, it designs and verifies before it claims "done", and it writes replies you can read in one pass. It is a fork of [pstack](https://github.com/cursor/plugins/tree/main/pstack) by Lauren Tan (pinned upstream commit and pstack version in the skills repo README), maintained in [jrmatherly/skills](https://github.com/jrmatherly/skills) (`plugins/jstack`, MIT), and installed here from that repo's marketplace (`plugin jstack@jrmatherly-skills` in `agents/claude-plugins.txt`, restored by `claude-config restore`). Counts below come from the installed plugin's own files on 2026-11-26: 55 skills, of which 24 are principles, 22 playbooks, 2 subagents, 1 hooks module that draws the band above the prompt.
+jstack is the Claude Code plugin that holds my working habits as skills: one command puts the agent into a written playbook for the kind of task at hand, it designs and verifies before it claims "done", and it writes replies you can read in one pass. It is a fork of [pstack](https://github.com/cursor/plugins/tree/main/pstack) by Lauren Tan (pinned upstream commit and pstack version in the skills repo README), maintained in [jrmatherly/skills](https://github.com/jrmatherly/skills) (`plugins/jstack`, MIT), and installed here from that repo's marketplace (`plugin jstack@jrmatherly-skills` in `agents/claude-plugins.txt`, restored by `claude-config restore`). Counts below come from the installed plugin's own files on 2026-11-26: 56 skills, of which 24 are principles, 23 playbooks, 2 subagents, 1 hooks module that draws the band above the prompt.
 
 ## Summary
 
@@ -32,15 +32,16 @@ The hooks module draws one line above the prompt: the current playbook step, the
 | Group | Skills | What they do |
 | --- | --- | --- |
 | Understand code (read-only) | `how`, `why`, `teach`, `bro`, `recall`, `ketchup`, `in-your-own-words` | How a subsystem works and where something should live; why it was built that way, from the commits and PR discussions; both woven together; the last message with no jargon; rebuilding context after a break; what changed in the chat since you looked; the agent restating your goal before it starts |
-| Design before coding | `architect`, `arena`, `interrogate`, `swarm`, `figure-it-out`, `sharpen` | Types and signatures first; N parallel attempts with the best parts grafted into one; several models attacking a change from independent angles; parallel workers for coverage matrices and races; a bespoke playbook when none of the 22 fits; a task made deeper, not bigger |
+| Design before coding | `architect`, `arena`, `interrogate`, `swarm`, `figure-it-out`, `sharpen` | Types and signatures first; N parallel attempts with the best parts grafted into one; several models attacking a change from independent angles; parallel workers for coverage matrices and races; a bespoke playbook when none of the 23 fits; a task made deeper, not bigger |
 | Verify | `blast-radius`, `benchmark-checklist`, `tdd`, `create-verification-skill`, `create-formal-verification-skill`, `maintain-verification-skill`, `maintain-formal-verification-skill`, `show-me-your-work` | What a diff could break elsewhere, proven by running code; vetting a measured speedup; a failing test first when cheap; a project skill that drives your app like a user; model-checking races and invariants; keeping both current; a decision log for work reviewed later |
 | Write clean | `unslop`, `no-comments`, `technical-writing`, `typescript-best-practices` | AI tells cut from any text (numbered rules other skills cite); comments reduced to the non-obvious why; docs, RFCs, PR descriptions and commit messages; conventions loaded whenever a `.ts` or `.tsx` file is touched |
 | Improve the agent | `reflect`, `correct`, `automate-me`, `setup-jstack` | The transcript mined for lessons that will last, each routed into a skill edit you approve first; a repeated mistake made impossible in structure (architecture, then types, then a lint, then a test); your working style turned into a personal mode skill; model and effort per role |
+| Land a pull request | `land` | `/jstack:land <PR>` reviews it, fixes the confirmed findings, waits for CI and hands you the merge command, then cleans up and returns to the default branch. It never merges |
 | Subagents | `j-agent`, `comment-sicko` | The delegate for code-writing work inside a run (reads j-mode in full first); the comment auditor `no-comments` spawns |
 
 ## Playbooks
 
-j-mode copies a playbook's steps into the todolist verbatim. The 22 files live in the plugin's `skills/j-mode/playbooks/`.
+j-mode copies a playbook's steps into the todolist verbatim. The 23 files live in the plugin's `skills/j-mode/playbooks/`.
 
 | Playbook | Use it when | What you get back |
 | --- | --- | --- |
@@ -53,6 +54,7 @@ j-mode copies a playbook's steps into the todolist verbatim. The 22 files live i
 | Runtime forensics, Trace forensics | A leak, a spin, or a captured profile | A diagnosis, not a fix |
 | Babysit, Shipping | "Get this PR green", "land the stack" | CI, review threads and conflicts driven to merge-ready, then landed bottom-up after independent verification |
 | Autonomous run, Autopilot-full, Autopilot-stack | "Run until done", a queue of independent PRs | Long unattended work with a decision trail to audit later |
+| Load context | `/jstack:j-mode` with no task | The handoff checked against the repo, the recorded decisions behind each open item, the tools the repo expects. No work started |
 | Session pickup, Pause safely | Resuming someone's branch, or stopping cleanly | State written down so the next session starts where this one stopped |
 | Eval, Authoring a skill | Changing how the agent itself behaves | A measured before and after |
 | Multi-phase plan | Work that spans phases or stacked PRs | Phase boundaries with a check at each |
