@@ -23,7 +23,10 @@
 
 # VS Code writes keybindings, tasks and snippets here. settings.json is
 # rendered into this folder by bin/vscode-settings, not copied.
+# .prettierrc.yaml is seeded beside it: without one, a save in VS Code adds
+# trailing commas (Prettier's default), and the next render refuses the file.
 "~/Library/Application Support/Code/User" = { permissions = "0700" }
+"~/Library/Application Support/Code/User/.prettierrc.yaml" = { source = "~/dotfiles/vscode/User/.prettierrc.yaml", mode = "copy", create_if_missing = true }
 "~/Library/Application Support/Code/User/keybindings.json" = { source = "~/dotfiles/vscode/User/keybindings.json", mode = "copy", create_if_missing = true }
 "~/Library/Application Support/Code/User/tasks.json" = { source = "~/dotfiles/vscode/User/tasks.json", mode = "copy", create_if_missing = true }
 "~/Library/Application Support/Code/User/chatLanguageModels.json" = { source = "~/dotfiles/vscode/User/chatLanguageModels.json", mode = "copy", create_if_missing = true }

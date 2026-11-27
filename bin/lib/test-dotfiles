@@ -52,6 +52,12 @@ while IFS= read -r line; do
   base=$(grep -F "${line%% = *} = " "$fragment" || true)
   [ "${line%, exclude = *}" = "${base%, exclude = *}" ] || fail "config.rotm-installed.toml changes more than the exclude list of ${line%% = *}"
 done < <(grep -E '^"[^"]*" = .*mode = "symlink-each", exclude = ' "$installed")
+# Code/User is a real folder there, so a tracked file with no entry never reaches it
+while IFS= read -r f; do
+  [ "$f" = vscode/User/settings.json.j2 ] && continue
+  grep -qF "\"~/Library/Application Support/Code/User/${f#vscode/User/}\" = " "$installed" \
+    || fail "config.rotm-installed.toml seeds no copy of $f"
+done < <(git -C "$repo" ls-files vscode/User)
 # A symlink here would put app writes back in the checkout
 if grep -E '^"' "$installed" | grep -vE 'mode = "copy", create_if_missing = true|merge = |= \{ permissions = "[0-7]+" \}|mode = "symlink-each", exclude = ' | grep -q .; then
   fail "config.rotm-installed.toml has an entry that is neither create_if_missing, merge, a real folder nor an exclude-only symlink-each"
@@ -268,6 +274,7 @@ for f in whitelist whitelist_optimize; do
 done
 code_user="$home/Library/Application Support/Code/User"
 [ ! -L "$code_user" ] && [ -f "$code_user/snippets/global.code-snippets" ] && [ ! -L "$code_user/keybindings.json" ] \
+  && cmp -s "$code_user/.prettierrc.yaml" "$repo/vscode/User/.prettierrc.yaml" \
   || fail "installed: Code/User is not a real folder with seeded files"
 [ -L "$home/.zshenv" ] || fail "installed: an entry the environment does not name is no longer a link"
 roles="$home/.claude/rules/jstack-models.md"

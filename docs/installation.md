@@ -32,7 +32,7 @@ Later:
 - `rotm settings tui` opens the settings (`rotm settings list` prints them). A macOS preference you change there is saved in your `config.override.toml`, not in the copy.
 - The [menu bar app](menu-bar.md), Return of the Mac, is in `/Applications`, and setup opens it once at the end of the first run. It runs these same commands from its menu and a settings window. `--without menubar` leaves it out.
 
-The copy is not for editing: `rotm update` replaces its files. `~/.gitconfig`, `~/.zshrc`, `gh`'s `config.yml`, fastfetch's `config.jsonc` and VS Code's keybindings, tasks and snippets are yours: they are written once and then left alone. With `MISE_DATA_DIR` set, the copy is at `$MISE_DATA_DIR/bootstrap-repo`, and `install.sh` runs setup from there.
+The copy is not for editing: `rotm update` replaces its files. `~/.gitconfig`, `~/.zshrc`, `gh`'s `config.yml`, fastfetch's `config.jsonc` and VS Code's keybindings, tasks, snippets and the Prettier config beside its settings are yours: they are written once and then left alone. With `MISE_DATA_DIR` set, the copy is at `$MISE_DATA_DIR/bootstrap-repo`, and `install.sh` runs setup from there.
 
 ### Install by hand
 
